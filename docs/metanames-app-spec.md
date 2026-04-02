@@ -406,7 +406,7 @@
 | Category | Types                                        |
 | -------- | -------------------------------------------- |
 | Profile  | Bio, Email, Uri, Wallet, Price, Avatar, Main |
-| Social   | Twitter, Discord, Github, Telegram, Website  |
+| Social   | Twitter, Discord                             |
 
 #### 7.2 View Records (Settings Tab)
 
@@ -727,9 +727,6 @@ export const useSdkStore = create<SdkStore>((set) => ({
 | Main     | Profile  | 64         | Text               |
 | Twitter  | Social   | 64         | Text               |
 | Discord  | Social   | 64         | Text               |
-| Github   | Social   | 64         | Text               |
-| Telegram | Social   | 64         | Text               |
-| Website  | Social   | 64         | Valid URL          |
 
 ---
 
