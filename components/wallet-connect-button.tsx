@@ -1,5 +1,5 @@
 'use client';
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { Button } from '@/components/ui/button';
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger, DropdownMenuSeparator } from '@/components/ui/dropdown-menu';
 import { Input } from '@/components/ui/input';
@@ -15,6 +15,9 @@ export function WalletConnectButton() {
   const { metaNamesSdk } = useSdkStore();
   const [devKey, setDevKey] = useState('');
   const [open, setOpen] = useState(false);
+  const [mounted, setMounted] = useState(false);
+
+  useEffect(() => { setMounted(true); }, []);
 
   const handleConnect = async (type: 'metamask' | 'partisia' | 'ledger') => {
     if (!metaNamesSdk) return;
@@ -71,7 +74,7 @@ export function WalletConnectButton() {
         <DropdownMenuItem onClick={() => handleConnect('metamask')}>MetaMask Wallet</DropdownMenuItem>
         <DropdownMenuItem onClick={() => handleConnect('partisia')}>Partisia Wallet</DropdownMenuItem>
         <DropdownMenuItem onClick={() => handleConnect('ledger')}>Ledger</DropdownMenuItem>
-        {config.isTestnet && (
+        {mounted && config.isTestnet && (
           <>
             <DropdownMenuSeparator />
             <div className="p-2 flex flex-col gap-2">
