@@ -34,7 +34,7 @@ export default function TransferPage() {
 
   return (
     <div className="flex flex-col gap-6 max-w-lg">
-      <GoBackButton />
+      <GoBackButton href={`/domain/${domainName}`} />
       <h2 className="text-2xl font-bold">Transfer domain</h2>
       <h4 className="text-xl">{domainName}</h4>
       <div className="flex flex-col gap-2 p-4 bg-muted rounded-lg">
@@ -42,8 +42,8 @@ export default function TransferPage() {
         <p><strong>Verify the address is correct</strong></p>
       </div>
       <div className="flex flex-col gap-2">
-        <Input placeholder="Recipient address (42 chars)" value={recipient} onChange={(e) => { setRecipient(e.target.value); setError(null); }} className={recipient && !isValid ? 'border-destructive' : ''} />
-        {recipient && !isValid && <p className="text-destructive text-sm">Address is invalid</p>}
+        <Input placeholder="Recipient address (42 chars)" value={recipient} onChange={(e) => { setRecipient(e.target.value); setError(null); }} className={recipient.length >= 40 && !isValid ? 'border-destructive' : ''} />
+        {recipient.length >= 40 && !isValid && <p className="text-destructive text-sm">Address is invalid</p>}
       </div>
       <ConnectionRequired><LoadingButton disabled={!isValid} onClick={handleTransfer} className="w-full">Transfer domain</LoadingButton></ConnectionRequired>
     </div>

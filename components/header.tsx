@@ -21,26 +21,25 @@ export function Header() {
             </Badge>
           )}
         </div>
-        <nav className="hidden md:flex items-center gap-4">
-          <Link
-            href="/profile"
-            className="text-sm text-muted-foreground hover:text-foreground transition-colors"
-          >
-            Profile
-          </Link>
-          <Link
-            href="/tld"
-            className="text-sm text-muted-foreground hover:text-foreground transition-colors"
-          >
-            TLD
-          </Link>
-          <WalletConnectButton />
-        </nav>
-        <div className="flex md:hidden items-center gap-2">
+        <div className="flex items-center gap-4">
+          <nav className="hidden md:flex items-center gap-4">
+            <Link
+              href="/profile"
+              className="text-sm text-muted-foreground hover:text-foreground transition-colors"
+            >
+              Profile
+            </Link>
+            <Link
+              href="/tld"
+              className="text-sm text-muted-foreground hover:text-foreground transition-colors"
+            >
+              TLD
+            </Link>
+          </nav>
           <WalletConnectButton />
           <button
             onClick={() => setMobileMenuOpen(!mobileMenuOpen)}
-            className="p-2 hover:bg-muted rounded-md transition-colors"
+            className="p-2 hover:bg-muted rounded-md transition-colors md:hidden"
             aria-label="Toggle menu"
           >
             {mobileMenuOpen ? <X className="h-5 w-5" /> : <Menu className="h-5 w-5" />}

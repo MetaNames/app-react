@@ -12,14 +12,14 @@ test.describe('Wallet Connection', () => {
   test('should show Connect button when disconnected', async ({ page }) => {
     await page.goto('/');
     
-    const connectBtn = page.locator('button:has-text("Connect")');
+    const connectBtn = page.locator('[data-testid="wallet-connect-button"]').first();
     await expect(connectBtn).toBeVisible();
   });
 
   test('should open wallet dropdown menu on click', async ({ page }) => {
     await page.goto('/');
     
-    const connectBtn = page.locator('button:has-text("Connect")');
+    const connectBtn = page.locator('[data-testid="wallet-connect-button"]').first();
     await connectBtn.click();
     
     const menu = page.locator('text=MetaMask Wallet');
@@ -31,7 +31,7 @@ test.describe('Wallet Connection', () => {
   test('should show dev key input in testnet', async ({ page }) => {
     await page.goto('/');
     
-    const connectBtn = page.locator('button:has-text("Connect")');
+    const connectBtn = page.locator('[data-testid="wallet-connect-button"]').first();
     await connectBtn.click();
     
     const devKeyInput = page.locator('input.dev-key-input');
@@ -44,7 +44,7 @@ test.describe('Wallet Connection', () => {
   test('should disable dev connect button when key is too short', async ({ page }) => {
     await page.goto('/');
     
-    const connectBtn = page.locator('button:has-text("Connect")');
+    const connectBtn = page.locator('[data-testid="wallet-connect-button"]').first();
     await connectBtn.click();
     
     const devKeyInput = page.locator('input.dev-key-input');
@@ -59,7 +59,7 @@ test.describe('Wallet Connection', () => {
     
     await page.goto('/');
     
-    const connectBtn = page.locator('button:has-text("Connect")');
+    const connectBtn = page.locator('[data-testid="wallet-connect-button"]').first();
     await connectBtn.click();
     
     const devKeyInput = page.locator('input.dev-key-input');
@@ -74,7 +74,7 @@ test.describe('Wallet Connection', () => {
     
     await page.goto('/');
     
-    const connectBtn = page.locator('button:has-text("Connect")');
+    const connectBtn = page.locator('[data-testid="wallet-connect-button"]').first();
     await connectBtn.click();
     
     const devKeyInput = page.locator('input.dev-key-input');
@@ -85,7 +85,7 @@ test.describe('Wallet Connection', () => {
     
     await page.waitForTimeout(1000);
     
-    await expect(page.locator('button:has-text("0037")')).toBeVisible({ timeout: 10000 });
+    await expect(page.locator('[data-testid="wallet-connected"]').first()).toBeVisible({ timeout: 10000 });
   });
 
   test('should show shortened address after connection', async ({ page }) => {
@@ -93,7 +93,7 @@ test.describe('Wallet Connection', () => {
     
     await page.goto('/');
     
-    const connectBtn = page.locator('button:has-text("Connect")');
+    const connectBtn = page.locator('[data-testid="wallet-connect-button"]').first();
     await connectBtn.click();
     
     const devKeyInput = page.locator('input.dev-key-input');
@@ -104,7 +104,7 @@ test.describe('Wallet Connection', () => {
     
     await page.waitForTimeout(1000);
     
-    const walletBtn = page.locator('button:has-text("0037")');
+    const walletBtn = page.locator('[data-testid="wallet-connected"]').first();
     await expect(walletBtn).toBeVisible({ timeout: 10000 });
   });
 
@@ -113,7 +113,7 @@ test.describe('Wallet Connection', () => {
     
     await page.goto('/');
     
-    const connectBtn = page.locator('button:has-text("Connect")');
+    const connectBtn = page.locator('[data-testid="wallet-connect-button"]').first();
     await connectBtn.click();
     
     const devKeyInput = page.locator('input.dev-key-input');
@@ -124,7 +124,7 @@ test.describe('Wallet Connection', () => {
     
     await page.waitForTimeout(1000);
     
-    const walletBtn = page.locator('button:has-text("0037")');
+    const walletBtn = page.locator('[data-testid="wallet-connected"]').first();
     await walletBtn.click();
     
     const disconnectBtn = page.locator('text=Disconnect');
@@ -136,7 +136,7 @@ test.describe('Wallet Connection', () => {
     
     await page.goto('/');
     
-    const connectBtn = page.locator('button:has-text("Connect")');
+    const connectBtn = page.locator('[data-testid="wallet-connect-button"]').first();
     await connectBtn.click();
     
     const devKeyInput = page.locator('input.dev-key-input');
@@ -147,12 +147,12 @@ test.describe('Wallet Connection', () => {
     
     await page.waitForTimeout(1000);
     
-    const walletBtn = page.locator('button:has-text("0037")');
+    const walletBtn = page.locator('[data-testid="wallet-connected"]').first();
     await walletBtn.click();
     
     const disconnectBtn = page.locator('text=Disconnect');
     await disconnectBtn.click();
     
-    await expect(page.getByRole('button', { name: 'Connect', exact: true })).toBeVisible({ timeout: 5000 });
+    await expect(page.locator('[data-testid="wallet-connect-button"]').first()).toBeVisible({ timeout: 5000 });
   });
 });

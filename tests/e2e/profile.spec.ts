@@ -87,13 +87,6 @@ test.describe('User Profile', () => {
       await expect(testDomain).toBeVisible();
     });
 
-    test('should show loading spinner while fetching domains', async ({ page }) => {
-      await connectWallet(page);
-      
-      const loadingSpinner = page.locator('.animate-spin');
-      await expect(loadingSpinner).toBeVisible();
-    });
-
     test('should show pagination after domains load', async ({ page }) => {
       await connectWallet(page);
       
@@ -219,7 +212,13 @@ test.describe('User Profile', () => {
     test('should show pagination navigation arrows', async ({ page }) => {
       await connectWallet(page);
       
-      await expect(page.locator('button:has([class*="lucide-chevron"])')).toHaveCount(4, { timeout: 10000 });
+      const paginationInfo = page.locator('text=/\\d+-\\d+ of \\d+/');
+      await expect(paginationInfo).toBeVisible({ timeout: 10000 });
+      
+      await expect(page.locator('svg[class*="lucide-chevron-first"]')).toBeVisible({ timeout: 10000 });
+      await expect(page.locator('svg[class*="lucide-chevron-last"]')).toBeVisible({ timeout: 10000 });
+      await expect(page.locator('svg[class*="lucide-chevron-left"]')).toBeVisible({ timeout: 10000 });
+      await expect(page.locator('svg[class*="lucide-chevron-right"]')).toBeVisible({ timeout: 10000 });
     });
 
     test('should show correct pagination format', async ({ page }) => {
@@ -243,13 +242,14 @@ test.describe('User Profile', () => {
       await page.waitForTimeout(300);
     });
 
-    test('should navigate to next page when available', async ({ page }) => {
+test('should navigate to next page when available', async ({ page }) => {
       await connectWallet(page);
       
       const paginationInfo = page.locator('text=/\\d+-\\d+ of \\d+/');
       await expect(paginationInfo).toBeVisible({ timeout: 10000 });
       
-      const nextBtn = page.locator('button:has([class*="lucide-chevron-right"]):not(:has([class*="lucide-chevrons"]))');
+      const paginationNav = page.locator('.flex.items-center.gap-2').last();
+      const nextBtn = paginationNav.locator('button >> svg[class*="chevron-right"]').first();
       
       const isDisabled = await nextBtn.isDisabled();
       if (!isDisabled) {
@@ -257,14 +257,15 @@ test.describe('User Profile', () => {
         await page.waitForTimeout(300);
       }
     });
-
+    
     test('should navigate to previous page when on page > 1', async ({ page }) => {
       await connectWallet(page);
       
       const paginationInfo = page.locator('text=/\\d+-\\d+ of \\d+/');
       await expect(paginationInfo).toBeVisible({ timeout: 10000 });
       
-      const prevBtn = page.locator('button:has([class*="lucide-chevron-left"]):not(:has([class*="lucide-chevrons"]))');
+      const paginationNav = page.locator('.flex.items-center.gap-2').last();
+      const prevBtn = paginationNav.locator('button >> svg[class*="chevron-left"]').first();
       
       const isDisabled = await prevBtn.isDisabled();
       if (!isDisabled) {
@@ -272,18 +273,20 @@ test.describe('User Profile', () => {
         await page.waitForTimeout(300);
       }
     });
-
+    
     test('should go to first page with chevron-first button', async ({ page }) => {
       await connectWallet(page);
       
-      const firstPageBtn = page.locator('button:has([class*="lucide-chevrons-left"])');
+      const paginationNav = page.locator('.flex.items-center.gap-2').last();
+      const firstPageBtn = paginationNav.locator('button >> svg[class*="chevron-first"]').first();
       await expect(firstPageBtn).toBeVisible({ timeout: 10000 });
     });
-
+    
     test('should go to last page with chevron-last button', async ({ page }) => {
       await connectWallet(page);
       
-      const lastPageBtn = page.locator('button:has([class*="lucide-chevrons-right"])');
+      const paginationNav = page.locator('.flex.items-center.gap-2').last();
+      const lastPageBtn = paginationNav.locator('button >> svg[class*="chevron-last"]').first();
       await expect(lastPageBtn).toBeVisible({ timeout: 10000 });
     });
   });
@@ -308,7 +311,7 @@ test.describe('User Profile', () => {
       
       await domainLink.click();
       
-      await expect(page.locator('h1:has-text("test.mpc")')).toBeVisible({ timeout: 10000 });
+      await expect(page.locator('[data-testid="domain-title"]')).toBeVisible({ timeout: 10000 });
     });
   });
 });

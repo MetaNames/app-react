@@ -10,7 +10,7 @@ export default function RenewPage() {
   const domainName = normalizeDomain(decodeURIComponent(name));
   return (
     <div className="flex flex-col gap-6 max-w-lg">
-      <div className="flex items-center gap-4"><GoBackButton /><h2 className="text-2xl font-bold">Renew domain</h2></div>
+      <div className="flex items-center gap-4"><GoBackButton href={`/domain/${domainName}`} /><h2 className="text-2xl font-bold">Renew domain</h2></div>
       <ConnectionRequired><DomainPayment domain={domainName} mode="renew" /></ConnectionRequired>
     </div>
   );

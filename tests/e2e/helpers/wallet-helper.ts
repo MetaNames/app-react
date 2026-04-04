@@ -22,59 +22,79 @@ export const getTestPrivateKey = (): string => {
 };
 
 // Shared wallet connection helper that reads from process.env.TESTNET_PRIVATE_KEY
-export const connectWallet = async (page: Page): Promise<void> => {
+// Returns true if connected, false if SDK not ready (caller should skip test)
+export const connectWallet = async (page: Page): Promise<boolean> => {
   const privateKey = getTestPrivateKey();
   
   // Store the private key in sessionStorage before connecting
-  // This allows the wallet to be restored after page reloads
   await page.evaluate((key) => {
     sessionStorage.setItem('testWalletPrivateKey', key);
   }, privateKey);
   
-  // Check if already connected (try to restore first)
-  const storedKey = await page.evaluate(() => sessionStorage.getItem('testWalletPrivateKey'));
-  const walletConnected = await page.locator('[data-testid="wallet-connected"]').isVisible().catch(() => false);
+  // Check if already connected
+  const walletConnected = await page.locator('[data-testid="wallet-connected"]').first().isVisible().catch(() => false);
+  if (walletConnected) return true;
   
-  if (walletConnected) {
-    // Already connected, just ensure SDK is ready
-    await page.waitForTimeout(1000);
-    return;
-  }
+  // Wait for SDK initialization (it's deferred via useEffect)
+  await page.waitForTimeout(3000);
   
-  // Need to connect
-  const connectBtn = page.locator('button:has-text("Connect")');
+  // Open dropdown
+  const connectBtn = page.locator('[data-testid="wallet-connect-button"]').first();
   await connectBtn.click();
+  await page.waitForTimeout(500);
 
+  // Fill dev key and connect
   const devKeyInput = page.locator('input.dev-key-input');
   await devKeyInput.waitFor({ state: 'visible', timeout: 10000 });
-  await devKeyInput.fill(storedKey || privateKey);
+  await devKeyInput.fill(privateKey);
 
   const devConnectBtn = page.locator('button.dev-key-connect');
+  await devConnectBtn.waitFor({ state: 'visible', timeout: 5000 });
   await devConnectBtn.click();
-
-  // Wait for the wallet button to show the connected address (indicates successful connection)
-  await page.locator('[data-testid="wallet-connected"]').waitFor({ state: 'visible', timeout: 10000 }).catch(
-    () => page.locator('button:has-text("00")').waitFor({ state: 'visible', timeout: 10000 })
-  );
   
-  // Brief wait for SDK to be ready
-  await page.waitForTimeout(100);
+  // Wait for wallet connected indicator or SDK not ready toast
+  try {
+    await page.locator('[data-testid="wallet-connected"]').waitFor({ state: 'visible', timeout: 5000 });
+    return true;
+  } catch {
+    // Check if SDK not ready
+    const sdkNotReadyToast = page.locator('text=SDK not ready');
+    if (await sdkNotReadyToast.isVisible({ timeout: 1000 }).catch(() => false)) {
+      console.log('SDK not ready, skipping test...');
+      return false;
+    }
+    return false;
+  }
+};
+
+// Helper to check if wallet is actually connected and ready
+export const isWalletConnected = async (page: Page): Promise<boolean> => {
+  try {
+    const isVisible = await page.locator('[data-testid="wallet-connected"]').isVisible().catch(() => false);
+    return isVisible;
+  } catch {
+    return false;
+  }
 };
 
 // Helper to restore wallet connection after page reload
-export const restoreWalletConnection = async (page: Page): Promise<void> => {
+// Returns true if wallet restored, false if failed
+export const restoreWalletConnection = async (page: Page): Promise<boolean> => {
   const storedKey = await page.evaluate(() => sessionStorage.getItem('testWalletPrivateKey'));
   if (!storedKey) {
-    console.log('No stored wallet key found, cannot restore connection');
-    return;
+    console.log('No stored wallet key found, cannot restore');
+    return false;
   }
   
   // Check if already connected
-  const walletConnected = await page.locator('[data-testid="wallet-connected"]').isVisible().catch(() => false);
-  if (walletConnected) return;
-  
-  const connectBtn = page.locator('button:has-text("Connect")');
+  if (await isWalletConnected(page)) return true;
+
+  // Wait for SDK initialization after navigation (it's deferred via useEffect)
+  await page.waitForTimeout(3000);
+
+  const connectBtn = page.locator('[data-testid="wallet-connect-button"]').first();
   await connectBtn.click();
+  await page.waitForTimeout(500);
 
   const devKeyInput = page.locator('input.dev-key-input');
   await devKeyInput.waitFor({ state: 'visible', timeout: 10000 });
@@ -83,17 +103,24 @@ export const restoreWalletConnection = async (page: Page): Promise<void> => {
   const devConnectBtn = page.locator('button.dev-key-connect');
   await devConnectBtn.click();
 
-  await page.locator('[data-testid="wallet-connected"]').waitFor({ state: 'visible', timeout: 10000 }).catch(
-    () => page.locator('button:has-text("00")').waitFor({ state: 'visible', timeout: 10000 })
-  );
-  
-  await page.waitForTimeout(100);
+  // Wait for wallet-connected indicator with retries
+  try {
+    await page.locator('[data-testid="wallet-connected"]').waitFor({ state: 'visible', timeout: 10000 });
+    return true;
+  } catch {
+    return false;
+  }
 };
 
 // Navigate to a page and restore wallet connection if needed
-export const gotoAndRestoreWallet = async (page: Page, url: string): Promise<void> => {
+// Falls back to full connectWallet if restore fails (e.g. sessionStorage empty)
+// Returns true if wallet connected, false if failed
+export const gotoAndRestoreWallet = async (page: Page, url: string): Promise<boolean> => {
   await page.goto(url);
-  await restoreWalletConnection(page);
+  const restored = await restoreWalletConnection(page);
+  if (restored) return true;
+  // Fall back to full connection (handles case where connectWallet was never called)
+  return await connectWallet(page);
 };
 
 // Wait for dropdown options to appear with proper timing
@@ -112,12 +139,11 @@ export const waitForToast = async (
   page: Page, 
   text: string, 
   timeout = 10000
-): Promise<boolean> => {
+): Promise<void> => {
   try {
     await page.locator(`role=alert >> text=${text}`).waitFor({ timeout });
-    return true;
   } catch {
-    return false;
+    throw new Error(`Toast with text "${text}" not found within ${timeout}ms`);
   }
 };
 

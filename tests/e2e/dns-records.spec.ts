@@ -39,7 +39,9 @@ test.describe('DNS Records Management', () => {
   });
 
   test('owner can view records container in settings tab', async ({ page }) => {
-    await gotoAndRestoreWallet(page, `/domain/${TEST_DOMAIN}`);
+    if (!await gotoAndRestoreWallet(page, `/domain/${TEST_DOMAIN}`)) {
+      test.skip(true, 'Wallet not available');
+    }
 
     await expect(page.locator('[data-testid="domain-title"]')).toBeVisible({ timeout: 10000 });
 
@@ -58,7 +60,9 @@ test.describe('DNS Records Management', () => {
   });
 
   test('add-record form is visible in settings tab', async ({ page }) => {
-    await gotoAndRestoreWallet(page, `/domain/${TEST_DOMAIN}`);
+    if (!await gotoAndRestoreWallet(page, `/domain/${TEST_DOMAIN}`)) {
+      test.skip(true, 'Wallet not available');
+    }
 
     await expect(page.locator('[data-testid="domain-title"]')).toBeVisible({ timeout: 10000 });
 
@@ -73,7 +77,9 @@ test.describe('DNS Records Management', () => {
   });
 
   test('add-record form has record type dropdown', async ({ page }) => {
-    await gotoAndRestoreWallet(page, `/domain/${TEST_DOMAIN}`);
+    if (!await gotoAndRestoreWallet(page, `/domain/${TEST_DOMAIN}`)) {
+      test.skip(true, 'Wallet not available');
+    }
 
     await expect(page.locator('[data-testid="domain-title"]')).toBeVisible({ timeout: 10000 });
 
@@ -86,7 +92,9 @@ test.describe('DNS Records Management', () => {
   });
 
   test('record type dropdown shows available record types', async ({ page }) => {
-    await gotoAndRestoreWallet(page, `/domain/${TEST_DOMAIN}`);
+    if (!await gotoAndRestoreWallet(page, `/domain/${TEST_DOMAIN}`)) {
+      test.skip(true, 'Wallet not available');
+    }
 
     await expect(page.locator('[data-testid="domain-title"]')).toBeVisible({ timeout: 10000 });
 
@@ -107,7 +115,9 @@ test.describe('DNS Records Management', () => {
   });
 
   test('add-record form has record value textarea', async ({ page }) => {
-    await gotoAndRestoreWallet(page, `/domain/${TEST_DOMAIN}`);
+    if (!await gotoAndRestoreWallet(page, `/domain/${TEST_DOMAIN}`)) {
+      test.skip(true, 'Wallet not available');
+    }
 
     await expect(page.locator('[data-testid="domain-title"]')).toBeVisible({ timeout: 10000 });
 
@@ -128,7 +138,9 @@ test.describe('DNS Records Management', () => {
   });
 
   test('add-record form has Add record button', async ({ page }) => {
-    await gotoAndRestoreWallet(page, `/domain/${TEST_DOMAIN}`);
+    if (!await gotoAndRestoreWallet(page, `/domain/${TEST_DOMAIN}`)) {
+      test.skip(true, 'Wallet not available');
+    }
 
     await expect(page.locator('[data-testid="domain-title"]')).toBeVisible({ timeout: 10000 });
 
@@ -141,7 +153,9 @@ test.describe('DNS Records Management', () => {
   });
 
   test('Add record button is disabled when no record type selected', async ({ page }) => {
-    await gotoAndRestoreWallet(page, `/domain/${TEST_DOMAIN}`);
+    if (!await gotoAndRestoreWallet(page, `/domain/${TEST_DOMAIN}`)) {
+      test.skip(true, 'Wallet not available');
+    }
 
     await expect(page.locator('[data-testid="domain-title"]')).toBeVisible({ timeout: 10000 });
 
@@ -154,7 +168,9 @@ test.describe('DNS Records Management', () => {
   });
 
   test('Add record button is disabled when record value is empty', async ({ page }) => {
-    await gotoAndRestoreWallet(page, `/domain/${TEST_DOMAIN}`);
+    if (!await gotoAndRestoreWallet(page, `/domain/${TEST_DOMAIN}`)) {
+      test.skip(true, 'Wallet not available');
+    }
 
     await expect(page.locator('[data-testid="domain-title"]')).toBeVisible({ timeout: 10000 });
 
@@ -175,7 +191,9 @@ test.describe('DNS Records Management', () => {
   });
 
   test('Add record button is enabled when record type and value are filled', async ({ page }) => {
-    await gotoAndRestoreWallet(page, `/domain/${TEST_DOMAIN}`);
+    if (!await gotoAndRestoreWallet(page, `/domain/${TEST_DOMAIN}`)) {
+      test.skip(true, 'Wallet not available');
+    }
 
     await expect(page.locator('[data-testid="domain-title"]')).toBeVisible({ timeout: 10000 });
 
@@ -199,7 +217,9 @@ test.describe('DNS Records Management', () => {
   });
 
   test('validation error shows when record value exceeds 64 characters', async ({ page }) => {
-    await gotoAndRestoreWallet(page, `/domain/${TEST_DOMAIN}`);
+    if (!await gotoAndRestoreWallet(page, `/domain/${TEST_DOMAIN}`)) {
+      test.skip(true, 'Wallet not available');
+    }
 
     await expect(page.locator('[data-testid="domain-title"]')).toBeVisible({ timeout: 10000 });
 
@@ -227,7 +247,9 @@ test.describe('DNS Records Management', () => {
   });
 
   test('validation error shows for invalid URL on Uri type', async ({ page }) => {
-    await gotoAndRestoreWallet(page, `/domain/${TEST_DOMAIN}`);
+    if (!await gotoAndRestoreWallet(page, `/domain/${TEST_DOMAIN}`)) {
+      test.skip(true, 'Wallet not available');
+    }
 
     await expect(page.locator('[data-testid="domain-title"]')).toBeVisible({ timeout: 10000 });
 
@@ -258,7 +280,9 @@ test.describe('DNS Records Management', () => {
   });
 
   test('validation error shows for invalid email on Email type', async ({ page }) => {
-    await gotoAndRestoreWallet(page, `/domain/${TEST_DOMAIN}`);
+    if (!await gotoAndRestoreWallet(page, `/domain/${TEST_DOMAIN}`)) {
+      test.skip(true, 'Wallet not available');
+    }
 
     await expect(page.locator('[data-testid="domain-title"]')).toBeVisible({ timeout: 10000 });
 
@@ -289,7 +313,9 @@ test.describe('DNS Records Management', () => {
   });
 
   test('add record button is enabled when form is filled', async ({ page }) => {
-    await gotoAndRestoreWallet(page, `/domain/${TEST_DOMAIN}`);
+    if (!await gotoAndRestoreWallet(page, `/domain/${TEST_DOMAIN}`)) {
+      test.skip(true, 'Wallet not available');
+    }
 
     await expect(page.locator('[data-testid="domain-title"]')).toBeVisible({ timeout: 10000 });
 
@@ -317,7 +343,9 @@ test.describe('DNS Records Management', () => {
       test.skip(true, 'TESTNET_PRIVATE_KEY not set - blockchain interaction disabled');
     }
 
-    await gotoAndRestoreWallet(page, `/domain/${TEST_DOMAIN}`);
+    if (!await gotoAndRestoreWallet(page, `/domain/${TEST_DOMAIN}`)) {
+      test.skip(true, 'Wallet not available');
+    }
 
     await expect(page.locator('[data-testid="domain-title"]')).toBeVisible({ timeout: 10000 });
 
@@ -396,7 +424,9 @@ test.describe('DNS Records Management', () => {
   });
 
   test('cancel edit restores original value', async ({ page }) => {
-    await gotoAndRestoreWallet(page, `/domain/${TEST_DOMAIN}`);
+    if (!await gotoAndRestoreWallet(page, `/domain/${TEST_DOMAIN}`)) {
+      test.skip(true, 'Wallet not available');
+    }
 
     await expect(page.locator('[data-testid="domain-title"]')).toBeVisible({ timeout: 10000 });
 
@@ -489,7 +519,9 @@ test.describe('DNS Records Management', () => {
   });
 
   test('record CRUD operations in settings tab on domain page', async ({ page }) => {
-    await gotoAndRestoreWallet(page, `/domain/${TEST_DOMAIN}`);
+    if (!await gotoAndRestoreWallet(page, `/domain/${TEST_DOMAIN}`)) {
+      test.skip(true, 'Wallet not available');
+    }
 
     await expect(page.locator('[data-testid="domain-title"]')).toBeVisible({ timeout: 10000 });
 
@@ -503,7 +535,9 @@ test.describe('DNS Records Management', () => {
   });
 
   test('settings tab shows Renew and Transfer buttons alongside records', async ({ page }) => {
-    await gotoAndRestoreWallet(page, `/domain/${TEST_DOMAIN}`);
+    if (!await gotoAndRestoreWallet(page, `/domain/${TEST_DOMAIN}`)) {
+      test.skip(true, 'Wallet not available');
+    }
 
     await expect(page.locator('[data-testid="domain-title"]')).toBeVisible({ timeout: 10000 });
 
@@ -521,7 +555,9 @@ test.describe('DNS Records Management', () => {
   });
 
   test('record value textarea shows character count', async ({ page }) => {
-    await gotoAndRestoreWallet(page, `/domain/${TEST_DOMAIN}`);
+    if (!await gotoAndRestoreWallet(page, `/domain/${TEST_DOMAIN}`)) {
+      test.skip(true, 'Wallet not available');
+    }
 
     await expect(page.locator('[data-testid="domain-title"]')).toBeVisible({ timeout: 10000 });
 

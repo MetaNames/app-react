@@ -3,7 +3,7 @@ export function validateDomainName(name: string): ValidationResult {
   const clean = name.replace(/\.mpc$/, '');
   const parts = clean.split('.');
   for (const part of parts) {
-    if (part.length < 3) return { valid: false, error: 'Domain name must be at least 3 characters' };
+    if (part.length < 1) return { valid: false, error: 'Domain name must be at least 1 character' };
     if (part.length > 32) return { valid: false, error: 'Domain name must be at most 32 characters' };
     if (part.startsWith('-') || part.endsWith('-')) return { valid: false, error: 'Cannot start or end with a hyphen' };
     if (/[^a-z0-9-]/.test(part)) return { valid: false, error: 'Only lowercase letters, numbers, and hyphens allowed' };

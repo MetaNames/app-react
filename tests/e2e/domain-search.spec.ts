@@ -36,20 +36,23 @@ test.describe('Domain Search', () => {
     await expect(errorMsg).toContainText('Cannot start or end with a hyphen');
   });
 
-  test('should show validation error for domain too short', async ({ page }) => {
+  test('should allow searching for 1-letter domain', async ({ page }) => {
     const input = page.getByPlaceholder('Search for a .mpc domain...');
-    await input.fill('ab');
+    await input.fill('a');
     
-    const errorMsg = page.locator('p.text-destructive');
-    await expect(errorMsg).toContainText('Domain name must be at least 3 characters');
+    await page.waitForTimeout(600);
+    
+    const spinner = page.locator('.animate-spin');
+    await expect(spinner).toBeVisible({ timeout: 10000 });
   });
 
   test('should show loading spinner while checking availability', async ({ page }) => {
     const input = page.getByPlaceholder('Search for a .mpc domain...');
     await input.fill('loadingtest' + Date.now());
     
+    await page.waitForTimeout(600); // wait for debounce (400ms) and SDK init
     const spinner = page.locator('.animate-spin');
-    await expect(spinner).toBeVisible();
+    await expect(spinner).toBeVisible({ timeout: 10000 });
   });
 
   test('should show available badge for new domain', async ({ page }) => {

@@ -2,17 +2,15 @@ import { describe, it, expect } from 'vitest';
 import { validateDomainName, normalizeDomain, parseSubdomain } from '../domain-validator';
 
 describe('validateDomainName', () => {
-  describe('minimum 3 characters', () => {
-    it('rejects single character', () => {
+  describe('minimum 1 character', () => {
+    it('accepts single character', () => {
       const result = validateDomainName('a');
-      expect(result.valid).toBe(false);
-      expect(result.error).toBe('Domain name must be at least 3 characters');
+      expect(result.valid).toBe(true);
     });
 
-    it('rejects two characters', () => {
+    it('accepts two characters', () => {
       const result = validateDomainName('ab');
-      expect(result.valid).toBe(false);
-      expect(result.error).toBe('Domain name must be at least 3 characters');
+      expect(result.valid).toBe(true);
     });
 
     it('accepts three characters', () => {
@@ -99,7 +97,7 @@ describe('validateDomainName', () => {
     it('rejects double dots - but min char check catches it first since split produces empty part', () => {
       const result = validateDomainName('te..st.mpc');
       expect(result.valid).toBe(false);
-      expect(result.error).toBe('Domain name must be at least 3 characters');
+      expect(result.error).toBe('Domain name must be at least 1 character');
     });
 
     it('rejects leading dot', () => {
@@ -199,16 +197,14 @@ describe('validateDomainName edge cases', () => {
     expect(result.valid).toBe(true);
   });
 
-  it('rejects single character domain', () => {
+  it('accepts single character domain', () => {
     const result = validateDomainName('a');
-    expect(result.valid).toBe(false);
-    expect(result.error).toBe('Domain name must be at least 3 characters');
+    expect(result.valid).toBe(true);
   });
 
-  it('rejects two character domain', () => {
+  it('accepts two character domain', () => {
     const result = validateDomainName('ab');
-    expect(result.valid).toBe(false);
-    expect(result.error).toBe('Domain name must be at least 3 characters');
+    expect(result.valid).toBe(true);
   });
 
   it('rejects underscore character', () => {
@@ -287,7 +283,7 @@ describe('validateDomainName edge cases', () => {
   it('handles empty string edge case', () => {
     const result = validateDomainName('');
     expect(result.valid).toBe(false);
-    expect(result.error).toBe('Domain name must be at least 3 characters');
+    expect(result.error).toBe('Domain name must be at least 1 character');
   });
 
   it('handles only dots', () => {
@@ -303,7 +299,7 @@ describe('validateDomainName edge cases', () => {
   it('rejects consecutive dots in domain', () => {
     const result = validateDomainName('te..st');
     expect(result.valid).toBe(false);
-    expect(result.error).toBe('Domain name must be at least 3 characters');
+    expect(result.error).toBe('Domain name must be at least 1 character');
   });
 
   it('rejects domain with empty part due to consecutive dots', () => {
