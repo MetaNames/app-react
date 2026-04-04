@@ -90,6 +90,18 @@ export const restoreWalletConnection = async (page: Page): Promise<void> => {
   await page.waitForTimeout(100);
 };
 
+// Navigate to a page and restore wallet connection if needed
+export const gotoAndRestoreWallet = async (page: Page, url: string): Promise<void> => {
+  await page.goto(url);
+  await restoreWalletConnection(page);
+};
+
+// Wait for dropdown options to appear with proper timing
+export const waitForDropdownOptions = async (page: Page, timeout = 5000): Promise<void> => {
+  const selectContent = page.locator('[role="presentation"]').last();
+  await selectContent.waitFor({ state: 'visible', timeout });
+};
+
 // Wait for toast notification with optional timeout
 export const waitForToast = async (
   page: Page, 
@@ -115,7 +127,7 @@ export const executeBlockchainOp = async <T>(
 };
 
 // Default test domain for blockchain operations
-export const TEST_DOMAIN = 'name.mpc';
+export const TEST_DOMAIN = 'test.mpc';
 
 // Helper to verify wallet is connected and owns the domain by checking settings tab visibility
 export const ensureDomainOwnership = async (page: Page, domainName: string): Promise<boolean> => {

@@ -1,23 +1,13 @@
 import { test, expect } from '@playwright/test';
-
-const TEST_WALLET_PK = 'df4642ef258f9aef2adb6c148590208b20387fb067f2c0907d6c85697c27928c';
+import { connectWallet, gotoAndRestoreWallet } from './helpers/wallet-helper';
 
 test.describe('Domain Management', () => {
   test.describe.configure({ mode: 'serial' });
 
   test.beforeEach(async ({ page }) => {
     await page.goto('/');
+    await connectWallet(page);
   });
-
-  const connectWallet = async (page: any) => {
-    const connectBtn = page.locator('button:has-text("Connect")');
-    await connectBtn.click();
-    const devKeyInput = page.locator('input.dev-key-input');
-    await devKeyInput.fill(TEST_WALLET_PK);
-    const devConnectBtn = page.locator('button.dev-key-connect');
-    await devConnectBtn.click();
-    await page.waitForTimeout(1500);
-  };
 
   test('non-existent domain redirects to register page', async ({ page }) => {
     const nonexistentDomain = `nonexistent${Date.now()}.mpc`;
@@ -27,8 +17,7 @@ test.describe('Domain Management', () => {
   });
 
   test('view domain details for owned domain (test.mpc)', async ({ page }) => {
-    await connectWallet(page);
-    await page.goto('/domain/test.mpc');
+    await gotoAndRestoreWallet(page, '/domain/test.mpc');
 
     await expect(page.locator('[data-testid="domain-title"]')).toBeVisible({ timeout: 10000 });
     await expect(page.locator('[data-testid="domain-title"]')).toContainText('test.mpc');
@@ -53,8 +42,7 @@ test.describe('Domain Management', () => {
   });
 
   test('owner sees tabs for details and settings', async ({ page }) => {
-    await connectWallet(page);
-    await page.goto('/domain/test.mpc');
+    await gotoAndRestoreWallet(page, '/domain/test.mpc');
 
     await expect(page.locator('[data-testid="domain-title"]')).toBeVisible({ timeout: 10000 });
 
@@ -70,8 +58,7 @@ test.describe('Domain Management', () => {
   });
 
   test('owner can switch between details and settings tabs', async ({ page }) => {
-    await connectWallet(page);
-    await page.goto('/domain/test.mpc');
+    await gotoAndRestoreWallet(page, '/domain/test.mpc');
 
     await expect(page.locator('[data-testid="domain-title"]')).toBeVisible({ timeout: 10000 });
 
@@ -105,8 +92,7 @@ test.describe('Domain Management', () => {
   });
 
   test('domain page shows profile records (Bio and Price for test.mpc)', async ({ page }) => {
-    await connectWallet(page);
-    await page.goto('/domain/test.mpc');
+    await gotoAndRestoreWallet(page, '/domain/test.mpc');
 
     await expect(page.locator('[data-testid="domain-title"]')).toBeVisible({ timeout: 10000 });
 
@@ -118,8 +104,7 @@ test.describe('Domain Management', () => {
   });
 
   test('domain page shows Whois section with Owner and Expires chips', async ({ page }) => {
-    await connectWallet(page);
-    await page.goto('/domain/test.mpc');
+    await gotoAndRestoreWallet(page, '/domain/test.mpc');
 
     await expect(page.locator('[data-testid="domain-title"]')).toBeVisible({ timeout: 10000 });
 
@@ -134,8 +119,7 @@ test.describe('Domain Management', () => {
   });
 
   test('domain page shows Social section', async ({ page }) => {
-    await connectWallet(page);
-    await page.goto('/domain/test.mpc');
+    await gotoAndRestoreWallet(page, '/domain/test.mpc');
 
     await expect(page.locator('[data-testid="domain-title"]')).toBeVisible({ timeout: 10000 });
 
@@ -144,8 +128,7 @@ test.describe('Domain Management', () => {
   });
 
   test('settings tab shows Records editor and action buttons', async ({ page }) => {
-    await connectWallet(page);
-    await page.goto('/domain/test.mpc');
+    await gotoAndRestoreWallet(page, '/domain/test.mpc');
 
     await expect(page.locator('[data-testid="domain-title"]')).toBeVisible({ timeout: 10000 });
 
@@ -165,8 +148,7 @@ test.describe('Domain Management', () => {
   });
 
   test('token id is displayed on domain page', async ({ page }) => {
-    await connectWallet(page);
-    await page.goto('/domain/test.mpc');
+    await gotoAndRestoreWallet(page, '/domain/test.mpc');
 
     await expect(page.locator('[data-testid="domain-title"]')).toBeVisible({ timeout: 10000 });
 

@@ -27,10 +27,11 @@ test.describe('TLD Information', () => {
     await expect(tokenIdText).toBeVisible();
   });
 
-  test('should display owner chip with contract address', async ({ page }) => {
+  test('should display owner chip linking to contract page', async ({ page }) => {
     await expect(page.locator('[data-testid="domain-title"]')).toBeVisible({ timeout: 10000 });
     const ownerChip = page.locator('a:has-text("Owner")');
     await expect(ownerChip).toBeVisible();
+    await expect(ownerChip).toHaveAttribute('href', /\/contracts\//);
   });
 
   test('should display Whois section', async ({ page }) => {

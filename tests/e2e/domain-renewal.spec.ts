@@ -7,13 +7,14 @@
  */
 
 import { test, expect } from '@playwright/test';
-import { connectWallet, executeBlockchainOp } from './helpers/wallet-helper';
+import { connectWallet, executeBlockchainOp, gotoAndRestoreWallet } from './helpers/wallet-helper';
 
 const TEST_DOMAIN = 'test.mpc';
 
 test.describe('Domain Renewal', () => {
   test.beforeEach(async ({ page }) => {
-    await page.goto(`/domain/${TEST_DOMAIN}/renew`);
+    await page.goto('/');
+    await connectWallet(page);
   });
 
   test('should display Renew domain heading', async ({ page }) => {
@@ -148,17 +149,13 @@ test.describe('Domain Renewal', () => {
         test.skip(true, 'TESTNET_PRIVATE_KEY not set - blockchain interaction disabled');
       }
 
-      await connectWallet(page);
-      
-      await page.goto(`/domain/${TEST_DOMAIN}/renew`);
+      await gotoAndRestoreWallet(page, `/domain/${TEST_DOMAIN}/renew`);
       await page.waitForTimeout(1500);
 
       const renewButton = page.getByRole('button', { name: /renew/i }).or(page.getByRole('button', { name: /proceed/i })).or(page.getByRole('button', { name: /pay now/i }));
       
-      // Verify the button exists
       await expect(renewButton).toBeVisible({ timeout: 5000 });
       
-      // Attempt renewal - may fail due to testnet conditions
       const result = await executeBlockchainOp(async () => {
         await renewButton.click();
         await page.waitForTimeout(5000);
@@ -166,8 +163,6 @@ test.describe('Domain Renewal', () => {
 
       if (!result.success) {
         console.log('Renewal attempt failed (expected on testnet):', result.error);
-        // Renewal failed - could be insufficient funds, network issues, etc.
-        // This is acceptable for E2E testing
       }
     });
   });

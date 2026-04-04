@@ -51,7 +51,7 @@ export function Domain({ domain, isTld = false, onRefresh }: DomainProps) {
       <section>
         <h5 className="font-semibold mb-3">Whois</h5>
         <div className="flex flex-wrap gap-2">
-          <Chip label="Owner" value={truncateAddress(domain.owner)} href={explorerAddressUrl(domain.owner)} />
+          <Chip label="Owner" value={truncateAddress(domain.owner)} href={explorerAddressUrl(domain.owner, isTld)} />
           {domain.expiresAt && <Chip label="Expires" value={formatDate(domain.expiresAt)} />}
           {domain.parentId && <Chip label="Parent" value={domain.parentId} href={`/domain/${domain.parentId}`} />}
         </div>

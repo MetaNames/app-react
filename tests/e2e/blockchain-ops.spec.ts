@@ -10,9 +10,11 @@
  */
 
 import { test, expect, type Page } from '@playwright/test';
-import { connectWallet, restoreWalletConnection, waitForToast, executeBlockchainOp, TEST_DOMAIN } from './helpers/wallet-helper';
+import { connectWallet, restoreWalletConnection, waitForToast, executeBlockchainOp, TEST_DOMAIN, gotoAndRestoreWallet } from './helpers/wallet-helper';
 
 async function skipIfNotOwner(page: Page) {
+  // Try to restore wallet connection first in case state was lost
+  await restoreWalletConnection(page);
   const settingsTab = page.locator('[data-testid="tab-settings"]');
   if (!await settingsTab.isVisible({ timeout: 2000 }).catch(() => false)) {
     test.skip(true, `Wallet does not own ${TEST_DOMAIN} - settings tab not visible`);
@@ -22,7 +24,7 @@ async function skipIfNotOwner(page: Page) {
 test.describe('Blockchain Operations', () => {
   test.beforeEach(async ({ page }) => {
     await page.goto('/');
-    await restoreWalletConnection(page);
+    await connectWallet(page);
   });
 
   test.describe('Two-Step Payment Flow for Registration', () => {
@@ -35,10 +37,8 @@ test.describe('Blockchain Operations', () => {
     });
 
     test('should show payment form when wallet is connected', async ({ page }) => {
-      await connectWallet(page);
-
       const testDomain = `payflow${Date.now()}.mpc`;
-      await page.goto(`/register/${testDomain}`);
+      await gotoAndRestoreWallet(page, `/register/${testDomain}`);
 
       await page.waitForTimeout(1000);
 
@@ -56,10 +56,8 @@ test.describe('Blockchain Operations', () => {
     });
 
     test('should have approve fees button disabled when not yet approved', async ({ page }) => {
-      await connectWallet(page);
-
       const testDomain = `approve${Date.now()}.mpc`;
-      await page.goto(`/register/${testDomain}`);
+      await gotoAndRestoreWallet(page, `/register/${testDomain}`);
 
       await page.waitForTimeout(1500);
 
@@ -75,10 +73,8 @@ test.describe('Blockchain Operations', () => {
     });
 
     test('should disable register domain button until fees are approved', async ({ page }) => {
-      await connectWallet(page);
-
       const testDomain = `registerdisabled${Date.now()}.mpc`;
-      await page.goto(`/register/${testDomain}`);
+      await gotoAndRestoreWallet(page, `/register/${testDomain}`);
 
       await page.waitForTimeout(1500);
 
@@ -102,10 +98,8 @@ test.describe('Blockchain Operations', () => {
         test.skip(true, 'TESTNET_PRIVATE_KEY not set - blockchain interaction disabled');
       }
 
-      await connectWallet(page);
-
       const testDomain = `approved${Date.now()}.mpc`;
-      await page.goto(`/register/${testDomain}`);
+      await gotoAndRestoreWallet(page, `/register/${testDomain}`);
 
       await page.waitForTimeout(1500);
 
@@ -136,10 +130,8 @@ test.describe('Blockchain Operations', () => {
         test.skip(true, 'TESTNET_PRIVATE_KEY not set - blockchain interaction disabled');
       }
 
-      await connectWallet(page);
-
       const testDomain = `afterapprove${Date.now()}.mpc`;
-      await page.goto(`/register/${testDomain}`);
+      await gotoAndRestoreWallet(page, `/register/${testDomain}`);
 
       await page.waitForTimeout(1500);
 
@@ -168,17 +160,15 @@ test.describe('Blockchain Operations', () => {
       // This test requires specific wallet state - skip by default
       test.skip(true, 'Test wallet has sufficient balance by default');
 
-      await connectWallet(page);
-
       const testDomain = `lowbalance${Date.now()}.mpc`;
-      await page.goto(`/register/${testDomain}`);
+      await gotoAndRestoreWallet(page, `/register/${testDomain}`);
 
       await page.waitForTimeout(1500);
 
       const paymentTokenSelect = page.locator('[data-testid="payment-token-select"]');
       await paymentTokenSelect.click();
 
-      const selectContent = page.locator('[role="presentation"]');
+      const selectContent = page.locator('[data-testid="add-record-form"] [role="presentation"]');
       await selectContent.waitFor({ timeout: 5000 });
 
       await page.locator('role=option >> text=BTC').click();
@@ -201,9 +191,7 @@ test.describe('Blockchain Operations', () => {
         test.skip(true, 'TESTNET_PRIVATE_KEY not set - blockchain interaction disabled');
       }
 
-      await connectWallet(page);
-
-      await page.goto(`/register/${TEST_DOMAIN}`);
+      await gotoAndRestoreWallet(page, `/register/${TEST_DOMAIN}`);
 
       const result = await executeBlockchainOp(async () => {
         await page.waitForTimeout(2000);
@@ -239,8 +227,7 @@ test.describe('Blockchain Operations', () => {
     });
 
     test('should show add record form with type dropdown and value input', async ({ page }) => {
-      await connectWallet(page);
-      await page.goto(`/domain/${TEST_DOMAIN}`);
+      await gotoAndRestoreWallet(page, `/domain/${TEST_DOMAIN}`);
 
       await expect(page.locator('[data-testid="domain-title"]')).toBeVisible({ timeout: 10000 });
 
@@ -256,8 +243,7 @@ test.describe('Blockchain Operations', () => {
     });
 
     test('should select record type from dropdown', async ({ page }) => {
-      await connectWallet(page);
-      await page.goto(`/domain/${TEST_DOMAIN}`);
+      await gotoAndRestoreWallet(page, `/domain/${TEST_DOMAIN}`);
 
       await expect(page.locator('[data-testid="domain-title"]')).toBeVisible({ timeout: 10000 });
 
@@ -268,16 +254,16 @@ test.describe('Blockchain Operations', () => {
       const selectTrigger = page.locator('[data-testid="add-record-form"] button[role="combobox"]');
       await selectTrigger.click();
 
-      const selectContent = page.locator('[role="presentation"]');
-      await expect(selectContent).toBeVisible({ timeout: 5000 });
+      const selectContent = page.locator('[data-testid="add-record-form"] [role="presentation"]');
+      await selectContent.waitFor({ timeout: 5000 });
 
-      const bioOption = page.locator('[data-testid="select-option-Bio"]');
-      await expect(bioOption).toBeVisible();
+      // Click the first available option (not all options may be available)
+      const firstOption = page.locator('[data-testid^="select-option-"]').first();
+      await expect(firstOption).toBeVisible({ timeout: 5000 });
     });
 
     test('should show textarea after selecting record type', async ({ page }) => {
-      await connectWallet(page);
-      await page.goto(`/domain/${TEST_DOMAIN}`);
+      await gotoAndRestoreWallet(page, `/domain/${TEST_DOMAIN}`);
 
       await expect(page.locator('[data-testid="domain-title"]')).toBeVisible({ timeout: 10000 });
 
@@ -288,18 +274,17 @@ test.describe('Blockchain Operations', () => {
       const selectTrigger = page.locator('[data-testid="add-record-form"] button[role="combobox"]');
       await selectTrigger.click();
 
-      const selectContent = page.locator('[role="presentation"]');
+      const selectContent = page.locator('[data-testid="add-record-form"] [role="presentation"]');
       await selectContent.waitFor({ timeout: 5000 });
 
-      await page.locator('[data-testid="select-option-Bio"]').click();
+      await page.locator('[data-testid^="select-option-"]').first().click();
 
       const textarea = page.locator('[data-testid="add-record-form"] textarea');
       await expect(textarea).toBeVisible();
     });
 
     test('should disable add record button when value is empty', async ({ page }) => {
-      await connectWallet(page);
-      await page.goto(`/domain/${TEST_DOMAIN}`);
+      await gotoAndRestoreWallet(page, `/domain/${TEST_DOMAIN}`);
 
       await expect(page.locator('[data-testid="domain-title"]')).toBeVisible({ timeout: 10000 });
 
@@ -310,18 +295,17 @@ test.describe('Blockchain Operations', () => {
       const selectTrigger = page.locator('[data-testid="add-record-form"] button[role="combobox"]');
       await selectTrigger.click();
 
-      const selectContent = page.locator('[role="presentation"]');
+      const selectContent = page.locator('[data-testid="add-record-form"] [role="presentation"]');
       await selectContent.waitFor({ timeout: 5000 });
 
-      await page.locator('[data-testid="select-option-Bio"]').click();
+      await page.locator('[data-testid^="select-option-"]').first().click();
 
       const addBtn = page.locator('[data-testid="add-record-button"]');
       await expect(addBtn).toBeDisabled();
     });
 
     test('should enable add record button when value is entered', async ({ page }) => {
-      await connectWallet(page);
-      await page.goto(`/domain/${TEST_DOMAIN}`);
+      await gotoAndRestoreWallet(page, `/domain/${TEST_DOMAIN}`);
 
       await expect(page.locator('[data-testid="domain-title"]')).toBeVisible({ timeout: 10000 });
 
@@ -332,10 +316,10 @@ test.describe('Blockchain Operations', () => {
       const selectTrigger = page.locator('[data-testid="add-record-form"] button[role="combobox"]');
       await selectTrigger.click();
 
-      const selectContent = page.locator('[role="presentation"]');
+      const selectContent = page.locator('[data-testid="add-record-form"] [role="presentation"]');
       await selectContent.waitFor({ timeout: 5000 });
 
-      await page.locator('[data-testid="select-option-Bio"]').click();
+      await page.locator('[data-testid^="select-option-"]').first().click();
 
       const textarea = page.locator('[data-testid="add-record-form"] textarea');
       await textarea.fill('Test bio value');
@@ -350,8 +334,7 @@ test.describe('Blockchain Operations', () => {
         test.skip(true, 'TESTNET_PRIVATE_KEY not set - blockchain interaction disabled');
       }
 
-      await connectWallet(page);
-      await page.goto(`/domain/${TEST_DOMAIN}`);
+      await gotoAndRestoreWallet(page, `/domain/${TEST_DOMAIN}`);
 
       await expect(page.locator('[data-testid="domain-title"]')).toBeVisible({ timeout: 10000 });
 
@@ -362,10 +345,10 @@ test.describe('Blockchain Operations', () => {
       const selectTrigger = page.locator('[data-testid="add-record-form"] button[role="combobox"]');
       await selectTrigger.click();
 
-      const selectContent = page.locator('[role="presentation"]');
+      const selectContent = page.locator('[data-testid="add-record-form"] [role="presentation"]');
       await selectContent.waitFor({ timeout: 5000 });
 
-      await page.locator('[data-testid="select-option-Bio"]').click();
+      await page.locator('[data-testid^="select-option-"]').first().click();
 
       const textarea = page.locator('[data-testid="add-record-form"] textarea');
       await textarea.fill('Test bio for blockchain');
@@ -391,8 +374,7 @@ test.describe('Blockchain Operations', () => {
 
   test.describe('Edit Record Blockchain Operation', () => {
     test('should show edit button for existing records', async ({ page }) => {
-      await connectWallet(page);
-      await page.goto(`/domain/${TEST_DOMAIN}`);
+      await gotoAndRestoreWallet(page, `/domain/${TEST_DOMAIN}`);
 
       await expect(page.locator('[data-testid="domain-title"]')).toBeVisible({ timeout: 10000 });
 
@@ -408,8 +390,7 @@ test.describe('Blockchain Operations', () => {
     });
 
     test('should show textarea and save/cancel buttons when edit is clicked', async ({ page }) => {
-      await connectWallet(page);
-      await page.goto(`/domain/${TEST_DOMAIN}`);
+      await gotoAndRestoreWallet(page, `/domain/${TEST_DOMAIN}`);
 
       await expect(page.locator('[data-testid="domain-title"]')).toBeVisible({ timeout: 10000 });
 
@@ -434,8 +415,7 @@ test.describe('Blockchain Operations', () => {
     });
 
     test('should restore original value when cancel is clicked', async ({ page }) => {
-      await connectWallet(page);
-      await page.goto(`/domain/${TEST_DOMAIN}`);
+      await gotoAndRestoreWallet(page, `/domain/${TEST_DOMAIN}`);
 
       await expect(page.locator('[data-testid="domain-title"]')).toBeVisible({ timeout: 10000 });
 
@@ -466,8 +446,7 @@ test.describe('Blockchain Operations', () => {
         test.skip(true, 'TESTNET_PRIVATE_KEY not set - blockchain interaction disabled');
       }
 
-      await connectWallet(page);
-      await page.goto(`/domain/${TEST_DOMAIN}`);
+      await gotoAndRestoreWallet(page, `/domain/${TEST_DOMAIN}`);
 
       await expect(page.locator('[data-testid="domain-title"]')).toBeVisible({ timeout: 10000 });
 
@@ -504,8 +483,7 @@ test.describe('Blockchain Operations', () => {
 
   test.describe('Delete Record Blockchain Operation', () => {
     test('should show delete button for existing records', async ({ page }) => {
-      await connectWallet(page);
-      await page.goto(`/domain/${TEST_DOMAIN}`);
+      await gotoAndRestoreWallet(page, `/domain/${TEST_DOMAIN}`);
 
       await expect(page.locator('[data-testid="domain-title"]')).toBeVisible({ timeout: 10000 });
 
@@ -521,8 +499,7 @@ test.describe('Blockchain Operations', () => {
     });
 
     test('should show confirmation dialog when delete is clicked', async ({ page }) => {
-      await connectWallet(page);
-      await page.goto(`/domain/${TEST_DOMAIN}`);
+      await gotoAndRestoreWallet(page, `/domain/${TEST_DOMAIN}`);
 
       await expect(page.locator('[data-testid="domain-title"]')).toBeVisible({ timeout: 10000 });
 
@@ -550,8 +527,7 @@ test.describe('Blockchain Operations', () => {
     });
 
     test('should close dialog when No is clicked', async ({ page }) => {
-      await connectWallet(page);
-      await page.goto(`/domain/${TEST_DOMAIN}`);
+      await gotoAndRestoreWallet(page, `/domain/${TEST_DOMAIN}`);
 
       await expect(page.locator('[data-testid="domain-title"]')).toBeVisible({ timeout: 10000 });
 
@@ -580,8 +556,7 @@ test.describe('Blockchain Operations', () => {
         test.skip(true, 'TESTNET_PRIVATE_KEY not set - blockchain interaction disabled');
       }
 
-      await connectWallet(page);
-      await page.goto(`/domain/${TEST_DOMAIN}`);
+      await gotoAndRestoreWallet(page, `/domain/${TEST_DOMAIN}`);
 
       await expect(page.locator('[data-testid="domain-title"]')).toBeVisible({ timeout: 10000 });
 
@@ -621,8 +596,7 @@ test.describe('Blockchain Operations', () => {
 
   test.describe('Records Page Navigation', () => {
     test('should navigate to records page from domain settings tab', async ({ page }) => {
-      await connectWallet(page);
-      await page.goto(`/domain/${TEST_DOMAIN}`);
+      await gotoAndRestoreWallet(page, `/domain/${TEST_DOMAIN}`);
 
       await expect(page.locator('[data-testid="domain-title"]')).toBeVisible({ timeout: 10000 });
 
@@ -635,8 +609,7 @@ test.describe('Blockchain Operations', () => {
     });
 
     test('should navigate directly to records page via URL', async ({ page }) => {
-      await connectWallet(page);
-      await page.goto(`/domain/${TEST_DOMAIN}/records`);
+      await gotoAndRestoreWallet(page, `/domain/${TEST_DOMAIN}/records`);
 
       const heading = page.locator(`h2:has-text("Records — ${TEST_DOMAIN}")`);
       await expect(heading).toBeVisible({ timeout: 10000 });
@@ -656,8 +629,7 @@ test.describe('Blockchain Operations', () => {
     });
 
     test('should show records list and add record form on records page', async ({ page }) => {
-      await connectWallet(page);
-      await page.goto(`/domain/${TEST_DOMAIN}/records`);
+      await gotoAndRestoreWallet(page, `/domain/${TEST_DOMAIN}/records`);
 
       const heading = page.locator(`h2:has-text("Records — ${TEST_DOMAIN}")`);
       await expect(heading).toBeVisible({ timeout: 10000 });

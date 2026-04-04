@@ -1,24 +1,14 @@
 import { test, expect } from '@playwright/test';
+import { connectWallet, gotoAndRestoreWallet } from './helpers/wallet-helper';
 
-const TEST_WALLET_PK = 'df4642ef258f9aef2adb6c148590208b20387fb067f2c0907d6c85697c27928c';
 const TEST_DOMAIN = 'test.mpc';
 const VALID_ADDRESS = '0x0333a0b93e9c30e2d6a3c0b3c6d5e4f1a2b3c4d5';
 const INVALID_ADDRESS = '0x0333a0b93e9c30e2d6a3c0b3c6d5e4f1a2b3c4d'; // 41 chars (invalid)
 
-async function connectWallet(page: any) {
-  await page.goto('/');
-  const connectBtn = page.locator('button:has-text("Connect")');
-  await connectBtn.click();
-  const devKeyInput = page.locator('input.dev-key-input');
-  await devKeyInput.fill(TEST_WALLET_PK);
-  const devConnectBtn = page.locator('button.dev-key-connect');
-  await devConnectBtn.click();
-  await page.waitForTimeout(1000);
-}
-
 test.describe('Domain Transfer', () => {
   test.beforeEach(async ({ page }) => {
-    await page.goto(`/domain/${TEST_DOMAIN}/transfer`);
+    await page.goto('/');
+    await connectWallet(page);
   });
 
   test('should display transfer page with all elements', async ({ page }) => {
@@ -83,8 +73,7 @@ test.describe('Domain Transfer', () => {
   });
 
   test('should show transfer button when wallet is connected', async ({ page }) => {
-    await connectWallet(page);
-    await page.goto(`/domain/${TEST_DOMAIN}/transfer`);
+    await gotoAndRestoreWallet(page, `/domain/${TEST_DOMAIN}/transfer`);
 
     // Transfer button should be visible
     const transferBtn = page.locator('button:has-text("Transfer domain")');
@@ -96,8 +85,7 @@ test.describe('Domain Transfer', () => {
   });
 
   test('should disable transfer button for invalid address when connected', async ({ page }) => {
-    await connectWallet(page);
-    await page.goto(`/domain/${TEST_DOMAIN}/transfer`);
+    await gotoAndRestoreWallet(page, `/domain/${TEST_DOMAIN}/transfer`);
 
     const addressInput = page.getByPlaceholder('Recipient address (42 chars)');
     await addressInput.fill(INVALID_ADDRESS);
@@ -107,8 +95,7 @@ test.describe('Domain Transfer', () => {
   });
 
   test('should enable transfer button for valid address when connected', async ({ page }) => {
-    await connectWallet(page);
-    await page.goto(`/domain/${TEST_DOMAIN}/transfer`);
+    await gotoAndRestoreWallet(page, `/domain/${TEST_DOMAIN}/transfer`);
 
     const addressInput = page.getByPlaceholder('Recipient address (42 chars)');
     await addressInput.fill(VALID_ADDRESS);
