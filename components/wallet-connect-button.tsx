@@ -45,16 +45,15 @@ export function WalletConnectButton() {
   const handleDisconnect = () => {
     if (metaNamesSdk) disconnectWallet(metaNamesSdk);
     setAddress(undefined);
+    setOpen(false);
     toast.success('Wallet disconnected');
   };
 
   if (address) {
     return (
       <DropdownMenu open={open} onOpenChange={setOpen}>
-        <DropdownMenuTrigger>
-          <Button variant="outline" className="gap-2">
-            <Wallet className="h-4 w-4" />{shortenAddress(address)}
-          </Button>
+        <DropdownMenuTrigger className="gap-2 border border-input bg-background hover:bg-accent hover:text-accent-foreground rounded-lg px-3 py-2 text-sm font-medium" data-testid="wallet-connected">
+          <Wallet className="h-4 w-4" />{shortenAddress(address)}
         </DropdownMenuTrigger>
         <DropdownMenuContent align="end">
           <DropdownMenuItem onClick={handleDisconnect} className="gap-2 text-destructive">
@@ -67,8 +66,8 @@ export function WalletConnectButton() {
 
   return (
       <DropdownMenu open={open} onOpenChange={setOpen}>
-        <DropdownMenuTrigger>
-          <Button className="gap-2"><Wallet className="h-4 w-4" /> Connect</Button>
+        <DropdownMenuTrigger className="gap-2 bg-primary text-primary-foreground hover:bg-primary/90 rounded-lg px-3 py-2 text-sm font-medium" data-testid="wallet-connect-button">
+          <Wallet className="h-4 w-4" /> Connect
         </DropdownMenuTrigger>
       <DropdownMenuContent align="end" className="w-64">
         <DropdownMenuItem onClick={() => handleConnect('metamask')}>MetaMask Wallet</DropdownMenuItem>
@@ -79,7 +78,7 @@ export function WalletConnectButton() {
             <DropdownMenuSeparator />
             <div className="p-2 flex flex-col gap-2">
               <Input className="dev-key-input text-xs" placeholder="64-char hex private key" value={devKey} onChange={(e) => setDevKey(e.target.value)} />
-              <Button size="sm" className="dev-key-connect w-full" disabled={!validatePrivateKey(devKey)} onClick={handleDevConnect}>Connect Dev Key</Button>
+              <Button size="sm" className="dev-key-connect w-full" disabled={!validatePrivateKey(devKey)} onClick={handleDevConnect} data-testid="dev-key-connect-button">Connect Dev Key</Button>
             </div>
           </>
         )}

@@ -29,8 +29,9 @@ export async function connectLedger(sdk: MetaNamesSdk): Promise<string> {
   return address;
 }
 export async function connectDevPrivateKey(sdk: MetaNamesSdk, privateKey: string): Promise<string> {
-  const { privateKeyToAccountAddress } = await import('partisia-blockchain-applications-crypto') as any;
-  const address = privateKeyToAccountAddress(privateKey);
+  const mod = await import('partisia-blockchain-applications-crypto') as any;
+  const partiisiaCrypto = mod.default?.partisiaCrypto || mod.partisiaCrypto;
+  const address = partiisiaCrypto.wallet.privateKeyToAccountAddress(privateKey);
   sdk.setSigningStrategy('privateKey', privateKey);
   return address;
 }

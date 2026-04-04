@@ -42,3 +42,4 @@ next-env.d.ts
 
 # Ignore e2e tests
 playwright-report/
+test-results/

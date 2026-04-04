@@ -11,8 +11,9 @@ export default function TldPage() {
 
   useEffect(() => {
     if (!metaNamesSdk) return;
+    const contractAddress = metaNamesSdk.config.contractAddress;
     (metaNamesSdk.domainRepository.find as any)('mpc.mpc')
-      .then((d: any) => setTldDomain(d ?? { name: 'mpc', nameWithoutTLD: 'mpc', owner: 'contract', tokenId: 0, createdAt: new Date(), expiresAt: null, parentId: null, records: {}, getRecordRepository: () => null }))
+      .then((d: any) => setTldDomain(d ?? { name: 'mpc', nameWithoutTLD: 'mpc', owner: contractAddress, tokenId: 0, createdAt: new Date(), expiresAt: null, parentId: null, records: {}, getRecordRepository: () => null }))
       .catch(() => {})
       .finally(() => setLoading(false));
   }, [metaNamesSdk]);

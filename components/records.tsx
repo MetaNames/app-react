@@ -29,30 +29,37 @@ export function Records({ records, repository, onUpdate }: RecordsProps) {
   const [newType, setNewType] = useState<RecordClass | ''>('');
   const [newValue, setNewValue] = useState('');
   const [addError, setAddError] = useState<string | null>(null);
+  const [adding, setAdding] = useState(false);
 
   const usedTypes = Object.keys(records) as RecordClass[];
   const availableTypes = ALL_RECORD_TYPES.filter((t) => !usedTypes.includes(t));
 
   const handleAdd = async () => {
-    if (!newType) return;
+    if (!newType || adding) return;
     const err = validateRecordValue(newType, newValue);
     if (err) { setAddError(err); return; }
     const classValue = RECORD_CLASS_MAP[newType];
     if (classValue === undefined) { setAddError(`Unsupported record type: ${newType}`); return; }
-    const intent = await repository.create({ class: classValue, data: newValue });
-    const txHash = await intent.send();
-    toast('New Transaction submitted', { action: { label: 'View', onClick: () => window.open(explorerTransactionUrl(txHash), '_blank') }, duration: 10000 });
-    await intent.waitForConfirmation();
-    setNewType(''); setNewValue(''); setAddError(null);
-    onUpdate();
+    setAdding(true);
+    try {
+      const intent = await repository.create({ class: classValue, data: newValue });
+      const txHash = await intent.send();
+      toast('New Transaction submitted', { action: { label: 'View', onClick: () => window.open(explorerTransactionUrl(txHash), '_blank') }, duration: 10000 });
+      await intent.waitForConfirmation();
+      toast.success('Record added successfully');
+      setNewType(''); setNewValue(''); setAddError(null);
+      onUpdate();
+    } finally {
+      setAdding(false);
+    }
   };
 
   return (
-    <div className="records flex flex-col gap-4">
+    <div className="records flex flex-col gap-4" data-testid="records-container">
       {usedTypes.length === 0 && <p className="text-muted-foreground text-sm">No records found</p>}
       {usedTypes.map((type) => <Record key={type} type={type} value={records[type]} repository={repository} onUpdate={onUpdate} />)}
       {availableTypes.length > 0 && (
-        <Card className="add-record">
+        <Card className="add-record" data-testid="add-record-form">
           <CardHeader><CardTitle className="text-sm">Add record</CardTitle></CardHeader>
           <CardContent className="flex flex-col gap-3">
             <Select value={newType} onValueChange={(v) => { setNewType(v as RecordClass); setAddError(null); }}>
@@ -65,7 +72,7 @@ export function Records({ records, repository, onUpdate }: RecordsProps) {
                 <div className="flex justify-between text-xs text-muted-foreground">{addError && <span className="text-destructive">{addError}</span>}<span className="ml-auto">{newValue.length}/64</span></div>
               </div>
             )}
-            <Button disabled={!newType || !newValue} onClick={handleAdd}>Add record</Button>
+            <Button disabled={!newType || !newValue || adding} onClick={handleAdd} data-testid="add-record-button">{adding ? 'Adding...' : 'Add record'}</Button>
           </CardContent>
         </Card>
       )}

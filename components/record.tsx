@@ -29,29 +29,45 @@ export function Record({ type, value, repository, onUpdate }: RecordProps) {
   const [editValue, setEditValue] = useState(value);
   const [editError, setEditError] = useState<string | null>(null);
   const [deleteOpen, setDeleteOpen] = useState(false);
+  const [saving, setSaving] = useState(false);
+  const [deleting, setDeleting] = useState(false);
 
   const handleSave = async () => {
+    if (saving) return;
     const err = validateRecordValue(type, editValue);
     if (err) { setEditError(err); return; }
     const classValue = RECORD_CLASS_MAP[type];
     if (classValue === undefined) return;
-    const intent = await repository.update({ class: classValue, data: editValue });
-    const txHash = await intent.send();
-    toast('New Transaction submitted', { action: { label: 'View', onClick: () => window.open(explorerTransactionUrl(txHash), '_blank') }, duration: 10000 });
-    await intent.waitForConfirmation();
-    setEditing(false);
-    onUpdate();
+    setSaving(true);
+    try {
+      const intent = await repository.update({ class: classValue, data: editValue });
+      const txHash = await intent.send();
+      toast('New Transaction submitted', { action: { label: 'View', onClick: () => window.open(explorerTransactionUrl(txHash), '_blank') }, duration: 10000 });
+      await intent.waitForConfirmation();
+      toast.success('Record updated successfully');
+      setEditing(false);
+      onUpdate();
+    } finally {
+      setSaving(false);
+    }
   };
 
   const handleDelete = async () => {
+    if (deleting) return;
     const classValue = RECORD_CLASS_MAP[type];
     if (classValue === undefined) return;
-    const intent = await repository.delete(classValue);
-    const txHash = await intent.send();
-    toast('New Transaction submitted', { action: { label: 'View', onClick: () => window.open(explorerTransactionUrl(txHash), '_blank') }, duration: 10000 });
-    await intent.waitForConfirmation();
-    setDeleteOpen(false);
-    onUpdate();
+    setDeleting(true);
+    try {
+      const intent = await repository.delete(classValue);
+      const txHash = await intent.send();
+      toast('New Transaction submitted', { action: { label: 'View', onClick: () => window.open(explorerTransactionUrl(txHash), '_blank') }, duration: 10000 });
+      await intent.waitForConfirmation();
+      toast.success('Record deleted successfully');
+      setDeleteOpen(false);
+      onUpdate();
+    } finally {
+      setDeleting(false);
+    }
   };
 
   return (
@@ -75,13 +91,13 @@ export function Record({ type, value, repository, onUpdate }: RecordProps) {
       </div>
       <div className="flex items-center gap-1 shrink-0">
         {editing ? (
-          <><Button size="icon" variant="ghost" data-testid="save-record" onClick={handleSave}><Check className="h-4 w-4" /></Button><Button size="icon" variant="ghost" data-testid="cancel-edit" onClick={() => { setEditing(false); setEditValue(value); setEditError(null); }}><X className="h-4 w-4" /></Button></>
+          <><Button size="icon" variant="ghost" data-testid="save-record" onClick={handleSave} disabled={saving}><Check className="h-4 w-4" /></Button><Button size="icon" variant="ghost" data-testid="cancel-edit" onClick={() => { setEditing(false); setEditValue(value); setEditError(null); }} disabled={saving}><X className="h-4 w-4" /></Button></>
         ) : (
           <><Button size="icon" variant="ghost" data-testid="edit-record" onClick={() => setEditing(true)}><Pencil className="h-4 w-4" /></Button><Button size="icon" variant="ghost" data-testid="delete-record" onClick={() => setDeleteOpen(true)} className="text-destructive hover:text-destructive"><Trash2 className="h-4 w-4" /></Button></>
         )}
       </div>
       <Dialog open={deleteOpen} onOpenChange={setDeleteOpen}>
-        <DialogContent><DialogHeader><DialogTitle>Confirm action</DialogTitle></DialogHeader><p>Do you really want to remove the record?</p><DialogFooter><Button variant="outline" onClick={() => setDeleteOpen(false)}>No</Button><Button variant="destructive" onClick={handleDelete}>Yes</Button></DialogFooter></DialogContent>
+        <DialogContent><DialogHeader><DialogTitle>Confirm action</DialogTitle></DialogHeader><p>Do you really want to remove the record?</p><DialogFooter><Button variant="outline" onClick={() => setDeleteOpen(false)} disabled={deleting}>No</Button><Button variant="destructive" onClick={handleDelete} disabled={deleting}>{deleting ? 'Deleting...' : 'Yes'}</Button></DialogFooter></DialogContent>
       </Dialog>
     </div>
   );

@@ -76,7 +76,7 @@ export function Domain({ domain, isTld = false, onRefresh }: DomainProps) {
       </div>
       {isOwner && !isTld ? (
         <Tabs defaultValue="details">
-          <TabsList><TabsTrigger value="details">details</TabsTrigger><TabsTrigger value="settings">settings</TabsTrigger></TabsList>
+          <TabsList><TabsTrigger value="details" data-testid="tab-details">details</TabsTrigger><TabsTrigger value="settings" data-testid="tab-settings">settings</TabsTrigger></TabsList>
           <TabsContent value="details" className="mt-4"><DetailsContent /></TabsContent>
           <TabsContent value="settings" className="mt-4 flex flex-col gap-4">
             {repository && <Records records={domain.records ?? {}} repository={repository} onUpdate={onRefresh ?? (() => {})} />}

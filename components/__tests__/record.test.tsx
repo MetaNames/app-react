@@ -2,9 +2,15 @@ import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest';
 import { render, screen, fireEvent, waitFor } from '@testing-library/react';
 import { Record } from '../record';
 
-vi.mock('sonner', () => ({
-  toast: vi.fn(),
-}));
+vi.mock('sonner', () => {
+  const fn = vi.fn((message: string) => message);
+  return {
+    toast: Object.assign(fn, {
+      success: vi.fn((message: string) => message),
+      error: vi.fn((message: string) => message),
+    }),
+  };
+});
 
 vi.mock('@/lib/url', () => ({
   explorerTransactionUrl: vi.fn((tx: string) => `https://browser.testnet.partisiablockchain.com/transactions/${tx}`),
