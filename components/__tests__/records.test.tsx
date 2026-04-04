@@ -72,6 +72,8 @@ vi.mock('@/components/ui/textarea', () => ({
 
 const mockRepository = {
   create: vi.fn(),
+  update: vi.fn(),
+  delete: vi.fn(),
 };
 
 const createMockIntent = () => ({

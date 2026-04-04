@@ -46,6 +46,7 @@ vi.mock('@/components/ui/textarea', () => ({
 }));
 
 const mockRepository = {
+  create: vi.fn(),
   update: vi.fn(),
   delete: vi.fn(),
 };
@@ -68,6 +69,7 @@ describe('Record', () => {
   });
 
   afterEach(() => {
+    mockRepository.create.mockReset();
     mockRepository.update.mockReset();
     mockRepository.delete.mockReset();
   });

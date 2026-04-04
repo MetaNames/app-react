@@ -8,6 +8,9 @@
 
 import { test, expect } from '@playwright/test';
 import { connectWallet, executeBlockchainOp, gotoAndRestoreWallet } from './helpers/wallet-helper';
+import { SELECTORS, TEXT, CSS_CLASSES, PLACEHOLDERS, VISIBILITY_TIMEOUT_MS, PAYMENT_TOKENS, TEST_DOMAIN_NAME } from './constants';
+import { RegisterPage } from './pages/RegisterPage';
+import { generateTestDomain, waitForSpinner } from './fixtures/shared';
 
 test.describe('Domain Registration', () => {
   test.beforeEach(async ({ page }) => {
@@ -15,63 +18,63 @@ test.describe('Domain Registration', () => {
   });
 
   test('should navigate to register page for available domain', async ({ page }) => {
-    const input = page.getByPlaceholder('Search for a .mpc domain...');
-    const testDomain = `availreg${Date.now()}`;
+    const input = page.getByPlaceholder(PLACEHOLDERS.SEARCH_DOMAIN);
+    const testDomain = generateTestDomain('availreg');
     await input.fill(testDomain);
     
-    await page.waitForTimeout(600);
+    await page.waitForTimeout(VISIBILITY_TIMEOUT_MS / 5);
     
     const card = page.locator(`a[href^="/register/"]`);
     await expect(card).toBeVisible({ timeout: 15000 });
   });
 
   test('should display registration page with checkout content for available domain', async ({ page }) => {
-    const testDomain = `checkout${Date.now()}.mpc`;
+    const testDomain = generateTestDomain('checkout');
     await page.goto(`/register/${testDomain}`);
     
     const heading = page.locator(`h2:has-text("Register ${testDomain}")`);
     await expect(heading).toBeVisible({ timeout: 10000 });
     
-    const checkoutContent = page.locator('.content.checkout');
+    const checkoutContent = page.locator(CSS_CLASSES.CONTENT_CHECKOUT);
     await expect(checkoutContent).toBeVisible();
   });
 
   test('should show connect wallet prompt when wallet is disconnected', async ({ page }) => {
-    const testDomain = `connect${Date.now()}.mpc`;
+    const testDomain = generateTestDomain('connect');
     await page.goto(`/register/${testDomain}`);
     
-    const connectPrompt = page.locator('text=Connect your wallet to continue');
+    const connectPrompt = page.getByText(TEXT.CONNECT_WALLET_PROMPT);
     await expect(connectPrompt).toBeVisible({ timeout: 10000 });
   });
 
   test('should not show payment form when wallet is disconnected', async ({ page }) => {
-    const testDomain = `nopayment${Date.now()}.mpc`;
+    const testDomain = generateTestDomain('nopayment');
     await page.goto(`/register/${testDomain}`);
     
-    await page.waitForTimeout(1000);
+    await page.waitForTimeout(VISIBILITY_TIMEOUT_MS / 5);
     
-    const paymentTokenSelect = page.locator('[data-testid="payment-token-select"]');
+    const paymentTokenSelect = page.locator(SELECTORS.PAYMENT_TOKEN_SELECT);
     await expect(paymentTokenSelect).not.toBeVisible();
     
-    const addYearBtn = page.locator('button[aria-label="add-year"]');
+    const addYearBtn = page.locator(`button[aria-label="${TEXT.ADD_YEAR}"]`);
     await expect(addYearBtn).not.toBeVisible();
     
-    const removeYearBtn = page.locator('button[aria-label="remove-year"]');
+    const removeYearBtn = page.locator(`button[aria-label="${TEXT.REMOVE_YEAR}"]`);
     await expect(removeYearBtn).not.toBeVisible();
   });
 
   test('should show payment form when wallet is connected', async ({ page }) => {
-    const testDomain = `payform${Date.now()}.mpc`;
+    const testDomain = generateTestDomain('payform');
     if (!await gotoAndRestoreWallet(page, `/register/${testDomain}`)) {
       test.skip(true, 'Wallet not available');
     }
     
-    await page.waitForTimeout(1000);
+    await page.waitForTimeout(VISIBILITY_TIMEOUT_MS / 5);
     
-    const paymentTokenSelect = page.locator('[data-testid="payment-token-select"]');
+    const paymentTokenSelect = page.locator(SELECTORS.PAYMENT_TOKEN_SELECT);
     
     if (!await paymentTokenSelect.isVisible({ timeout: 2000 }).catch(() => false)) {
-      const connectPrompt = page.locator('text=Connect your wallet to continue');
+      const connectPrompt = page.getByText(TEXT.CONNECT_WALLET_PROMPT);
       if (await connectPrompt.isVisible().catch(() => false)) {
         test.skip(true, 'Wallet state not persisted after navigation - app needs wallet persistence fix');
       }
@@ -81,14 +84,14 @@ test.describe('Domain Registration', () => {
   });
 
   test('should display payment token selection dropdown with available tokens', async ({ page }) => {
-    const testDomain = `tokens${Date.now()}.mpc`;
+    const testDomain = generateTestDomain('tokens');
     if (!await gotoAndRestoreWallet(page, `/register/${testDomain}`)) {
       test.skip(true, 'Wallet not available');
     }
     
-    await page.waitForTimeout(1000);
+    await page.waitForTimeout(VISIBILITY_TIMEOUT_MS / 5);
     
-    const paymentTokenSelect = page.locator('[data-testid="payment-token-select"]');
+    const paymentTokenSelect = page.locator(SELECTORS.PAYMENT_TOKEN_SELECT);
     
     if (!await paymentTokenSelect.isVisible({ timeout: 2000 }).catch(() => false)) {
       test.skip(true, 'Wallet state not persisted after navigation - app needs wallet persistence fix');
@@ -100,21 +103,20 @@ test.describe('Domain Registration', () => {
     const selectContent = page.locator('[data-slot="select-content"]');
     await expect(selectContent).toBeVisible();
     
-    const expectedTokens = ['BTC', 'ETH', 'USDT', 'PARTI', 'TEST_COIN'];
-    for (const token of expectedTokens) {
+    for (const token of PAYMENT_TOKENS) {
       await expect(page.getByText(token, { exact: false }).first()).toBeVisible();
     }
   });
 
   test('should display year selector with add and remove buttons', async ({ page }) => {
-    const testDomain = `yearsel${Date.now()}.mpc`;
+    const testDomain = generateTestDomain('yearsel');
     if (!await gotoAndRestoreWallet(page, `/register/${testDomain}`)) {
       test.skip(true, 'Wallet not available');
     }
     
-    await page.waitForTimeout(1000);
+    await page.waitForTimeout(VISIBILITY_TIMEOUT_MS / 5);
     
-    const addYearBtn = page.locator('button[aria-label="add-year"]');
+    const addYearBtn = page.locator(`button[aria-label="${TEXT.ADD_YEAR}"]`);
     
     if (!await addYearBtn.isVisible({ timeout: 2000 }).catch(() => false)) {
       test.skip(true, 'Wallet state not persisted after navigation - app needs wallet persistence fix');
@@ -122,22 +124,22 @@ test.describe('Domain Registration', () => {
     
     await expect(addYearBtn).toBeVisible({ timeout: 10000 });
     
-    const removeYearBtn = page.locator('button[aria-label="remove-year"]');
+    const removeYearBtn = page.locator(`button[aria-label="${TEXT.REMOVE_YEAR}"]`);
     await expect(removeYearBtn).toBeVisible();
     
-    const yearDisplay = page.getByText(/\d+ year/).first();
+    const yearDisplay = page.locator(CSS_CLASSES.YEAR_DISPLAY);
     await expect(yearDisplay).toContainText('1 year');
   });
 
   test('should increment year count when add-year button is clicked', async ({ page }) => {
-    const testDomain = `addyear${Date.now()}.mpc`;
+    const testDomain = generateTestDomain('addyear');
     if (!await gotoAndRestoreWallet(page, `/register/${testDomain}`)) {
       test.skip(true, 'Wallet not available');
     }
     
-    await page.waitForTimeout(1000);
+    await page.waitForTimeout(VISIBILITY_TIMEOUT_MS / 5);
     
-    const addYearBtn = page.locator('button[aria-label="add-year"]');
+    const addYearBtn = page.locator(`button[aria-label="${TEXT.ADD_YEAR}"]`);
     
     if (!await addYearBtn.isVisible({ timeout: 2000 }).catch(() => false)) {
       test.skip(true, 'Wallet state not persisted after navigation - app needs wallet persistence fix');
@@ -145,19 +147,19 @@ test.describe('Domain Registration', () => {
     
     await addYearBtn.click();
     
-    const yearDisplay = page.getByText(/\d+ year/).first();
+    const yearDisplay = page.locator(CSS_CLASSES.YEAR_DISPLAY);
     await expect(yearDisplay).toContainText('2 years');
   });
 
   test('should decrement year count when remove-year button is clicked', async ({ page }) => {
-    const testDomain = `remyear${Date.now()}.mpc`;
+    const testDomain = generateTestDomain('remyear');
     if (!await gotoAndRestoreWallet(page, `/register/${testDomain}`)) {
       test.skip(true, 'Wallet not available');
     }
     
-    await page.waitForTimeout(1000);
+    await page.waitForTimeout(VISIBILITY_TIMEOUT_MS / 5);
     
-    const addYearBtn = page.locator('button[aria-label="add-year"]');
+    const addYearBtn = page.locator(`button[aria-label="${TEXT.ADD_YEAR}"]`);
     
     if (!await addYearBtn.isVisible({ timeout: 2000 }).catch(() => false)) {
       test.skip(true, 'Wallet state not persisted after navigation - app needs wallet persistence fix');
@@ -166,24 +168,24 @@ test.describe('Domain Registration', () => {
     await addYearBtn.click();
     await addYearBtn.click();
     
-    const yearDisplay1 = page.getByText(/\d+ year/).first();
+    const yearDisplay1 = page.locator(CSS_CLASSES.YEAR_DISPLAY);
     await expect(yearDisplay1).toContainText('3 years');
     
-    const removeYearBtn = page.locator('button[aria-label="remove-year"]');
+    const removeYearBtn = page.locator(`button[aria-label="${TEXT.REMOVE_YEAR}"]`);
     await removeYearBtn.click();
     
     await expect(yearDisplay1).toContainText('2 years');
   });
 
   test('should disable remove-year button at minimum 1 year', async ({ page }) => {
-    const testDomain = `minyear${Date.now()}.mpc`;
+    const testDomain = generateTestDomain('minyear');
     if (!await gotoAndRestoreWallet(page, `/register/${testDomain}`)) {
       test.skip(true, 'Wallet not available');
     }
     
-    await page.waitForTimeout(1000);
+    await page.waitForTimeout(VISIBILITY_TIMEOUT_MS / 5);
     
-    const removeYearBtn = page.locator('button[aria-label="remove-year"]');
+    const removeYearBtn = page.locator(`button[aria-label="${TEXT.REMOVE_YEAR}"]`);
     
     if (!await removeYearBtn.isVisible({ timeout: 2000 }).catch(() => false)) {
       test.skip(true, 'Wallet state not persisted after navigation - app needs wallet persistence fix');
@@ -191,14 +193,14 @@ test.describe('Domain Registration', () => {
     
     await expect(removeYearBtn).toBeDisabled();
     
-    const addYearBtn = page.locator('button[aria-label="add-year"]');
+    const addYearBtn = page.locator(`button[aria-label="${TEXT.ADD_YEAR}"]`);
     await addYearBtn.click();
     
     await expect(removeYearBtn).toBeEnabled();
   });
 
   test('should display price breakdown with 1 year registration and total', async ({ page }) => {
-    const testDomain = `price${Date.now()}.mpc`;
+    const testDomain = generateTestDomain('price');
     if (!await gotoAndRestoreWallet(page, `/register/${testDomain}`)) {
       test.skip(true, 'Wallet not available');
     }
@@ -213,14 +215,14 @@ test.describe('Domain Registration', () => {
   });
 
   test('should update price breakdown when years are changed', async ({ page }) => {
-    const testDomain = `priceupdate${Date.now()}.mpc`;
+    const testDomain = generateTestDomain('priceupdate');
     if (!await gotoAndRestoreWallet(page, `/register/${testDomain}`)) {
       test.skip(true, 'Wallet not available');
     }
     
     await page.waitForTimeout(2000);
     
-    const addYearBtn = page.locator('button[aria-label="add-year"]');
+    const addYearBtn = page.locator(`button[aria-label="${TEXT.ADD_YEAR}"]`);
     
     if (!await addYearBtn.isVisible({ timeout: 2000 }).catch(() => false)) {
       test.skip(true, 'Wallet state not persisted after navigation - app needs wallet persistence fix');
@@ -228,7 +230,7 @@ test.describe('Domain Registration', () => {
     
     await addYearBtn.click();
     
-    await page.waitForTimeout(500);
+    await page.waitForTimeout(VISIBILITY_TIMEOUT_MS / 5);
     
     const totalPrice = page.getByText('Total (excluding network fees)').locator('..');
     await expect(totalPrice).toContainText('2');
@@ -251,7 +253,7 @@ test.describe('Domain Registration', () => {
       
       await page.waitForTimeout(2000);
       
-      const subdomainTitle = page.locator('[data-slot="card-title"]:has-text("sub.test.mpc")');
+      const subdomainTitle = page.locator('[data-slot="card-title"]').filter({ hasText: 'sub.test.mpc' });
       await expect(subdomainTitle).toBeVisible({ timeout: 10000 });
       
       const parentChip = page.getByText(/Parent:/);
@@ -268,29 +270,29 @@ test.describe('Domain Registration', () => {
       
       await page.waitForTimeout(2000);
       
-      const registerBtn = page.locator('button:has-text("Register domain")');
+      const registerBtn = page.locator(`button:has-text("${TEXT.REGISTER_DOMAIN}")`);
       await expect(registerBtn).toBeVisible({ timeout: 10000 });
     });
   });
 
   test.describe('Wallet Connection State', () => {
     test('should show payment token dropdown after connecting wallet', async ({ page }) => {
-      const testDomain = `walletcon${Date.now()}.mpc`;
+      const testDomain = generateTestDomain('walletcon');
 
       // Check prompt appears when disconnected on register page
       await page.goto(`/register/${testDomain}`);
-      await page.waitForTimeout(1000);
-      const promptBefore = page.locator('text=Connect your wallet to continue');
+      await page.waitForTimeout(VISIBILITY_TIMEOUT_MS / 5);
+      const promptBefore = page.getByText(TEXT.CONNECT_WALLET_PROMPT);
       await expect(promptBefore).toBeVisible({ timeout: 10000 });
 
       // Connect wallet and verify payment form appears
       if (!await connectWallet(page)) {
         test.skip(true, 'Wallet not available');
       }
-      await page.waitForTimeout(1000);
+      await page.waitForTimeout(VISIBILITY_TIMEOUT_MS / 5);
 
       await expect(promptBefore).not.toBeVisible();
-      const paymentTokenSelect = page.locator('[data-testid="payment-token-select"]');
+      const paymentTokenSelect = page.locator(SELECTORS.PAYMENT_TOKEN_SELECT);
       await expect(paymentTokenSelect).toBeVisible({ timeout: 10000 });
     });
   });
@@ -301,14 +303,14 @@ test.describe('Domain Registration', () => {
         test.skip(true, 'TESTNET_PRIVATE_KEY not set - blockchain interaction disabled');
       }
 
-      const testDomain = `e2ereg${Date.now()}.mpc`;
+      const testDomain = generateTestDomain('e2ereg');
       if (!await gotoAndRestoreWallet(page, `/register/${testDomain}`)) {
         test.skip(true, 'Wallet not available');
       }
       
       await page.waitForTimeout(2000);
       
-      const registerBtn = page.locator('button:has-text("Register domain")');
+      const registerBtn = page.locator(`button:has-text("${TEXT.REGISTER_DOMAIN}")`);
       
       if (!await registerBtn.isVisible({ timeout: 2000 }).catch(() => false)) {
         test.skip(true, 'Wallet state not persisted after navigation - app needs wallet persistence fix');

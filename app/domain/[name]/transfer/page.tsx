@@ -19,7 +19,6 @@ export default function TransferPage() {
   const { address } = useWalletStore();
   const { metaNamesSdk } = useSdkStore();
   const [recipient, setRecipient] = useState('');
-  const [error, setError] = useState<string | null>(null);
   const isValid = validateAddress(recipient);
 
   const handleTransfer = async () => {
@@ -42,7 +41,8 @@ export default function TransferPage() {
         <p><strong>Verify the address is correct</strong></p>
       </div>
       <div className="flex flex-col gap-2">
-        <Input placeholder="Recipient address (42 chars)" value={recipient} onChange={(e) => { setRecipient(e.target.value); setError(null); }} className={recipient.length >= 40 && !isValid ? 'border-destructive' : ''} />
+        <label htmlFor="recipient-input" className="text-sm font-medium">Recipient Address</label>
+        <Input id="recipient-input" placeholder="Recipient address (42 chars)" value={recipient} onChange={(e) => { setRecipient(e.target.value); }} className={recipient.length >= 40 && !isValid ? 'border-destructive' : ''} />
         {recipient.length >= 40 && !isValid && <p className="text-destructive text-sm">Address is invalid</p>}
       </div>
       <ConnectionRequired><LoadingButton disabled={!isValid} onClick={handleTransfer} className="w-full">Transfer domain</LoadingButton></ConnectionRequired>

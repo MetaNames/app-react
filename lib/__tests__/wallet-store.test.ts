@@ -8,7 +8,7 @@ describe('wallet-store', () => {
     expect(result.current.address).toBeUndefined();
     expect(result.current.alertMessage).toBeUndefined();
     expect(result.current.alertTransaction).toBeUndefined();
-    expect(result.current.refresh).toBe(false);
+    expect(result.current.lastRefreshed).toBeNull();
   });
 
   it('should set address', () => {
@@ -30,14 +30,6 @@ describe('wallet-store', () => {
     expect(result.current.address).toBeUndefined();
   });
 
-  it('should set alertMessage as string', () => {
-    const { result } = renderHook(() => useWalletStore());
-    act(() => {
-      result.current.setAlertMessage('Test alert');
-    });
-    expect(result.current.alertMessage).toBe('Test alert');
-  });
-
   it('should set alertMessage as AlertMessage object', () => {
     const { result } = renderHook(() => useWalletStore());
     const alertWithAction = {
@@ -53,7 +45,10 @@ describe('wallet-store', () => {
   it('should clear alertMessage when set to undefined', () => {
     const { result } = renderHook(() => useWalletStore());
     act(() => {
-      result.current.setAlertMessage('Test alert');
+      result.current.setAlertMessage({
+        message: 'Test alert',
+        action: { label: 'Click me', onClick: vi.fn() },
+      });
     });
     act(() => {
       result.current.setAlertMessage(undefined);
@@ -80,24 +75,13 @@ describe('wallet-store', () => {
     expect(result.current.alertTransaction).toBeUndefined();
   });
 
-  it('should set refresh', () => {
+  it('should trigger refresh with timestamp', () => {
     const { result } = renderHook(() => useWalletStore());
-    expect(result.current.refresh).toBe(false);
+    expect(result.current.lastRefreshed).toBeNull();
+    const beforeRefresh = Date.now();
     act(() => {
-      result.current.setRefresh(true);
+      result.current.triggerRefresh();
     });
-    expect(result.current.refresh).toBe(true);
-  });
-
-  it('should toggle refresh state', () => {
-    const { result } = renderHook(() => useWalletStore());
-    act(() => {
-      result.current.setRefresh(true);
-    });
-    expect(result.current.refresh).toBe(true);
-    act(() => {
-      result.current.setRefresh(false);
-    });
-    expect(result.current.refresh).toBe(false);
+    expect(result.current.lastRefreshed).toBeGreaterThanOrEqual(beforeRefresh);
   });
 });

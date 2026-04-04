@@ -1,5 +1,8 @@
 import { test, expect } from '@playwright/test';
 import { connectWallet, gotoAndRestoreWallet } from './helpers/wallet-helper';
+import { SELECTORS, TEXT, CSS_CLASSES, TEST_DOMAIN_NAME } from './constants';
+import { navigateToSettingsTab, expectSectionConditional, waitForDomainTitle } from './fixtures/shared';
+import { DomainPage } from './pages/DomainPage';
 
 test.describe('Domain Management', () => {
   test.describe.configure({ mode: 'serial' });
@@ -17,166 +20,129 @@ test.describe('Domain Management', () => {
   });
 
   test('view domain details for owned domain (test.mpc)', async ({ page }) => {
-    if (!await gotoAndRestoreWallet(page, '/domain/test.mpc')) {
+    const domainPage = new DomainPage(page);
+
+    if (!await gotoAndRestoreWallet(page, `/domain/${TEST_DOMAIN_NAME}`)) {
       test.skip(true, 'Wallet not available');
     }
 
-    await expect(page.locator('[data-testid="domain-title"]')).toBeVisible({ timeout: 10000 });
-    await expect(page.locator('[data-testid="domain-title"]')).toContainText('test.mpc');
-
-    const avatar = page.locator('.avatar svg');
-    await expect(avatar).toBeVisible();
-
-    const profileSection = page.locator('h5:has-text("Profile")');
-    await expect(profileSection).toBeVisible();
-
-    const whoisSection = page.locator('h5:has-text("Whois")');
-    await expect(whoisSection).toBeVisible();
-
-    const ownerChip = page.getByText(/Owner/i);
-    await expect(ownerChip).toBeVisible();
-
-    const expiresChip = page.getByText(/Expires/i);
-    await expect(expiresChip).toBeVisible();
+    await waitForDomainTitle(page, TEST_DOMAIN_NAME);
+    await expect(domainPage.avatar).toBeVisible();
+    await expect(domainPage.profileSection).toBeVisible();
+    await expect(domainPage.whoisSection).toBeVisible();
+    await expect(domainPage.ownerChip).toBeVisible();
+    await expect(domainPage.expiresChip).toBeVisible();
 
     // Social section only renders when domain has social records
-    const socialSection = page.locator('h5:has-text("Social")');
-    const hasSocial = await socialSection.isVisible({ timeout: 2000 }).catch(() => false);
-    if (hasSocial) {
-      await expect(socialSection).toBeVisible();
-    }
+    await expectSectionConditional(page, TEXT.SOCIAL);
   });
 
   test('owner sees tabs for details and settings', async ({ page }) => {
-    if (!await gotoAndRestoreWallet(page, '/domain/test.mpc')) {
+    const domainPage = new DomainPage(page);
+
+    if (!await gotoAndRestoreWallet(page, `/domain/${TEST_DOMAIN_NAME}`)) {
       test.skip(true, 'Wallet not available');
     }
 
-    await expect(page.locator('[data-testid="domain-title"]')).toBeVisible({ timeout: 10000 });
-
-    const tabsList = page.locator('role=tablist');
-    await expect(tabsList).toBeVisible();
-
-    const detailsTab = page.locator('role=tab[name="details"]');
-    await expect(detailsTab).toBeVisible();
-    await expect(detailsTab).toHaveAttribute('aria-selected', 'true');
-
-    const settingsTab = page.locator('role=tab[name="settings"]');
-    await expect(settingsTab).toBeVisible();
+    await waitForDomainTitle(page, TEST_DOMAIN_NAME);
+    await expect(domainPage.tabsList).toBeVisible();
+    await expect(domainPage.detailsTab).toBeVisible();
+    await expect(domainPage.detailsTab).toHaveAttribute('aria-selected', 'true');
+    await expect(domainPage.settingsTab).toBeVisible();
   });
 
   test('owner can switch between details and settings tabs', async ({ page }) => {
-    if (!await gotoAndRestoreWallet(page, '/domain/test.mpc')) {
+    const domainPage = new DomainPage(page);
+
+    if (!await gotoAndRestoreWallet(page, `/domain/${TEST_DOMAIN_NAME}`)) {
       test.skip(true, 'Wallet not available');
     }
 
-    await expect(page.locator('[data-testid="domain-title"]')).toBeVisible({ timeout: 10000 });
+    await waitForDomainTitle(page, TEST_DOMAIN_NAME);
 
-    const settingsTab = page.locator('role=tab[name="settings"]');
-    await settingsTab.click();
-
-    await expect(settingsTab).toHaveAttribute('aria-selected', 'true');
-
-    const detailsTab = page.locator('role=tab[name="details"]');
-    await detailsTab.click();
-
-    await expect(detailsTab).toHaveAttribute('aria-selected', 'true');
-
-    const profileSection = page.locator('h5:has-text("Profile")');
-    await expect(profileSection).toBeVisible();
+    await domainPage.switchToSettingsTab();
+    await domainPage.switchToDetailsTab();
+    await expect(domainPage.profileSection).toBeVisible();
   });
 
   test('non-owner view shows no tabs', async ({ page }) => {
-    await page.goto('/domain/test.mpc');
+    const domainPage = new DomainPage(page);
 
-    await expect(page.locator('[data-testid="domain-title"]')).toBeVisible({ timeout: 10000 });
+    await domainPage.goto(TEST_DOMAIN_NAME);
+    await waitForDomainTitle(page, TEST_DOMAIN_NAME);
 
-    const tabsList = page.locator('role=tablist');
-    await expect(tabsList).not.toBeVisible();
-
-    const profileSection = page.locator('h5:has-text("Profile")');
-    await expect(profileSection).toBeVisible();
-
-    const whoisSection = page.locator('h5:has-text("Whois")');
-    await expect(whoisSection).toBeVisible();
+    await expect(domainPage.tabsList).not.toBeVisible();
+    await expect(domainPage.profileSection).toBeVisible();
+    await expect(domainPage.whoisSection).toBeVisible();
   });
 
   test('domain page shows profile records (Bio and Price for test.mpc)', async ({ page }) => {
-    if (!await gotoAndRestoreWallet(page, '/domain/test.mpc')) {
+    const domainPage = new DomainPage(page);
+
+    if (!await gotoAndRestoreWallet(page, `/domain/${TEST_DOMAIN_NAME}`)) {
       test.skip(true, 'Wallet not available');
     }
 
-    await expect(page.locator('[data-testid="domain-title"]')).toBeVisible({ timeout: 10000 });
+    await waitForDomainTitle(page, TEST_DOMAIN_NAME);
+    await expect(domainPage.profileSection).toBeVisible();
 
-    const profileSection = page.locator('h5:has-text("Profile")');
-    await expect(profileSection).toBeVisible();
-
-    const profileChips = page.locator('.flex.flex-wrap.gap-2').first();
+    const profileChips = page.locator(CSS_CLASSES.PROFILE_CHIPS).first();
     await expect(profileChips).toBeVisible();
   });
 
   test('domain page shows Whois section with Owner and Expires chips', async ({ page }) => {
-    if (!await gotoAndRestoreWallet(page, '/domain/test.mpc')) {
+    const domainPage = new DomainPage(page);
+
+    if (!await gotoAndRestoreWallet(page, `/domain/${TEST_DOMAIN_NAME}`)) {
       test.skip(true, 'Wallet not available');
     }
 
-    await expect(page.locator('[data-testid="domain-title"]')).toBeVisible({ timeout: 10000 });
-
-    const whoisSection = page.locator('h5:has-text("Whois")');
-    await expect(whoisSection).toBeVisible();
-
-    const ownerChip = page.getByText(/Owner/i);
-    await expect(ownerChip).toBeVisible();
-
-    const expiresChip = page.getByText(/Expires/i);
-    await expect(expiresChip).toBeVisible();
+    await waitForDomainTitle(page, TEST_DOMAIN_NAME);
+    await expect(domainPage.whoisSection).toBeVisible();
+    await expect(domainPage.ownerChip).toBeVisible();
+    await expect(domainPage.expiresChip).toBeVisible();
   });
 
   test('domain page shows Social section', async ({ page }) => {
-    if (!await gotoAndRestoreWallet(page, '/domain/test.mpc')) {
+    const domainPage = new DomainPage(page);
+
+    if (!await gotoAndRestoreWallet(page, `/domain/${TEST_DOMAIN_NAME}`)) {
       test.skip(true, 'Wallet not available');
     }
 
-    await expect(page.locator('[data-testid="domain-title"]')).toBeVisible({ timeout: 10000 });
-
-    // Social section only renders when domain has social records
-    const socialSection = page.locator('h5:has-text("Social")');
-    const hasSocial = await socialSection.isVisible({ timeout: 2000 }).catch(() => false);
-    if (hasSocial) {
-      await expect(socialSection).toBeVisible();
-    }
+    await waitForDomainTitle(page, TEST_DOMAIN_NAME);
+    await domainPage.expectHasSocialSection();
   });
 
   test('settings tab shows Records editor and action buttons', async ({ page }) => {
-    if (!await gotoAndRestoreWallet(page, '/domain/test.mpc')) {
+    const domainPage = new DomainPage(page);
+
+    if (!await gotoAndRestoreWallet(page, `/domain/${TEST_DOMAIN_NAME}`)) {
       test.skip(true, 'Wallet not available');
     }
 
-    await expect(page.locator('[data-testid="domain-title"]')).toBeVisible({ timeout: 10000 });
+    await waitForDomainTitle(page, TEST_DOMAIN_NAME);
 
-    const settingsTab = page.locator('role=tab[name="settings"]');
-    await settingsTab.click();
+    await navigateToSettingsTab(page);
 
-    await expect(settingsTab).toHaveAttribute('aria-selected', 'true');
-
-    const recordsSection = page.locator('.records');
+    const recordsSection = page.locator(CSS_CLASSES.RECORDS_SECTION);
     await expect(recordsSection).toBeVisible();
 
-    const renewButton = page.locator('button:has-text("Renew")');
+    const renewButton = page.locator(`button:has-text("${TEXT.RENEW}")`);
     await expect(renewButton).toBeVisible();
 
-    const transferButton = page.locator('button:has-text("Transfer")');
+    const transferButton = page.locator(`button:has-text("${TEXT.TRANSFER}")`);
     await expect(transferButton).toBeVisible();
   });
 
   test('token id is displayed on domain page', async ({ page }) => {
-    if (!await gotoAndRestoreWallet(page, '/domain/test.mpc')) {
+    const domainPage = new DomainPage(page);
+
+    if (!await gotoAndRestoreWallet(page, `/domain/${TEST_DOMAIN_NAME}`)) {
       test.skip(true, 'Wallet not available');
     }
 
-    await expect(page.locator('[data-testid="domain-title"]')).toBeVisible({ timeout: 10000 });
-
-    const tokenIdText = page.locator('p.text-muted-foreground:has-text("#")');
-    await expect(tokenIdText).toBeVisible();
+    await waitForDomainTitle(page, TEST_DOMAIN_NAME);
+    await expect(domainPage.tokenId).toBeVisible();
   });
 });

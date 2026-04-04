@@ -29,7 +29,11 @@ export function DomainSearch() {
         const domainName = normalizeDomain(query);
         const domain = await metaNamesSdk.domainRepository.find(domainName);
         setResult({ name: domainName, available: domain == null });
-      } catch { setResult(null); }
+      } catch (e) {
+        console.error('Error searching domain:', e);
+        setError('Failed to search domain. Please try again.');
+        setResult(null);
+      }
       finally { setLoading(false); }
     }, 400);
     return () => { if (debounceRef.current) clearTimeout(debounceRef.current); };

@@ -11,14 +11,20 @@
 
 import { test, expect, type Page } from '@playwright/test';
 import { connectWallet, restoreWalletConnection, executeBlockchainOp, TEST_DOMAIN, gotoAndRestoreWallet } from './helpers/wallet-helper';
+import { SELECTORS, TEXT, CSS_CLASSES, TEST_DOMAIN_NAME, VALIDATION_MESSAGES } from './constants';
+import { navigateToSettingsTab, waitForDropdown, waitForDomainTitle, selectFirstDropdownOption } from './fixtures/shared';
+import { DomainPage } from './pages/DomainPage';
 
-async function skipIfNotOwner(page: Page) {
+/**
+ * Check if the wallet owns the domain by verifying settings tab visibility.
+ * Returns true if the wallet is the owner (settings tab visible), false otherwise.
+ */
+async function skipIfNotOwner(page: Page): Promise<boolean> {
   // Try to restore wallet connection first in case state was lost
   await restoreWalletConnection(page);
-  const settingsTab = page.locator('[data-testid="tab-settings"]');
-  if (!await settingsTab.isVisible({ timeout: 2000 }).catch(() => false)) {
-    test.skip(true, `Wallet does not own ${TEST_DOMAIN} - settings tab not visible`);
-  }
+  const settingsTab = page.locator(SELECTORS.TAB_SETTINGS);
+  const isOwner = await settingsTab.isVisible({ timeout: 2000 }).catch(() => false);
+  return !isOwner;
 }
 
 test.describe('DNS Records Management', () => {
@@ -30,11 +36,11 @@ test.describe('DNS Records Management', () => {
   });
 
   test('non-owner cannot see records editor in settings tab', async ({ page }) => {
-    await page.goto(`/domain/${TEST_DOMAIN}`);
+    const domainPage = new DomainPage(page);
+    await domainPage.goto(TEST_DOMAIN_NAME);
+    await waitForDomainTitle(page, TEST_DOMAIN_NAME);
 
-    await expect(page.locator('[data-testid="domain-title"]')).toBeVisible({ timeout: 10000 });
-
-    const settingsTab = page.locator('[data-testid="tab-settings"]');
+    const settingsTab = page.locator(SELECTORS.TAB_SETTINGS);
     await expect(settingsTab).not.toBeVisible();
   });
 
@@ -43,19 +49,15 @@ test.describe('DNS Records Management', () => {
       test.skip(true, 'Wallet not available');
     }
 
-    await expect(page.locator('[data-testid="domain-title"]')).toBeVisible({ timeout: 10000 });
+    await waitForDomainTitle(page, TEST_DOMAIN_NAME);
 
-    const settingsTab = page.locator('[data-testid="tab-settings"]');
-    
-    if (!await settingsTab.isVisible({ timeout: 2000 }).catch(() => false)) {
+    if (await skipIfNotOwner(page)) {
       test.skip(true, `Wallet does not own ${TEST_DOMAIN} - settings tab not visible`);
     }
     
-    await settingsTab.click();
+    await navigateToSettingsTab(page);
 
-    await expect(settingsTab).toHaveAttribute('aria-selected', 'true');
-
-    const recordsContainer = page.locator('[data-testid="records-container"]');
+    const recordsContainer = page.locator(SELECTORS.RECORDS_CONTAINER);
     await expect(recordsContainer).toBeVisible();
   });
 
@@ -64,15 +66,14 @@ test.describe('DNS Records Management', () => {
       test.skip(true, 'Wallet not available');
     }
 
-    await expect(page.locator('[data-testid="domain-title"]')).toBeVisible({ timeout: 10000 });
+    await waitForDomainTitle(page, TEST_DOMAIN_NAME);
 
-    const settingsTab = page.locator('[data-testid="tab-settings"]');
-    await skipIfNotOwner(page);
-    await settingsTab.click();
+    if (await skipIfNotOwner(page)) {
+      test.skip(true, `Wallet does not own ${TEST_DOMAIN} - settings tab not visible`);
+    }
+    await navigateToSettingsTab(page);
 
-    await expect(settingsTab).toHaveAttribute('aria-selected', 'true');
-
-    const addRecordForm = page.locator('[data-testid="add-record-form"]');
+    const addRecordForm = page.locator(SELECTORS.ADD_RECORD_FORM);
     await expect(addRecordForm).toBeVisible();
   });
 
@@ -81,13 +82,14 @@ test.describe('DNS Records Management', () => {
       test.skip(true, 'Wallet not available');
     }
 
-    await expect(page.locator('[data-testid="domain-title"]')).toBeVisible({ timeout: 10000 });
+    await waitForDomainTitle(page, TEST_DOMAIN_NAME);
 
-    const settingsTab = page.locator('[data-testid="tab-settings"]');
-    await skipIfNotOwner(page);
-    await settingsTab.click();
+    if (await skipIfNotOwner(page)) {
+      test.skip(true, `Wallet does not own ${TEST_DOMAIN} - settings tab not visible`);
+    }
+    await navigateToSettingsTab(page);
 
-    const recordTypeTrigger = page.locator('[data-testid="add-record-form"] button[role="combobox"]').first();
+    const recordTypeTrigger = page.locator(`${SELECTORS.ADD_RECORD_FORM} button[role="combobox"]`).first();
     await expect(recordTypeTrigger).toBeVisible();
   });
 
@@ -96,19 +98,20 @@ test.describe('DNS Records Management', () => {
       test.skip(true, 'Wallet not available');
     }
 
-    await expect(page.locator('[data-testid="domain-title"]')).toBeVisible({ timeout: 10000 });
+    await waitForDomainTitle(page, TEST_DOMAIN_NAME);
 
-    const settingsTab = page.locator('[data-testid="tab-settings"]');
-    await skipIfNotOwner(page);
-    await settingsTab.click();
+    if (await skipIfNotOwner(page)) {
+      test.skip(true, `Wallet does not own ${TEST_DOMAIN} - settings tab not visible`);
+    }
+    await navigateToSettingsTab(page);
 
     await page.waitForTimeout(500);
 
-    const recordTypeTrigger = page.locator('[data-testid="add-record-form"] button[role="combobox"]').first();
+    const recordTypeTrigger = page.locator(`${SELECTORS.ADD_RECORD_FORM} button[role="combobox"]`).first();
     await expect(recordTypeTrigger).toBeVisible({ timeout: 5000 });
     await recordTypeTrigger.click();
 
-    await page.locator('[data-testid^="select-option-"]').first().waitFor({ timeout: 5000 });
+    await waitForDropdown(page);
 
     const optionsCount = await page.locator('[data-testid^="select-option-"]').count();
     expect(optionsCount).toBeGreaterThan(0);
@@ -119,21 +122,22 @@ test.describe('DNS Records Management', () => {
       test.skip(true, 'Wallet not available');
     }
 
-    await expect(page.locator('[data-testid="domain-title"]')).toBeVisible({ timeout: 10000 });
+    await waitForDomainTitle(page, TEST_DOMAIN_NAME);
 
-    const settingsTab = page.locator('[data-testid="tab-settings"]');
-    await skipIfNotOwner(page);
-    await settingsTab.click();
+    if (await skipIfNotOwner(page)) {
+      test.skip(true, `Wallet does not own ${TEST_DOMAIN} - settings tab not visible`);
+    }
+    await navigateToSettingsTab(page);
 
-    const recordTypeTrigger = page.locator('[data-testid="add-record-form"] button[role="combobox"]').first();
+    const recordTypeTrigger = page.locator(`${SELECTORS.ADD_RECORD_FORM} button[role="combobox"]`).first();
     await recordTypeTrigger.click();
 
-    await page.locator('[data-testid^="select-option-"]').first().waitFor({ timeout: 5000 });
+    await waitForDropdown(page);
 
     const firstOption = page.locator('[data-testid^="select-option-"]').first();
     await firstOption.click();
 
-    const valueTextarea = page.locator('[data-testid="add-record-form"] textarea');
+    const valueTextarea = page.locator(`${SELECTORS.ADD_RECORD_FORM} textarea`);
     await expect(valueTextarea).toBeVisible();
   });
 
@@ -142,13 +146,14 @@ test.describe('DNS Records Management', () => {
       test.skip(true, 'Wallet not available');
     }
 
-    await expect(page.locator('[data-testid="domain-title"]')).toBeVisible({ timeout: 10000 });
+    await waitForDomainTitle(page, TEST_DOMAIN_NAME);
 
-    const settingsTab = page.locator('[data-testid="tab-settings"]');
-    await skipIfNotOwner(page);
-    await settingsTab.click();
+    if (await skipIfNotOwner(page)) {
+      test.skip(true, `Wallet does not own ${TEST_DOMAIN} - settings tab not visible`);
+    }
+    await navigateToSettingsTab(page);
 
-    const addButton = page.locator('[data-testid="add-record-button"]');
+    const addButton = page.locator(SELECTORS.ADD_RECORD_BUTTON);
     await expect(addButton).toBeVisible();
   });
 
@@ -157,13 +162,14 @@ test.describe('DNS Records Management', () => {
       test.skip(true, 'Wallet not available');
     }
 
-    await expect(page.locator('[data-testid="domain-title"]')).toBeVisible({ timeout: 10000 });
+    await waitForDomainTitle(page, TEST_DOMAIN_NAME);
 
-    const settingsTab = page.locator('[data-testid="tab-settings"]');
-    await skipIfNotOwner(page);
-    await settingsTab.click();
+    if (await skipIfNotOwner(page)) {
+      test.skip(true, `Wallet does not own ${TEST_DOMAIN} - settings tab not visible`);
+    }
+    await navigateToSettingsTab(page);
 
-    const addButton = page.locator('[data-testid="add-record-button"]');
+    const addButton = page.locator(SELECTORS.ADD_RECORD_BUTTON);
     await expect(addButton).toBeDisabled();
   });
 
@@ -172,21 +178,22 @@ test.describe('DNS Records Management', () => {
       test.skip(true, 'Wallet not available');
     }
 
-    await expect(page.locator('[data-testid="domain-title"]')).toBeVisible({ timeout: 10000 });
+    await waitForDomainTitle(page, TEST_DOMAIN_NAME);
 
-    const settingsTab = page.locator('[data-testid="tab-settings"]');
-    await skipIfNotOwner(page);
-    await settingsTab.click();
+    if (await skipIfNotOwner(page)) {
+      test.skip(true, `Wallet does not own ${TEST_DOMAIN} - settings tab not visible`);
+    }
+    await navigateToSettingsTab(page);
 
-    const recordTypeTrigger = page.locator('[data-testid="add-record-form"] button[role="combobox"]').first();
+    const recordTypeTrigger = page.locator(`${SELECTORS.ADD_RECORD_FORM} button[role="combobox"]`).first();
     await recordTypeTrigger.click();
 
-    await page.locator('[data-testid^="select-option-"]').first().waitFor({ timeout: 5000 });
+    await waitForDropdown(page);
 
     const bioOption = page.locator('[data-testid^="select-option-"]').first();
     await bioOption.click();
 
-    const addButton = page.locator('[data-testid="add-record-button"]');
+    const addButton = page.locator(SELECTORS.ADD_RECORD_BUTTON);
     await expect(addButton).toBeDisabled();
   });
 
@@ -195,24 +202,25 @@ test.describe('DNS Records Management', () => {
       test.skip(true, 'Wallet not available');
     }
 
-    await expect(page.locator('[data-testid="domain-title"]')).toBeVisible({ timeout: 10000 });
+    await waitForDomainTitle(page, TEST_DOMAIN_NAME);
 
-    const settingsTab = page.locator('[data-testid="tab-settings"]');
-    await skipIfNotOwner(page);
-    await settingsTab.click();
+    if (await skipIfNotOwner(page)) {
+      test.skip(true, `Wallet does not own ${TEST_DOMAIN} - settings tab not visible`);
+    }
+    await navigateToSettingsTab(page);
 
-    const recordTypeTrigger = page.locator('[data-testid="add-record-form"] button[role="combobox"]').first();
+    const recordTypeTrigger = page.locator(`${SELECTORS.ADD_RECORD_FORM} button[role="combobox"]`).first();
     await recordTypeTrigger.click();
 
-    await page.locator('[data-testid^="select-option-"]').first().waitFor({ timeout: 5000 });
+    await waitForDropdown(page);
 
     const firstOption = page.locator('[data-testid^="select-option-"]').first();
     await firstOption.click();
 
-    const valueTextarea = page.locator('[data-testid="add-record-form"] textarea');
+    const valueTextarea = page.locator(`${SELECTORS.ADD_RECORD_FORM} textarea`);
     await valueTextarea.fill('test value');
 
-    const addButton = page.locator('[data-testid="add-record-button"]');
+    const addButton = page.locator(SELECTORS.ADD_RECORD_BUTTON);
     await expect(addButton).toBeVisible();
   });
 
@@ -221,28 +229,29 @@ test.describe('DNS Records Management', () => {
       test.skip(true, 'Wallet not available');
     }
 
-    await expect(page.locator('[data-testid="domain-title"]')).toBeVisible({ timeout: 10000 });
+    await waitForDomainTitle(page, TEST_DOMAIN_NAME);
 
-    const settingsTab = page.locator('[data-testid="tab-settings"]');
-    await skipIfNotOwner(page);
-    await settingsTab.click();
+    if (await skipIfNotOwner(page)) {
+      test.skip(true, `Wallet does not own ${TEST_DOMAIN} - settings tab not visible`);
+    }
+    await navigateToSettingsTab(page);
 
-    const recordTypeTrigger = page.locator('[data-testid="add-record-form"] button[role="combobox"]').first();
+    const recordTypeTrigger = page.locator(`${SELECTORS.ADD_RECORD_FORM} button[role="combobox"]`).first();
     await recordTypeTrigger.click();
 
-    await page.locator('[data-testid^="select-option-"]').first().waitFor({ timeout: 5000 });
+    await waitForDropdown(page);
 
     const firstOption = page.locator('[data-testid^="select-option-"]').first();
     await firstOption.click();
 
-    const valueTextarea = page.locator('[data-testid="add-record-form"] textarea');
+    const valueTextarea = page.locator(`${SELECTORS.ADD_RECORD_FORM} textarea`);
     const longValue = 'a'.repeat(64);
     await valueTextarea.fill(longValue);
 
-    const charCount = page.locator('[data-testid="add-record-form"] >> text=/\\d+\\/64/');
+    const charCount = page.locator(`${SELECTORS.ADD_RECORD_FORM} >> text=/\\d+\\/64/`);
     await expect(charCount).toContainText('64/64');
 
-    const addButton = page.locator('[data-testid="add-record-button"]');
+    const addButton = page.locator(SELECTORS.ADD_RECORD_BUTTON);
     await expect(addButton).toBeEnabled();
   });
 
@@ -251,16 +260,17 @@ test.describe('DNS Records Management', () => {
       test.skip(true, 'Wallet not available');
     }
 
-    await expect(page.locator('[data-testid="domain-title"]')).toBeVisible({ timeout: 10000 });
+    await waitForDomainTitle(page, TEST_DOMAIN_NAME);
 
-    const settingsTab = page.locator('[data-testid="tab-settings"]');
-    await skipIfNotOwner(page);
-    await settingsTab.click();
+    if (await skipIfNotOwner(page)) {
+      test.skip(true, `Wallet does not own ${TEST_DOMAIN} - settings tab not visible`);
+    }
+    await navigateToSettingsTab(page);
 
-    const recordTypeTrigger = page.locator('[data-testid="add-record-form"] button[role="combobox"]').first();
+    const recordTypeTrigger = page.locator(`${SELECTORS.ADD_RECORD_FORM} button[role="combobox"]`).first();
     await recordTypeTrigger.click();
 
-    await page.locator('[data-testid^="select-option-"]').first().waitFor({ timeout: 5000 });
+    await waitForDropdown(page);
 
     const uriOption = page.locator('[data-testid="select-option-Uri"]');
     const uriVisible = await uriOption.isVisible().catch(() => false);
@@ -269,14 +279,14 @@ test.describe('DNS Records Management', () => {
     }
     await uriOption.click();
 
-    const valueTextarea = page.locator('[data-testid="add-record-form"] textarea');
+    const valueTextarea = page.locator(`${SELECTORS.ADD_RECORD_FORM} textarea`);
     await valueTextarea.fill('not-a-valid-url');
 
-    const addButton = page.locator('[data-testid="add-record-button"]');
+    const addButton = page.locator(SELECTORS.ADD_RECORD_BUTTON);
     await addButton.click();
 
-    const errorMsg = page.locator('[data-testid="add-record-form"] .text-destructive');
-    await expect(errorMsg).toContainText('Must be a valid URL');
+    const errorMsg = page.locator(`${SELECTORS.ADD_RECORD_FORM} .${CSS_CLASSES.TEXT_DESTRUCTIVE}`);
+    await expect(errorMsg).toContainText(VALIDATION_MESSAGES.INVALID_URL);
   });
 
   test('validation error shows for invalid email on Email type', async ({ page }) => {
@@ -284,16 +294,17 @@ test.describe('DNS Records Management', () => {
       test.skip(true, 'Wallet not available');
     }
 
-    await expect(page.locator('[data-testid="domain-title"]')).toBeVisible({ timeout: 10000 });
+    await waitForDomainTitle(page, TEST_DOMAIN_NAME);
 
-    const settingsTab = page.locator('[data-testid="tab-settings"]');
-    await skipIfNotOwner(page);
-    await settingsTab.click();
+    if (await skipIfNotOwner(page)) {
+      test.skip(true, `Wallet does not own ${TEST_DOMAIN} - settings tab not visible`);
+    }
+    await navigateToSettingsTab(page);
 
-    const recordTypeTrigger = page.locator('[data-testid="add-record-form"] button[role="combobox"]').first();
+    const recordTypeTrigger = page.locator(`${SELECTORS.ADD_RECORD_FORM} button[role="combobox"]`).first();
     await recordTypeTrigger.click();
 
-    await page.locator('[data-testid^="select-option-"]').first().waitFor({ timeout: 5000 });
+    await waitForDropdown(page);
 
     const emailOption = page.locator('[data-testid="select-option-Email"]');
     const emailVisible = await emailOption.isVisible().catch(() => false);
@@ -302,14 +313,14 @@ test.describe('DNS Records Management', () => {
     }
     await emailOption.click();
 
-    const valueTextarea = page.locator('[data-testid="add-record-form"] textarea');
+    const valueTextarea = page.locator(`${SELECTORS.ADD_RECORD_FORM} textarea`);
     await valueTextarea.fill('not-an-email');
 
-    const addButton = page.locator('[data-testid="add-record-button"]');
+    const addButton = page.locator(SELECTORS.ADD_RECORD_BUTTON);
     await addButton.click();
 
-    const errorMsg = page.locator('[data-testid="add-record-form"] .text-destructive');
-    await expect(errorMsg).toContainText('Must be a valid email');
+    const errorMsg = page.locator(`${SELECTORS.ADD_RECORD_FORM} .${CSS_CLASSES.TEXT_DESTRUCTIVE}`);
+    await expect(errorMsg).toContainText(VALIDATION_MESSAGES.INVALID_EMAIL);
   });
 
   test('add record button is enabled when form is filled', async ({ page }) => {
@@ -317,24 +328,25 @@ test.describe('DNS Records Management', () => {
       test.skip(true, 'Wallet not available');
     }
 
-    await expect(page.locator('[data-testid="domain-title"]')).toBeVisible({ timeout: 10000 });
+    await waitForDomainTitle(page, TEST_DOMAIN_NAME);
 
-    const settingsTab = page.locator('[data-testid="tab-settings"]');
-    await skipIfNotOwner(page);
-    await settingsTab.click();
+    if (await skipIfNotOwner(page)) {
+      test.skip(true, `Wallet does not own ${TEST_DOMAIN} - settings tab not visible`);
+    }
+    await navigateToSettingsTab(page);
 
-    const recordTypeTrigger = page.locator('[data-testid="add-record-form"] button[role="combobox"]').first();
+    const recordTypeTrigger = page.locator(`${SELECTORS.ADD_RECORD_FORM} button[role="combobox"]`).first();
     await recordTypeTrigger.click();
 
-    await page.locator('[data-testid^="select-option-"]').first().waitFor({ timeout: 5000 });
+    await waitForDropdown(page);
 
     const firstOption = page.locator('[data-testid^="select-option-"]').first();
     await firstOption.click();
 
-    const valueTextarea = page.locator('[data-testid="add-record-form"] textarea');
+    const valueTextarea = page.locator(`${SELECTORS.ADD_RECORD_FORM} textarea`);
     await valueTextarea.fill('Test value');
 
-    const addButton = page.locator('[data-testid="add-record-button"]');
+    const addButton = page.locator(SELECTORS.ADD_RECORD_BUTTON);
     await expect(addButton).toBeEnabled();
   });
 
@@ -347,30 +359,31 @@ test.describe('DNS Records Management', () => {
       test.skip(true, 'Wallet not available');
     }
 
-    await expect(page.locator('[data-testid="domain-title"]')).toBeVisible({ timeout: 10000 });
+    await waitForDomainTitle(page, TEST_DOMAIN_NAME);
 
-    const settingsTab = page.locator('[data-testid="tab-settings"]');
-    await skipIfNotOwner(page);
-    await settingsTab.click();
+    if (await skipIfNotOwner(page)) {
+      test.skip(true, `Wallet does not own ${TEST_DOMAIN} - settings tab not visible`);
+    }
+    await navigateToSettingsTab(page);
 
-    const initialCount = await page.locator('.record-container').count();
+    const initialCount = await page.locator(CSS_CLASSES.RECORD_CONTAINER).count();
 
-    const recordTypeTrigger = page.locator('[data-testid="add-record-form"] button[role="combobox"]').first();
+    const recordTypeTrigger = page.locator(`${SELECTORS.ADD_RECORD_FORM} button[role="combobox"]`).first();
     await recordTypeTrigger.click();
 
-    await page.locator('[data-testid^="select-option-"]').first().waitFor({ timeout: 5000 });
+    await waitForDropdown(page);
 
     const firstOption = page.locator('[data-testid^="select-option-"]').first();
     await firstOption.click();
 
-    const valueTextarea = page.locator('[data-testid="add-record-form"] textarea');
+    const valueTextarea = page.locator(`${SELECTORS.ADD_RECORD_FORM} textarea`);
     await valueTextarea.fill(`@testuser${Date.now()}`);
 
-    const addButton = page.locator('[data-testid="add-record-button"]');
+    const addButton = page.locator(SELECTORS.ADD_RECORD_BUTTON);
     
     const result = await executeBlockchainOp(async () => {
       await addButton.click();
-      await expect(page.locator('[data-testid="add-record-button"]:has-text("Adding...")')).toBeVisible({ timeout: 5000 });
+      await expect(page.locator(`${SELECTORS.ADD_RECORD_BUTTON}:has-text("Adding...")`)).toBeVisible({ timeout: 5000 });
       await page.waitForTimeout(5000);
     }, 'Add record transaction failed');
 
@@ -379,7 +392,7 @@ test.describe('DNS Records Management', () => {
       test.skip(true, `Blockchain transaction failed: ${result.error}`);
     }
 
-    const newCount = await page.locator('.record-container').count();
+    const newCount = await page.locator(CSS_CLASSES.RECORD_CONTAINER).count();
     expect(newCount).toBeGreaterThanOrEqual(initialCount);
   });
 
@@ -391,17 +404,18 @@ test.describe('DNS Records Management', () => {
     await connectWallet(page);
     await page.goto(`/domain/${TEST_DOMAIN}`);
 
-    await expect(page.locator('[data-testid="domain-title"]')).toBeVisible({ timeout: 10000 });
+    await waitForDomainTitle(page, TEST_DOMAIN_NAME);
 
-    const settingsTab = page.locator('[data-testid="tab-settings"]');
-    await skipIfNotOwner(page);
-    await settingsTab.click();
+    if (await skipIfNotOwner(page)) {
+      test.skip(true, `Wallet does not own ${TEST_DOMAIN} - settings tab not visible`);
+    }
+    await navigateToSettingsTab(page);
 
-    const recordsContainer = page.locator('[data-testid="records-container"]');
+    const recordsContainer = page.locator(SELECTORS.RECORDS_CONTAINER);
     await expect(recordsContainer).toBeVisible();
 
-    const firstRecord = page.locator('.record-container').first();
-    const editButton = firstRecord.locator('[data-testid="edit-record"]');
+    const firstRecord = page.locator(CSS_CLASSES.RECORD_CONTAINER).first();
+    const editButton = firstRecord.locator(SELECTORS.EDIT_RECORD);
     await editButton.click();
 
     const textarea = firstRecord.locator('textarea');
@@ -410,7 +424,7 @@ test.describe('DNS Records Management', () => {
 
     await textarea.fill(modifiedValue);
 
-    const saveButton = firstRecord.locator('[data-testid="save-record"]');
+    const saveButton = firstRecord.locator(SELECTORS.SAVE_RECORD);
     
     const result = await executeBlockchainOp(async () => {
       await saveButton.click();
@@ -428,29 +442,30 @@ test.describe('DNS Records Management', () => {
       test.skip(true, 'Wallet not available');
     }
 
-    await expect(page.locator('[data-testid="domain-title"]')).toBeVisible({ timeout: 10000 });
+    await waitForDomainTitle(page, TEST_DOMAIN_NAME);
 
-    const settingsTab = page.locator('[data-testid="tab-settings"]');
-    await skipIfNotOwner(page);
-    await settingsTab.click();
+    if (await skipIfNotOwner(page)) {
+      test.skip(true, `Wallet does not own ${TEST_DOMAIN} - settings tab not visible`);
+    }
+    await navigateToSettingsTab(page);
 
-    const recordsContainer = page.locator('[data-testid="records-container"]');
+    const recordsContainer = page.locator(SELECTORS.RECORDS_CONTAINER);
     await expect(recordsContainer).toBeVisible();
 
-    const firstRecord = page.locator('.record-container').first();
+    const firstRecord = page.locator(CSS_CLASSES.RECORD_CONTAINER).first();
     const valueBeforeEdit = await firstRecord.locator('p').first().textContent();
 
-    const editButton = firstRecord.locator('[data-testid="edit-record"]');
+    const editButton = firstRecord.locator(SELECTORS.EDIT_RECORD);
     await editButton.click();
 
     const textarea = firstRecord.locator('textarea');
     await textarea.fill('modified value that should be cancelled');
 
-    const cancelButton = firstRecord.locator('[data-testid="cancel-edit"]');
+    const cancelButton = firstRecord.locator(SELECTORS.CANCEL_EDIT);
     await cancelButton.click();
 
-    await expect(firstRecord.locator('[data-testid="save-record"]')).not.toBeVisible();
-    await expect(firstRecord.locator('[data-testid="cancel-edit"]')).not.toBeVisible();
+    await expect(firstRecord.locator(SELECTORS.SAVE_RECORD)).not.toBeVisible();
+    await expect(firstRecord.locator(SELECTORS.CANCEL_EDIT)).not.toBeVisible();
   });
 
   test('delete record after confirmation', async ({ page }) => {
@@ -461,22 +476,23 @@ test.describe('DNS Records Management', () => {
     await connectWallet(page);
     await page.goto(`/domain/${TEST_DOMAIN}`);
 
-    await expect(page.locator('[data-testid="domain-title"]')).toBeVisible({ timeout: 10000 });
+    await waitForDomainTitle(page, TEST_DOMAIN_NAME);
 
-    const settingsTab = page.locator('[data-testid="tab-settings"]');
-    await skipIfNotOwner(page);
-    await settingsTab.click();
+    if (await skipIfNotOwner(page)) {
+      test.skip(true, `Wallet does not own ${TEST_DOMAIN} - settings tab not visible`);
+    }
+    await navigateToSettingsTab(page);
 
-    const recordsContainer = page.locator('[data-testid="records-container"]');
+    const recordsContainer = page.locator(SELECTORS.RECORDS_CONTAINER);
     await expect(recordsContainer).toBeVisible();
 
-    const initialCount = await page.locator('.record-container').count();
+    const initialCount = await page.locator(CSS_CLASSES.RECORD_CONTAINER).count();
     if (initialCount <= 1) {
       test.skip(true, 'Need at least 2 records to safely test deletion');
     }
 
-    const firstRecord = page.locator('.record-container').first();
-    const deleteButton = firstRecord.locator('[data-testid="delete-record"]');
+    const firstRecord = page.locator(CSS_CLASSES.RECORD_CONTAINER).first();
+    const deleteButton = firstRecord.locator(SELECTORS.DELETE_RECORD);
     await deleteButton.click();
 
     const dialog = page.locator('[data-slot="dialog-content"]:has-text("Confirm action")');
@@ -495,7 +511,7 @@ test.describe('DNS Records Management', () => {
       test.skip(true, `Blockchain transaction failed: ${result.error}`);
     }
 
-    const newCount = await page.locator('.record-container').count();
+    const newCount = await page.locator(CSS_CLASSES.RECORD_CONTAINER).count();
     expect(newCount).toBeLessThanOrEqual(initialCount);
   });
 
@@ -507,7 +523,7 @@ test.describe('DNS Records Management', () => {
     
     await page.waitForTimeout(2000);
     
-    const settingsTab = page.locator('[data-testid="tab-settings"]');
+    const settingsTab = page.locator(SELECTORS.TAB_SETTINGS);
     if (await settingsTab.isVisible()) {
       await settingsTab.click();
       const noRecordsMessage = page.getByText(/No records? found/i).or(page.getByText(/No record/i));
@@ -523,15 +539,17 @@ test.describe('DNS Records Management', () => {
       test.skip(true, 'Wallet not available');
     }
 
-    await expect(page.locator('[data-testid="domain-title"]')).toBeVisible({ timeout: 10000 });
+    await waitForDomainTitle(page, TEST_DOMAIN_NAME);
 
-    const settingsTab = page.locator('[data-testid="tab-settings"]');
-    await skipIfNotOwner(page);
-    await settingsTab.click();
+    if (await skipIfNotOwner(page)) {
+      test.skip(true, `Wallet does not own ${TEST_DOMAIN} - settings tab not visible`);
+    }
+    await navigateToSettingsTab(page);
+    const settingsTab = page.locator(SELECTORS.TAB_SETTINGS);
     await expect(settingsTab).toHaveAttribute('aria-selected', 'true');
 
-    await expect(page.locator('[data-testid="records-container"]')).toBeVisible();
-    await expect(page.locator('[data-testid="add-record-form"]')).toBeVisible();
+    await expect(page.locator(SELECTORS.RECORDS_CONTAINER)).toBeVisible();
+    await expect(page.locator(SELECTORS.ADD_RECORD_FORM)).toBeVisible();
   });
 
   test('settings tab shows Renew and Transfer buttons alongside records', async ({ page }) => {
@@ -539,18 +557,19 @@ test.describe('DNS Records Management', () => {
       test.skip(true, 'Wallet not available');
     }
 
-    await expect(page.locator('[data-testid="domain-title"]')).toBeVisible({ timeout: 10000 });
+    await waitForDomainTitle(page, TEST_DOMAIN_NAME);
 
-    const settingsTab = page.locator('[data-testid="tab-settings"]');
-    await skipIfNotOwner(page);
-    await settingsTab.click();
+    if (await skipIfNotOwner(page)) {
+      test.skip(true, `Wallet does not own ${TEST_DOMAIN} - settings tab not visible`);
+    }
+    await navigateToSettingsTab(page);
 
-    await expect(page.locator('[data-testid="records-container"]')).toBeVisible();
+    await expect(page.locator(SELECTORS.RECORDS_CONTAINER)).toBeVisible();
 
-    const renewButton = page.locator('button:has-text("Renew")');
+    const renewButton = page.locator(`button:has-text("${TEXT.RENEW}")`);
     await expect(renewButton).toBeVisible();
 
-    const transferButton = page.locator('button:has-text("Transfer")');
+    const transferButton = page.locator(`button:has-text("${TEXT.TRANSFER}")`);
     await expect(transferButton).toBeVisible();
   });
 
@@ -559,28 +578,28 @@ test.describe('DNS Records Management', () => {
       test.skip(true, 'Wallet not available');
     }
 
-    await expect(page.locator('[data-testid="domain-title"]')).toBeVisible({ timeout: 10000 });
+    await waitForDomainTitle(page, TEST_DOMAIN_NAME);
 
-    const settingsTab = page.locator('[data-testid="tab-settings"]');
-    await skipIfNotOwner(page);
-    await settingsTab.click();
+    if (await skipIfNotOwner(page)) {
+      test.skip(true, `Wallet does not own ${TEST_DOMAIN} - settings tab not visible`);
+    }
+    await navigateToSettingsTab(page);
 
-    const recordTypeTrigger = page.locator('[data-testid="add-record-form"] button[role="combobox"]').first();
+    const recordTypeTrigger = page.locator(`${SELECTORS.ADD_RECORD_FORM} button[role="combobox"]`).first();
     await recordTypeTrigger.click();
 
-    await page.locator('[data-testid^="select-option-"]').first().waitFor({ timeout: 5000 });
+    await waitForDropdown(page);
 
     const bioOption = page.locator('[data-testid^="select-option-"]').first();
     await bioOption.click();
 
-    const valueTextarea = page.locator('[data-testid="add-record-form"] textarea');
+    const valueTextarea = page.locator(`${SELECTORS.ADD_RECORD_FORM} textarea`);
     await valueTextarea.fill('Test content');
 
-    const charCount = page.locator('[data-testid="add-record-form"] [class*="char-count"], [data-testid="add-record-form"] [class*="counter"]');
+    const charCount = page.locator(`${SELECTORS.ADD_RECORD_FORM} [class*="char-count"], ${SELECTORS.ADD_RECORD_FORM} [class*="counter"]`);
     const isVisible = await charCount.isVisible().catch(() => false);
     if (isVisible) {
       await expect(charCount.first()).toBeVisible();
     }
   });
 });
-

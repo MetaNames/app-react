@@ -19,6 +19,12 @@ export default function RootLayout({
   return (
     <html lang="en" suppressHydrationWarning>
       <body>
+        <a 
+          href="#main-content" 
+          className="sr-only focus:not-sr-only focus:absolute focus:top-4 focus:left-4 focus:z-50 focus:px-4 focus:py-2 focus:bg-primary focus:text-primary-foreground focus:rounded-md"
+        >
+          Skip to main content
+        </a>
         <Providers>
           {config.contractDisabled && (
             <Alert className="rounded-none border-x-0 border-t-0 bg-yellow-50 dark:bg-yellow-900/20">
@@ -36,7 +42,7 @@ export default function RootLayout({
             </Alert>
           )}
           <Header />
-          <main className="container mx-auto px-4 py-0 flex-1 flex flex-col">
+          <main id="main-content" className="container mx-auto px-4 py-0 flex-1 flex flex-col">
             {children}
           </main>
           <Footer />

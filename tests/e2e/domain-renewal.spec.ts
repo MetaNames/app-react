@@ -7,21 +7,21 @@
  */
 
 import { test, expect } from '@playwright/test';
+import { SELECTORS, TEXT, CSS_CLASSES, TEST_DOMAIN_NAME, VISIBILITY_TIMEOUT_MS } from './constants';
 import { connectWallet, executeBlockchainOp, gotoAndRestoreWallet } from './helpers/wallet-helper';
-
-const TEST_DOMAIN = 'test.mpc';
+import { RegisterPage } from './pages/RegisterPage';
 
 test.describe('Domain Renewal', () => {
   test.beforeEach(async ({ page }) => {
     await page.goto('/');
     await connectWallet(page);
-    if (!await gotoAndRestoreWallet(page, `/domain/${TEST_DOMAIN}/renew`)) {
+    if (!await gotoAndRestoreWallet(page, `/domain/${TEST_DOMAIN_NAME}/renew`)) {
       test.skip(true, 'Wallet not available');
     }
   });
 
   test('should display Renew domain heading', async ({ page }) => {
-    const heading = page.getByRole('heading', { name: /renew domain/i });
+    const heading = page.getByRole('heading', { name: TEXT.RENEW_HEADING });
     await expect(heading).toBeVisible();
   });
 
@@ -30,22 +30,22 @@ test.describe('Domain Renewal', () => {
   });
 
   test('should display year selector with increment button', async ({ page }) => {
-    const incrementButton = page.locator('button[aria-label="add-year"]');
+    const incrementButton = page.locator(`button[aria-label="${TEXT.ADD_YEAR}"]`);
     await expect(incrementButton).toBeVisible();
   });
 
   test('should display year selector with decrement button', async ({ page }) => {
-    const decrementButton = page.locator('button[aria-label="remove-year"]');
+    const decrementButton = page.locator(`button[aria-label="${TEXT.REMOVE_YEAR}"]`);
     await expect(decrementButton).toBeVisible();
   });
 
   test('should display Go back button', async ({ page }) => {
-    const goBackButton = page.getByRole('button', { name: /go back/i }).or(page.locator('a[href*="/domain/test.mpc"]'));
+    const goBackButton = page.getByRole('button', { name: TEXT.GO_BACK }).or(page.locator(`a[href*="/domain/${TEST_DOMAIN_NAME}"]`));
     await expect(goBackButton).toBeVisible();
   });
 
   test('should increment year when + button is clicked', async ({ page }) => {
-    const incrementButton = page.locator('button[aria-label="add-year"]');
+    const incrementButton = page.locator(`button[aria-label="${TEXT.ADD_YEAR}"]`);
     
     const yearDisplay = page.getByText(/\d+\s*year/).first();
     const initialText = await yearDisplay.textContent();
@@ -59,8 +59,8 @@ test.describe('Domain Renewal', () => {
   });
 
   test('should decrement year when - button is clicked', async ({ page }) => {
-    const incrementButton = page.locator('button[aria-label="add-year"]');
-    const decrementButton = page.locator('button[aria-label="remove-year"]');
+    const incrementButton = page.locator(`button[aria-label="${TEXT.ADD_YEAR}"]`);
+    const decrementButton = page.locator(`button[aria-label="${TEXT.REMOVE_YEAR}"]`);
     
     await incrementButton.click();
     await incrementButton.click();
@@ -75,7 +75,7 @@ test.describe('Domain Renewal', () => {
   });
 
   test('should not decrement below 1 year', async ({ page }) => {
-    const decrementButton = page.locator('button[aria-label="remove-year"]');
+    const decrementButton = page.locator(`button[aria-label="${TEXT.REMOVE_YEAR}"]`);
     
     // Button should be disabled at 1 year, so force-click to verify it stays at 1
     await decrementButton.click({ force: true });
@@ -100,27 +100,27 @@ test.describe('Domain Renewal', () => {
     await expect(totalDisplay).toBeVisible();
 
     // Verify year counter updates when increment is clicked
-    const yearDisplay = page.locator('span.w-20.text-center.font-medium');
+    const yearDisplay = page.locator(CSS_CLASSES.YEAR_DISPLAY);
     await expect(yearDisplay).toContainText('1 year');
 
-    const incrementButton = page.locator('button[aria-label="add-year"]');
+    const incrementButton = page.locator(`button[aria-label="${TEXT.ADD_YEAR}"]`);
     await incrementButton.click();
 
     await expect(yearDisplay).toContainText('2 years');
   });
 
   test('should display proceed to payment or renew button', async ({ page }) => {
-    const renewButton = page.getByRole('button', { name: /renew/i }).or(page.getByRole('button', { name: /proceed/i })).or(page.getByRole('button', { name: /pay now/i }));
+    const renewButton = page.getByRole('button', { name: TEXT.RENEW }).or(page.getByRole('button', { name: /proceed/i })).or(page.getByRole('button', { name: /pay now/i }));
     await expect(renewButton).toBeVisible();
   });
 
   test('should display domain name being renewed', async ({ page }) => {
-    const domainName = page.getByText(TEST_DOMAIN);
+    const domainName = page.getByText(TEST_DOMAIN_NAME);
     await expect(domainName).toBeVisible();
   });
 
   test('should navigate back to domain page when Go back is clicked', async ({ page }) => {
-    const goBackButton = page.getByRole('button', { name: /go back/i }).or(page.locator('a[href*="/domain/test.mpc"]'));
+    const goBackButton = page.getByRole('button', { name: TEXT.GO_BACK }).or(page.locator(`a[href*="/domain/${TEST_DOMAIN_NAME}"]`));
     await goBackButton.click();
     
     await expect(page).toHaveURL(/\/domain\/test\.mpc/);
@@ -138,8 +138,8 @@ test.describe('Domain Renewal', () => {
   });
 
   test('should have accessible year selector buttons', async ({ page }) => {
-    const incrementButton = page.locator('button[aria-label="add-year"]');
-    const decrementButton = page.locator('button[aria-label="remove-year"]');
+    const incrementButton = page.locator(`button[aria-label="${TEXT.ADD_YEAR}"]`);
+    const decrementButton = page.locator(`button[aria-label="${TEXT.REMOVE_YEAR}"]`);
     
     await expect(incrementButton).toBeEnabled();
     // Decrement starts disabled at 1 year, so just check it exists
@@ -152,12 +152,12 @@ test.describe('Domain Renewal', () => {
         test.skip(true, 'TESTNET_PRIVATE_KEY not set - blockchain interaction disabled');
       }
 
-      if (!await gotoAndRestoreWallet(page, `/domain/${TEST_DOMAIN}/renew`)) {
+      if (!await gotoAndRestoreWallet(page, `/domain/${TEST_DOMAIN_NAME}/renew`)) {
         test.skip(true, 'Wallet not available');
       }
-      await page.waitForTimeout(1500);
+      await page.waitForTimeout(VISIBILITY_TIMEOUT_MS);
 
-      const renewButton = page.locator('button:has-text("Renew domain")');
+      const renewButton = page.locator(`button:has-text("${TEXT.REGISTER_DOMAIN}")`);
       await expect(renewButton).toBeVisible({ timeout: 5000 });
 
       const isEnabled = await renewButton.isEnabled({ timeout: 3000 }).catch(() => false);

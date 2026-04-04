@@ -7,12 +7,11 @@ export interface Domain {
   expiresAt: Date | null;
   parentId: string | null;
   records: Record<string, string>;
-  getRecordRepository(sdk: any): RecordRepository;
 }
 export interface RecordRepository {
-  create(params: { class: string; data: string }): Promise<any>;
-  update(params: { class: string; data: string }): Promise<any>;
-  delete(recordClass: string): Promise<any>;
+  create(params: { class: RecordClass; data: string }): Promise<any>;
+  update(params: { class: RecordClass; data: string }): Promise<any>;
+  delete(recordClass: RecordClass): Promise<any>;
 }
 export interface AlertMessage {
   message: string;

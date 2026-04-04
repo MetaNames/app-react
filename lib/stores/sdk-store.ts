@@ -1,9 +1,10 @@
 import { create } from 'zustand';
 import type { BYOCSymbol } from '../types';
+import type { MetaNamesSdk } from '@metanames/sdk';
 interface SdkStore {
-  metaNamesSdk: any | null;
+  metaNamesSdk: MetaNamesSdk | null;
   selectedCoin: BYOCSymbol;
-  setMetaNamesSdk: (sdk: any) => void;
+  setMetaNamesSdk: (sdk: MetaNamesSdk) => void;
   setSelectedCoin: (coin: BYOCSymbol) => void;
 }
 // NOTE: Using `null` instead of `metaNamesSdkFactory()` to avoid SSR issues.

@@ -1,5 +1,5 @@
 'use client';
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useMemo } from 'react';
 import { Button } from '@/components/ui/button';
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger, DropdownMenuSeparator } from '@/components/ui/dropdown-menu';
 import { Input } from '@/components/ui/input';
@@ -16,6 +16,7 @@ export function WalletConnectButton() {
   const [devKey, setDevKey] = useState('');
   const [open, setOpen] = useState(false);
   const [mounted, setMounted] = useState(false);
+  const isValidKey = useMemo(() => validatePrivateKey(devKey), [devKey]);
 
   useEffect(() => { setMounted(true); }, []);
 
@@ -37,7 +38,7 @@ export function WalletConnectButton() {
       toast.error('SDK not ready, please wait...');
       return;
     }
-    if (!validatePrivateKey(devKey)) return;
+    if (!isValidKey) return;
     try {
       const addr = await connectDevPrivateKey(metaNamesSdk, devKey);
       setAddress(addr);
@@ -82,7 +83,7 @@ export function WalletConnectButton() {
             <DropdownMenuSeparator />
             <div className="p-2 flex flex-col gap-2">
               <Input className="dev-key-input text-xs" placeholder="64-char hex private key" value={devKey} onChange={(e) => setDevKey(e.target.value)} />
-              <Button size="sm" className="dev-key-connect w-full" disabled={!validatePrivateKey(devKey)} onClick={handleDevConnect} data-testid="dev-key-connect-button">Connect Dev Key</Button>
+              <Button size="sm" className="dev-key-connect w-full" disabled={!isValidKey} onClick={handleDevConnect} data-testid="dev-key-connect-button">Connect Dev Key</Button>
             </div>
           </>
         )}

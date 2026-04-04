@@ -1,19 +1,6 @@
 import { test, expect } from '@playwright/test';
-
-const TEST_WALLET_PK = 'df4642ef258f9aef2adb6c148590208b20387fb067f2c0907d6c85697c27928c';
-
-async function connectWallet(page: any) {
-  const connectBtn = page.locator('button:has-text("Connect")');
-  await connectBtn.click();
-  
-  const devKeyInput = page.locator('input.dev-key-input');
-  await devKeyInput.fill(TEST_WALLET_PK);
-  
-  const devConnectBtn = page.locator('button.dev-key-connect');
-  await devConnectBtn.click();
-  
-  await page.waitForTimeout(1500);
-}
+import { SELECTORS, TEXT, CSS_CLASSES, PAGINATION_WAIT_MS, TEST_DOMAIN_NAME } from './constants';
+import { connectWallet } from './helpers/wallet-helper';
 
 test.describe('User Profile', () => {
   test.beforeEach(async ({ page }) => {
@@ -22,22 +9,22 @@ test.describe('User Profile', () => {
 
   test.describe('Disconnected State', () => {
     test('should show "Connect your wallet to see your domains" message', async ({ page }) => {
-      const message = page.locator('text=Connect your wallet to see your domains');
+      const message = page.locator(`text=${TEXT.CONNECT_TO_SEE_DOMAINS}`);
       await expect(message).toBeVisible();
     });
 
     test('should not show Profile heading when disconnected', async ({ page }) => {
-      const profileHeading = page.locator('h1:has-text("Profile")');
+      const profileHeading = page.locator(`h1:has-text("${TEXT.PROFILE_HEADING}")`);
       await expect(profileHeading).not.toBeVisible();
     });
 
     test('should not show Domains heading when disconnected', async ({ page }) => {
-      const domainsHeading = page.locator('h2:has-text("Domains")');
+      const domainsHeading = page.locator(`h2:has-text("${TEXT.DOMAINS_HEADING}")`);
       await expect(domainsHeading).not.toBeVisible();
     });
 
     test('should not show search bar when disconnected', async ({ page }) => {
-      const searchBar = page.locator('[data-testid="search-bar"]');
+      const searchBar = page.locator(SELECTORS.SEARCH_BAR);
       await expect(searchBar).not.toBeVisible();
     });
 
@@ -51,7 +38,7 @@ test.describe('User Profile', () => {
     test('should show Profile heading after connecting', async ({ page }) => {
       await connectWallet(page);
       
-      const profileHeading = page.locator('h1:has-text("Profile")');
+      const profileHeading = page.locator(`h1:has-text("${TEXT.PROFILE_HEADING}")`);
       await expect(profileHeading).toBeVisible();
     });
 
@@ -65,7 +52,7 @@ test.describe('User Profile', () => {
     test('should show Domains heading after connecting', async ({ page }) => {
       await connectWallet(page);
       
-      const domainsHeading = page.locator('h2:has-text("Domains")');
+      const domainsHeading = page.locator(`h2:has-text("${TEXT.DOMAINS_HEADING}")`);
       await expect(domainsHeading).toBeVisible();
     });
 
@@ -83,14 +70,14 @@ test.describe('User Profile', () => {
     test('should show test.mpc domain in table', async ({ page }) => {
       await connectWallet(page);
       
-      const testDomain = page.locator('table >> text=test.mpc');
+      const testDomain = page.locator(`table >> text=${TEST_DOMAIN_NAME}`);
       await expect(testDomain).toBeVisible();
     });
 
     test('should show pagination after domains load', async ({ page }) => {
       await connectWallet(page);
       
-      const paginationInfo = page.locator('text=/\\d+-\\d+ of \\d+/');
+      const paginationInfo = page.locator('text=/\\d+\\-\\d+ of \\d+/');
       await expect(paginationInfo).toBeVisible({ timeout: 10000 });
     });
   });
@@ -99,50 +86,50 @@ test.describe('User Profile', () => {
     test('should show search bar when connected', async ({ page }) => {
       await connectWallet(page);
       
-      const searchBar = page.locator('[data-testid="search-bar"]');
+      const searchBar = page.locator(SELECTORS.SEARCH_BAR);
       await expect(searchBar).toBeVisible();
     });
 
     test('should filter domains by exact prefix match', async ({ page }) => {
       await connectWallet(page);
       
-      const searchBar = page.locator('[data-testid="search-bar"]');
+      const searchBar = page.locator(SELECTORS.SEARCH_BAR);
       await expect(searchBar).toBeVisible({ timeout: 10000 });
       
       await searchBar.fill('test');
       
-      const testDomain = page.locator('table >> text=test.mpc');
+      const testDomain = page.locator(`table >> text=${TEST_DOMAIN_NAME}`);
       await expect(testDomain).toBeVisible();
     });
 
     test('should filter domains by fuzzy match (contains)', async ({ page }) => {
       await connectWallet(page);
       
-      const searchBar = page.locator('[data-testid="search-bar"]');
+      const searchBar = page.locator(SELECTORS.SEARCH_BAR);
       await expect(searchBar).toBeVisible({ timeout: 10000 });
       
       await searchBar.fill('est.m');
       
-      const testDomain = page.locator('table >> text=test.mpc');
+      const testDomain = page.locator(`table >> text=${TEST_DOMAIN_NAME}`);
       await expect(testDomain).toBeVisible();
     });
 
     test('should show no results message for non-matching search', async ({ page }) => {
       await connectWallet(page);
       
-      const searchBar = page.locator('[data-testid="search-bar"]');
+      const searchBar = page.locator(SELECTORS.SEARCH_BAR);
       await expect(searchBar).toBeVisible({ timeout: 10000 });
       
       await searchBar.fill('nonexistentdomain12345');
       
-      const noResults = page.locator('text=No domains found');
+      const noResults = page.locator(`text=${TEXT.NO_DOMAINS_FOUND}`);
       await expect(noResults).toBeVisible();
     });
 
     test('should clear search with X button', async ({ page }) => {
       await connectWallet(page);
       
-      const searchBar = page.locator('[data-testid="search-bar"]');
+      const searchBar = page.locator(SELECTORS.SEARCH_BAR);
       await expect(searchBar).toBeVisible({ timeout: 10000 });
       
       await searchBar.fill('test');
@@ -163,11 +150,11 @@ test.describe('User Profile', () => {
       
       await tokenIdHeader.click();
       
-      await page.waitForTimeout(300);
+      await page.waitForTimeout(PAGINATION_WAIT_MS);
       
       await tokenIdHeader.click();
       
-      await page.waitForTimeout(300);
+      await page.waitForTimeout(PAGINATION_WAIT_MS);
     });
 
     test('should toggle sort on Domain Name column', async ({ page }) => {
@@ -178,11 +165,11 @@ test.describe('User Profile', () => {
       
       await domainNameHeader.click();
       
-      await page.waitForTimeout(300);
+      await page.waitForTimeout(PAGINATION_WAIT_MS);
       
       await domainNameHeader.click();
       
-      await page.waitForTimeout(300);
+      await page.waitForTimeout(PAGINATION_WAIT_MS);
     });
 
     test('should toggle sort on Parent column', async ({ page }) => {
@@ -193,11 +180,11 @@ test.describe('User Profile', () => {
       
       await parentHeader.click();
       
-      await page.waitForTimeout(300);
+      await page.waitForTimeout(PAGINATION_WAIT_MS);
       
       await parentHeader.click();
       
-      await page.waitForTimeout(300);
+      await page.waitForTimeout(PAGINATION_WAIT_MS);
     });
   });
 
@@ -212,7 +199,7 @@ test.describe('User Profile', () => {
     test('should show pagination navigation arrows', async ({ page }) => {
       await connectWallet(page);
       
-      const paginationInfo = page.locator('text=/\\d+-\\d+ of \\d+/');
+      const paginationInfo = page.locator('text=/\\d+\\-\\d+ of \\d+/');
       await expect(paginationInfo).toBeVisible({ timeout: 10000 });
       
       await expect(page.locator('svg[class*="lucide-chevron-first"]')).toBeVisible({ timeout: 10000 });
@@ -224,7 +211,7 @@ test.describe('User Profile', () => {
     test('should show correct pagination format', async ({ page }) => {
       await connectWallet(page);
       
-      const paginationInfo = page.locator('text=/\\d+-\\d+ of \\d+/');
+      const paginationInfo = page.locator('text=/\\d+\\-\\d+ of \\d+/');
       await expect(paginationInfo).toBeVisible({ timeout: 10000 });
     });
 
@@ -239,13 +226,13 @@ test.describe('User Profile', () => {
       const option5 = page.locator('[role="option"]:has-text("5"), [role="option"] >> text=5').first();
       await option5.click();
       
-      await page.waitForTimeout(300);
+      await page.waitForTimeout(PAGINATION_WAIT_MS);
     });
 
 test('should navigate to next page when available', async ({ page }) => {
       await connectWallet(page);
       
-      const paginationInfo = page.locator('text=/\\d+-\\d+ of \\d+/');
+      const paginationInfo = page.locator('text=/\\d+\\-\\d+ of \\d+/');
       await expect(paginationInfo).toBeVisible({ timeout: 10000 });
       
       const paginationNav = page.locator('.flex.items-center.gap-2').last();
@@ -254,14 +241,14 @@ test('should navigate to next page when available', async ({ page }) => {
       const isDisabled = await nextBtn.isDisabled();
       if (!isDisabled) {
         await nextBtn.click();
-        await page.waitForTimeout(300);
+        await page.waitForTimeout(PAGINATION_WAIT_MS);
       }
     });
     
     test('should navigate to previous page when on page > 1', async ({ page }) => {
       await connectWallet(page);
       
-      const paginationInfo = page.locator('text=/\\d+-\\d+ of \\d+/');
+      const paginationInfo = page.locator('text=/\\d+\\-\\d+ of \\d+/');
       await expect(paginationInfo).toBeVisible({ timeout: 10000 });
       
       const paginationNav = page.locator('.flex.items-center.gap-2').last();
@@ -270,7 +257,7 @@ test('should navigate to next page when available', async ({ page }) => {
       const isDisabled = await prevBtn.isDisabled();
       if (!isDisabled) {
         await prevBtn.click();
-        await page.waitForTimeout(300);
+        await page.waitForTimeout(PAGINATION_WAIT_MS);
       }
     });
     
@@ -295,23 +282,23 @@ test('should navigate to next page when available', async ({ page }) => {
     test('should navigate to /domain/test.mpc when clicking domain name link', async ({ page }) => {
       await connectWallet(page);
       
-      const domainLink = page.locator('a[href="/domain/test.mpc"]');
+      const domainLink = page.locator(`a[href="/domain/${TEST_DOMAIN_NAME}"]`);
       await expect(domainLink).toBeVisible({ timeout: 10000 });
       
       await domainLink.click();
       
-      await expect(page).toHaveURL(/\/domain\/test\.mpc/);
+      await expect(page).toHaveURL(new RegExp(`\\/domain\\/${TEST_DOMAIN_NAME.replace('.', '\\\\.')}`));
     });
 
     test('should navigate to domain page with correct content', async ({ page }) => {
       await connectWallet(page);
       
-      const domainLink = page.locator('a[href="/domain/test.mpc"]');
+      const domainLink = page.locator(`a[href="/domain/${TEST_DOMAIN_NAME}"]`);
       await expect(domainLink).toBeVisible({ timeout: 10000 });
       
       await domainLink.click();
       
-      await expect(page.locator('[data-testid="domain-title"]')).toBeVisible({ timeout: 10000 });
+      await expect(page.locator(SELECTORS.DOMAIN_TITLE)).toBeVisible({ timeout: 10000 });
     });
   });
 });

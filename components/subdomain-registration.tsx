@@ -8,15 +8,15 @@ import { useSdkStore } from '@/lib/stores/sdk-store';
 import { explorerTransactionUrl } from '@/lib/url';
 import { toast } from 'sonner';
 
-interface SubdomainRegistrationProps { domain: string; parentDomain: string; }
-export function SubdomainRegistration({ domain, parentDomain }: SubdomainRegistrationProps) {
+interface SubdomainRegistrationProps { domain: string; parentDomain: string; byocSymbol?: string; }
+export function SubdomainRegistration({ domain, parentDomain, byocSymbol }: SubdomainRegistrationProps) {
   const router = useRouter();
   const { address } = useWalletStore();
   const { metaNamesSdk } = useSdkStore();
 
   const handleRegister = async () => {
     if (!metaNamesSdk || !address) return;
-    const intent = await metaNamesSdk.domainRepository.register({ domain, parentDomain, to: address, byocSymbol: 'TEST_COIN' });
+    const intent = await metaNamesSdk.domainRepository.register({ domain, parentDomain, to: address, byocSymbol: byocSymbol || 'TEST_COIN' });
     const txHash = await intent.send();
     toast('New Transaction submitted', { action: { label: 'View', onClick: () => window.open(explorerTransactionUrl(txHash), '_blank') }, duration: 10000 });
     await intent.waitForConfirmation();

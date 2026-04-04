@@ -2,8 +2,6 @@ import { NextRequest, NextResponse } from 'next/server';
 import { MetaNamesSdk, Enviroment } from '@metanames/sdk';
 function getSdk() {
   const sdk = new MetaNamesSdk(process.env.NEXT_PUBLIC_ENV !== 'prod' ? Enviroment.testnet : Enviroment.mainnet);
-  const key = process.env.TESTNET_PRIVATE_KEY;
-  if (key) try { sdk.setSigningStrategy('privateKey', key); } catch {}
   return sdk;
 }
 export async function GET(_req: NextRequest, { params }: { params: Promise<{ name: string }> }) {

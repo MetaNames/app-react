@@ -7,19 +7,20 @@
 
 import { test, expect } from '@playwright/test';
 import { getTestPrivateKey } from './helpers/wallet-helper';
+import { SELECTORS, TEXT, WALLET_CONNECT_TIMEOUT_MS } from './constants';
 
 test.describe('Wallet Connection', () => {
   test('should show Connect button when disconnected', async ({ page }) => {
     await page.goto('/');
     
-    const connectBtn = page.locator('[data-testid="wallet-connect-button"]').first();
+    const connectBtn = page.locator(SELECTORS.WALLET_CONNECT_BUTTON).first();
     await expect(connectBtn).toBeVisible();
   });
 
   test('should open wallet dropdown menu on click', async ({ page }) => {
     await page.goto('/');
     
-    const connectBtn = page.locator('[data-testid="wallet-connect-button"]').first();
+    const connectBtn = page.locator(SELECTORS.WALLET_CONNECT_BUTTON).first();
     await connectBtn.click();
     
     const menu = page.locator('text=MetaMask Wallet');
@@ -31,7 +32,7 @@ test.describe('Wallet Connection', () => {
   test('should show dev key input in testnet', async ({ page }) => {
     await page.goto('/');
     
-    const connectBtn = page.locator('[data-testid="wallet-connect-button"]').first();
+    const connectBtn = page.locator(SELECTORS.WALLET_CONNECT_BUTTON).first();
     await connectBtn.click();
     
     const devKeyInput = page.locator('input.dev-key-input');
@@ -44,7 +45,7 @@ test.describe('Wallet Connection', () => {
   test('should disable dev connect button when key is too short', async ({ page }) => {
     await page.goto('/');
     
-    const connectBtn = page.locator('[data-testid="wallet-connect-button"]').first();
+    const connectBtn = page.locator(SELECTORS.WALLET_CONNECT_BUTTON).first();
     await connectBtn.click();
     
     const devKeyInput = page.locator('input.dev-key-input');
@@ -59,7 +60,7 @@ test.describe('Wallet Connection', () => {
     
     await page.goto('/');
     
-    const connectBtn = page.locator('[data-testid="wallet-connect-button"]').first();
+    const connectBtn = page.locator(SELECTORS.WALLET_CONNECT_BUTTON).first();
     await connectBtn.click();
     
     const devKeyInput = page.locator('input.dev-key-input');
@@ -74,7 +75,7 @@ test.describe('Wallet Connection', () => {
     
     await page.goto('/');
     
-    const connectBtn = page.locator('[data-testid="wallet-connect-button"]').first();
+    const connectBtn = page.locator(SELECTORS.WALLET_CONNECT_BUTTON).first();
     await connectBtn.click();
     
     const devKeyInput = page.locator('input.dev-key-input');
@@ -83,9 +84,7 @@ test.describe('Wallet Connection', () => {
     const devConnectBtn = page.locator('button.dev-key-connect');
     await devConnectBtn.click();
     
-    await page.waitForTimeout(1000);
-    
-    await expect(page.locator('[data-testid="wallet-connected"]').first()).toBeVisible({ timeout: 10000 });
+    await expect(page.locator(SELECTORS.WALLET_CONNECTED).first()).toBeVisible({ timeout: WALLET_CONNECT_TIMEOUT_MS });
   });
 
   test('should show shortened address after connection', async ({ page }) => {
@@ -93,7 +92,7 @@ test.describe('Wallet Connection', () => {
     
     await page.goto('/');
     
-    const connectBtn = page.locator('[data-testid="wallet-connect-button"]').first();
+    const connectBtn = page.locator(SELECTORS.WALLET_CONNECT_BUTTON).first();
     await connectBtn.click();
     
     const devKeyInput = page.locator('input.dev-key-input');
@@ -102,10 +101,8 @@ test.describe('Wallet Connection', () => {
     const devConnectBtn = page.locator('button.dev-key-connect');
     await devConnectBtn.click();
     
-    await page.waitForTimeout(1000);
-    
-    const walletBtn = page.locator('[data-testid="wallet-connected"]').first();
-    await expect(walletBtn).toBeVisible({ timeout: 10000 });
+    const walletBtn = page.locator(SELECTORS.WALLET_CONNECTED).first();
+    await expect(walletBtn).toBeVisible({ timeout: WALLET_CONNECT_TIMEOUT_MS });
   });
 
   test('should show disconnect option when connected', async ({ page }) => {
@@ -113,7 +110,7 @@ test.describe('Wallet Connection', () => {
     
     await page.goto('/');
     
-    const connectBtn = page.locator('[data-testid="wallet-connect-button"]').first();
+    const connectBtn = page.locator(SELECTORS.WALLET_CONNECT_BUTTON).first();
     await connectBtn.click();
     
     const devKeyInput = page.locator('input.dev-key-input');
@@ -122,12 +119,10 @@ test.describe('Wallet Connection', () => {
     const devConnectBtn = page.locator('button.dev-key-connect');
     await devConnectBtn.click();
     
-    await page.waitForTimeout(1000);
-    
-    const walletBtn = page.locator('[data-testid="wallet-connected"]').first();
+    const walletBtn = page.locator(SELECTORS.WALLET_CONNECTED).first();
     await walletBtn.click();
     
-    const disconnectBtn = page.locator('text=Disconnect');
+    const disconnectBtn = page.locator(`text=${TEXT.DISCONNECT}`);
     await expect(disconnectBtn).toBeVisible();
   });
 
@@ -136,7 +131,7 @@ test.describe('Wallet Connection', () => {
     
     await page.goto('/');
     
-    const connectBtn = page.locator('[data-testid="wallet-connect-button"]').first();
+    const connectBtn = page.locator(SELECTORS.WALLET_CONNECT_BUTTON).first();
     await connectBtn.click();
     
     const devKeyInput = page.locator('input.dev-key-input');
@@ -145,14 +140,12 @@ test.describe('Wallet Connection', () => {
     const devConnectBtn = page.locator('button.dev-key-connect');
     await devConnectBtn.click();
     
-    await page.waitForTimeout(1000);
-    
-    const walletBtn = page.locator('[data-testid="wallet-connected"]').first();
+    const walletBtn = page.locator(SELECTORS.WALLET_CONNECTED).first();
     await walletBtn.click();
     
-    const disconnectBtn = page.locator('text=Disconnect');
+    const disconnectBtn = page.locator(`text=${TEXT.DISCONNECT}`);
     await disconnectBtn.click();
     
-    await expect(page.locator('[data-testid="wallet-connect-button"]').first()).toBeVisible({ timeout: 5000 });
+    await expect(page.locator(SELECTORS.WALLET_CONNECT_BUTTON).first()).toBeVisible({ timeout: WALLET_CONNECT_TIMEOUT_MS });
   });
 });

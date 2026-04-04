@@ -12,7 +12,7 @@ import { getAccountBalance } from '@/lib/sdk';
 import { InsufficientBalanceError, isInsufficientBalanceError } from '@/lib/error';
 import { bridgeUrl, explorerTransactionUrl } from '@/lib/url';
 import { BYOC_SYMBOLS, type BYOCSymbol, type FeesResponse } from '@/lib/types';
-import { Minus, Plus } from 'lucide-react';
+import { Minus, Plus, Loader2 } from 'lucide-react';
 import { toast } from 'sonner';
 
 interface DomainPaymentProps { domain: string; mode: 'register' | 'renew'; onSuccess?: () => void; }
@@ -94,6 +94,11 @@ export function DomainPayment({ domain, mode, onSuccess }: DomainPaymentProps) {
               <SelectTrigger data-testid="payment-token-select" className="w-40"><SelectValue /></SelectTrigger>
               <SelectContent>{BYOC_SYMBOLS.map((s) => <SelectItem key={s} value={s}>{s}</SelectItem>)}</SelectContent>
             </Select>
+          </div>
+        )}
+        {address && loadingFees && (
+          <div className="flex justify-center py-4">
+            <Loader2 className="h-6 w-6 animate-spin text-muted-foreground" />
           </div>
         )}
         {address && fees && (

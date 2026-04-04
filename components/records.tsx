@@ -6,24 +6,12 @@ import { Textarea } from '@/components/ui/textarea';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Record } from '@/components/record';
 import { validateRecordValue } from '@/lib/records';
-import { ALL_RECORD_TYPES, type RecordClass } from '@/lib/types';
+import { ALL_RECORD_TYPES, type RecordClass, type RecordRepository } from '@/lib/types';
 import { toast } from 'sonner';
 import { explorerTransactionUrl } from '@/lib/url';
-import { RecordClassEnum } from '@metanames/sdk';
+import { RECORD_CLASS_MAP } from '@/lib/constants';
 
-const RECORD_CLASS_MAP: Record<string, number> = {
-  Bio: RecordClassEnum.Bio,
-  Discord: RecordClassEnum.Discord,
-  Twitter: RecordClassEnum.Twitter,
-  Uri: RecordClassEnum.Uri,
-  Wallet: RecordClassEnum.Wallet,
-  Avatar: RecordClassEnum.Avatar,
-  Email: RecordClassEnum.Email,
-  Price: RecordClassEnum.Price,
-  Main: RecordClassEnum.Main,
-};
-
-interface RecordsProps { records: Record<string, string>; repository: any; onUpdate: () => void; }
+interface RecordsProps { records: Record<string, string>; repository: RecordRepository; onUpdate: () => void; }
 
 export function Records({ records, repository, onUpdate }: RecordsProps) {
   const [newType, setNewType] = useState<RecordClass | ''>('');
@@ -38,11 +26,12 @@ export function Records({ records, repository, onUpdate }: RecordsProps) {
     if (!newType || adding) return;
     const err = validateRecordValue(newType, newValue);
     if (err) { setAddError(err); return; }
-    const classValue = RECORD_CLASS_MAP[newType];
-    if (classValue === undefined) { setAddError(`Unsupported record type: ${newType}`); return; }
+    const classInfo = RECORD_CLASS_MAP[newType];
+    if (!classInfo) { setAddError(`Unsupported record type: ${newType}`); return; }
     setAdding(true);
     try {
-      const intent = await repository.create({ class: classValue, data: newValue });
+      // @ts-expect-error - SDK expects number, not string RecordClass
+      const intent = await repository.create({ class: classInfo.value, data: newValue });
       const txHash = await intent.send();
       toast('New Transaction submitted', { action: { label: 'View', onClick: () => window.open(explorerTransactionUrl(txHash), '_blank') }, duration: 10000 });
       await intent.waitForConfirmation();

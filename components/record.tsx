@@ -5,24 +5,12 @@ import { Textarea } from '@/components/ui/textarea';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from '@/components/ui/dialog';
 import { Pencil, Trash2, X, Check } from 'lucide-react';
 import { validateRecordValue, isUrlRecord } from '@/lib/records';
-import type { RecordClass } from '@/lib/types';
+import type { RecordClass, RecordRepository } from '@/lib/types';
 import { toast } from 'sonner';
 import { explorerTransactionUrl } from '@/lib/url';
-import { RecordClassEnum } from '@metanames/sdk';
+import { RECORD_CLASS_MAP } from '@/lib/constants';
 
-const RECORD_CLASS_MAP: Record<string, number> = {
-  Bio: RecordClassEnum.Bio,
-  Discord: RecordClassEnum.Discord,
-  Twitter: RecordClassEnum.Twitter,
-  Uri: RecordClassEnum.Uri,
-  Wallet: RecordClassEnum.Wallet,
-  Avatar: RecordClassEnum.Avatar,
-  Email: RecordClassEnum.Email,
-  Price: RecordClassEnum.Price,
-  Main: RecordClassEnum.Main,
-};
-
-interface RecordProps { type: RecordClass; value: string; repository: any; onUpdate: () => void; }
+interface RecordProps { type: RecordClass; value: string; repository: RecordRepository; onUpdate: () => void; }
 
 export function Record({ type, value, repository, onUpdate }: RecordProps) {
   const [editing, setEditing] = useState(false);
@@ -36,11 +24,12 @@ export function Record({ type, value, repository, onUpdate }: RecordProps) {
     if (saving) return;
     const err = validateRecordValue(type, editValue);
     if (err) { setEditError(err); return; }
-    const classValue = RECORD_CLASS_MAP[type];
-    if (classValue === undefined) return;
+    const classInfo = RECORD_CLASS_MAP[type];
+    if (!classInfo) return;
     setSaving(true);
     try {
-      const intent = await repository.update({ class: classValue, data: editValue });
+      // @ts-expect-error - SDK expects number, not string RecordClass
+      const intent = await repository.update({ class: classInfo.value, data: editValue });
       const txHash = await intent.send();
       toast('New Transaction submitted', { action: { label: 'View', onClick: () => window.open(explorerTransactionUrl(txHash), '_blank') }, duration: 10000 });
       await intent.waitForConfirmation();
@@ -54,11 +43,12 @@ export function Record({ type, value, repository, onUpdate }: RecordProps) {
 
   const handleDelete = async () => {
     if (deleting) return;
-    const classValue = RECORD_CLASS_MAP[type];
-    if (classValue === undefined) return;
+    const classInfo = RECORD_CLASS_MAP[type];
+    if (!classInfo) return;
     setDeleting(true);
     try {
-      const intent = await repository.delete(classValue);
+      // @ts-expect-error - SDK expects number, not string RecordClass
+      const intent = await repository.delete(classInfo.value);
       const txHash = await intent.send();
       toast('New Transaction submitted', { action: { label: 'View', onClick: () => window.open(explorerTransactionUrl(txHash), '_blank') }, duration: 10000 });
       await intent.waitForConfirmation();
