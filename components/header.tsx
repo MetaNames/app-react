@@ -1,0 +1,72 @@
+'use client';
+import { useState } from 'react';
+import Link from 'next/link';
+import { Logo } from '@/components/logo';
+import { WalletConnectButton } from '@/components/wallet-connect-button';
+import { Badge } from '@/components/ui/badge';
+import { config } from '@/lib/config';
+import { Menu, X } from 'lucide-react';
+
+export function Header() {
+  const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
+
+  return (
+    <header className="border-b border-border sticky top-0 z-50 bg-background/80 backdrop-blur">
+      <div className="container mx-auto px-4 h-16 flex items-center justify-between">
+        <div className="flex items-center gap-3">
+          <Logo />
+          {config.isTestnet && (
+            <Badge variant="secondary" className="text-xs">
+              TESTNET
+            </Badge>
+          )}
+        </div>
+        <nav className="hidden md:flex items-center gap-4">
+          <Link
+            href="/profile"
+            className="text-sm text-muted-foreground hover:text-foreground transition-colors"
+          >
+            Profile
+          </Link>
+          <Link
+            href="/tld"
+            className="text-sm text-muted-foreground hover:text-foreground transition-colors"
+          >
+            TLD
+          </Link>
+          <WalletConnectButton />
+        </nav>
+        <div className="flex md:hidden items-center gap-2">
+          <WalletConnectButton />
+          <button
+            onClick={() => setMobileMenuOpen(!mobileMenuOpen)}
+            className="p-2 hover:bg-muted rounded-md transition-colors"
+            aria-label="Toggle menu"
+          >
+            {mobileMenuOpen ? <X className="h-5 w-5" /> : <Menu className="h-5 w-5" />}
+          </button>
+        </div>
+      </div>
+      {mobileMenuOpen && (
+        <div className="md:hidden border-t border-border">
+          <nav className="container mx-auto px-4 py-4 flex flex-col gap-3">
+            <Link
+              href="/profile"
+              className="text-sm text-muted-foreground hover:text-foreground transition-colors py-2"
+              onClick={() => setMobileMenuOpen(false)}
+            >
+              Profile
+            </Link>
+            <Link
+              href="/tld"
+              className="text-sm text-muted-foreground hover:text-foreground transition-colors py-2"
+              onClick={() => setMobileMenuOpen(false)}
+            >
+              TLD
+            </Link>
+          </nav>
+        </div>
+      )}
+    </header>
+  );
+}

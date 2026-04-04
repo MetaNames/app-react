@@ -38,20 +38,18 @@ describe('DomainSearch', () => {
   });
 
   describe('Validation', () => {
-    it('shows validation error for invalid domain (too short)', async () => {
-      (validateDomainName as unknown as ReturnType<typeof vi.fn>).mockReturnValue({ 
-        valid: false, 
-        error: 'Domain name must be at least 3 characters' 
-      });
+    it('allows 1-letter domain search', async () => {
+      (validateDomainName as unknown as ReturnType<typeof vi.fn>).mockReturnValue({ valid: true });
+      mockFind.mockResolvedValue(null);
       
       render(<DomainSearch />);
       const input = screen.getByPlaceholderText('Search for a .mpc domain...');
       await act(async () => {
-        fireEvent.change(input, { target: { value: 'ab' } });
+        fireEvent.change(input, { target: { value: 'a' } });
       });
 
       await waitFor(() => {
-        expect(screen.getByText('Domain name must be at least 3 characters')).toBeInTheDocument();
+        expect(screen.getByText('Available')).toBeInTheDocument();
       });
     });
 

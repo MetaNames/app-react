@@ -40,7 +40,7 @@ export function DomainsTable({ domains }: DomainsTableProps) {
         <Input data-testid="search-bar" placeholder="Search domains..." value={search} onChange={(e) => setSearch(e.target.value)} className="pr-8" />
         {search && <button onClick={() => setSearch('')} className="absolute right-2 top-1/2 -translate-y-1/2"><X className="h-4 w-4 text-muted-foreground" /></button>}
       </div>
-      <div className="rounded-md border">
+      <div className="overflow-x-auto rounded-md border">
         <Table>
           <TableHeader>{table.getHeaderGroups().map((hg) => <TableRow key={hg.id}>{hg.headers.map((h) => <TableHead key={h.id}>{flexRender(h.column.columnDef.header, h.getContext())}</TableHead>)}</TableRow>)}</TableHeader>
           <TableBody>{table.getRowModel().rows.length ? table.getRowModel().rows.map((row) => <TableRow key={row.id}>{row.getVisibleCells().map((cell) => <TableCell key={cell.id}>{flexRender(cell.column.columnDef.cell, cell.getContext())}</TableCell>)}</TableRow>) : <TableRow><TableCell colSpan={3} className="text-center py-8 text-muted-foreground">No domains found</TableCell></TableRow>}</TableBody>

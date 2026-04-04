@@ -33,7 +33,11 @@ export function WalletConnectButton() {
   };
 
   const handleDevConnect = async () => {
-    if (!metaNamesSdk || !validatePrivateKey(devKey)) return;
+    if (!metaNamesSdk) {
+      toast.error('SDK not ready, please wait...');
+      return;
+    }
+    if (!validatePrivateKey(devKey)) return;
     try {
       const addr = await connectDevPrivateKey(metaNamesSdk, devKey);
       setAddress(addr);
