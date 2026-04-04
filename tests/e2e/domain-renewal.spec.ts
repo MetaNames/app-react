@@ -13,8 +13,7 @@ const TEST_DOMAIN = 'test.mpc';
 
 test.describe('Domain Renewal', () => {
   test.beforeEach(async ({ page }) => {
-    await page.goto('/');
-    await connectWallet(page);
+    await gotoAndRestoreWallet(page, `/domain/${TEST_DOMAIN}/renew`);
   });
 
   test('should display Renew domain heading', async ({ page }) => {
@@ -44,7 +43,7 @@ test.describe('Domain Renewal', () => {
   test('should increment year when + button is clicked', async ({ page }) => {
     const incrementButton = page.getByRole('button', { name: /\+/i }).or(page.locator('button[name*="increment"]')).or(page.locator('button').filter({ hasText: /\+/ })).first();
     
-    const yearDisplay = page.locator('[data-testid="years-selected"], .year-value, text=/\\d+\\s*year/i').first();
+    const yearDisplay = page.getByText(/\d+\s*year/).first();
     const initialText = await yearDisplay.textContent();
     const initialYear = parseInt(initialText?.match(/\d+/)?.[0] || '1', 10);
 
@@ -62,7 +61,7 @@ test.describe('Domain Renewal', () => {
     await incrementButton.click();
     await incrementButton.click();
     
-    const yearDisplay = page.locator('[data-testid="years-selected"], .year-value, text=/\\d+\\s*year/i').first();
+    const yearDisplay = page.getByText(/\d+\s*year/).first();
     
     await decrementButton.click();
     
@@ -78,7 +77,7 @@ test.describe('Domain Renewal', () => {
     await decrementButton.click();
     await decrementButton.click();
     
-    const yearDisplay = page.locator('[data-testid="years-selected"], .year-value, text=/\\d+\\s*year/i').first();
+    const yearDisplay = page.getByText(/\d+\s*year/).first();
     const finalText = await yearDisplay.textContent();
     const finalYear = parseInt(finalText?.match(/\d+/)?.[0] || '1', 10);
     
@@ -86,15 +85,15 @@ test.describe('Domain Renewal', () => {
   });
 
   test('should display renewal price information', async ({ page }) => {
-    const priceElement = page.locator('[data-testid="renewal-price"], .price, text=/\\d+\\s*(mpc|eth|\\$)/i');
+    const priceElement = page.getByText(/\d+\s*(mpc|eth|\$)/i);
     await expect(priceElement).toBeVisible();
   });
 
   test('should display total cost that updates with year selection', async ({ page }) => {
-    const totalDisplay = page.locator('[data-testid="total-cost"], .total, text=/total/i');
+    const totalDisplay = page.getByText(/total/i);
     await expect(totalDisplay).toBeVisible();
 
-    const priceElement = page.locator('[data-testid="renewal-price"], .price, text=/\\d+\\s*(mpc|eth|\\$)/i');
+    const priceElement = page.getByText(/\d+\s*(mpc|eth|\$)/i);
     const initialPriceText = await priceElement.textContent();
     const initialPrice = parseFloat(initialPriceText?.match(/[\d.]+/)?.[0] || '0');
 
@@ -113,7 +112,7 @@ test.describe('Domain Renewal', () => {
   });
 
   test('should display domain name being renewed', async ({ page }) => {
-    const domainName = page.locator(`text=${TEST_DOMAIN}`);
+    const domainName = page.getByText(TEST_DOMAIN);
     await expect(domainName).toBeVisible();
   });
 
@@ -125,13 +124,13 @@ test.describe('Domain Renewal', () => {
   });
 
   test('should display wallet connection prompt when not connected', async ({ page }) => {
-    const connectWalletButton = page.getByRole('button', { name: /connect wallet/i }).or(page.locator('text=/connect.*wallet/i'));
+    const connectWalletButton = page.getByRole('button', { name: /connect wallet/i }).or(page.getByText(/connect.*wallet/i));
     await expect(connectWalletButton).toBeVisible({ timeout: 5000 }).catch(() => {
     });
   });
 
   test('should display year selector with default value of 1 year', async ({ page }) => {
-    const yearDisplay = page.locator('[data-testid="years-selected"], .year-value, text=/1\\s*year/i');
+    const yearDisplay = page.getByText(/1\s*year/i);
     await expect(yearDisplay).toBeVisible();
   });
 

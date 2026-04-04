@@ -31,10 +31,10 @@ test.describe('Domain Management', () => {
     const whoisSection = page.locator('h5:has-text("Whois")');
     await expect(whoisSection).toBeVisible();
 
-    const ownerChip = page.locator('button:has-text(/Owner/i)');
+    const ownerChip = page.getByText(/Owner/i);
     await expect(ownerChip).toBeVisible();
 
-    const expiresChip = page.locator('button:has-text(/Expires/i)');
+    const expiresChip = page.getByText(/Expires/i);
     await expect(expiresChip).toBeVisible();
 
     const socialSection = page.locator('h5:has-text("Social")');
@@ -111,10 +111,10 @@ test.describe('Domain Management', () => {
     const whoisSection = page.locator('h5:has-text("Whois")');
     await expect(whoisSection).toBeVisible();
 
-    const ownerChip = page.locator('button:has-text(/Owner/i)');
+    const ownerChip = page.getByText(/Owner/i);
     await expect(ownerChip).toBeVisible();
 
-    const expiresChip = page.locator('button:has-text(/Expires/i)');
+    const expiresChip = page.getByText(/Expires/i);
     await expect(expiresChip).toBeVisible();
   });
 

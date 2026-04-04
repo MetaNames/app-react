@@ -168,7 +168,7 @@ test.describe('Blockchain Operations', () => {
       const paymentTokenSelect = page.locator('[data-testid="payment-token-select"]');
       await paymentTokenSelect.click();
 
-      const selectContent = page.locator('[data-testid="add-record-form"] [role="presentation"]');
+      const selectContent = page.locator('[data-slot="select-content"]');
       await selectContent.waitFor({ timeout: 5000 });
 
       await page.locator('role=option >> text=BTC').click();
@@ -254,7 +254,7 @@ test.describe('Blockchain Operations', () => {
       const selectTrigger = page.locator('[data-testid="add-record-form"] button[role="combobox"]');
       await selectTrigger.click();
 
-      const selectContent = page.locator('[data-testid="add-record-form"] [role="presentation"]');
+      const selectContent = page.locator('[data-slot="select-content"]');
       await selectContent.waitFor({ timeout: 5000 });
 
       // Click the first available option (not all options may be available)
@@ -274,7 +274,7 @@ test.describe('Blockchain Operations', () => {
       const selectTrigger = page.locator('[data-testid="add-record-form"] button[role="combobox"]');
       await selectTrigger.click();
 
-      const selectContent = page.locator('[data-testid="add-record-form"] [role="presentation"]');
+      const selectContent = page.locator('[data-slot="select-content"]');
       await selectContent.waitFor({ timeout: 5000 });
 
       await page.locator('[data-testid^="select-option-"]').first().click();
@@ -295,7 +295,7 @@ test.describe('Blockchain Operations', () => {
       const selectTrigger = page.locator('[data-testid="add-record-form"] button[role="combobox"]');
       await selectTrigger.click();
 
-      const selectContent = page.locator('[data-testid="add-record-form"] [role="presentation"]');
+      const selectContent = page.locator('[data-slot="select-content"]');
       await selectContent.waitFor({ timeout: 5000 });
 
       await page.locator('[data-testid^="select-option-"]').first().click();
@@ -316,7 +316,7 @@ test.describe('Blockchain Operations', () => {
       const selectTrigger = page.locator('[data-testid="add-record-form"] button[role="combobox"]');
       await selectTrigger.click();
 
-      const selectContent = page.locator('[data-testid="add-record-form"] [role="presentation"]');
+      const selectContent = page.locator('[data-slot="select-content"]');
       await selectContent.waitFor({ timeout: 5000 });
 
       await page.locator('[data-testid^="select-option-"]').first().click();
@@ -345,7 +345,7 @@ test.describe('Blockchain Operations', () => {
       const selectTrigger = page.locator('[data-testid="add-record-form"] button[role="combobox"]');
       await selectTrigger.click();
 
-      const selectContent = page.locator('[data-testid="add-record-form"] [role="presentation"]');
+      const selectContent = page.locator('[data-slot="select-content"]');
       await selectContent.waitFor({ timeout: 5000 });
 
       await page.locator('[data-testid^="select-option-"]').first().click();
@@ -513,7 +513,7 @@ test.describe('Blockchain Operations', () => {
       const deleteBtn = recordContainer.locator('[data-testid="delete-record"]');
       await deleteBtn.click();
 
-      const dialog = page.locator('[role="dialog"]');
+      const dialog = page.locator('[data-slot="dialog-content"]:has-text("Confirm action")');
       await expect(dialog).toBeVisible({ timeout: 5000 });
 
       const dialogTitle = page.locator('text=Confirm action');
@@ -541,7 +541,7 @@ test.describe('Blockchain Operations', () => {
       const deleteBtn = recordContainer.locator('[data-testid="delete-record"]');
       await deleteBtn.click();
 
-      const dialog = page.locator('[role="dialog"]');
+      const dialog = page.locator('[data-slot="dialog-content"]:has-text("Confirm action")');
       await expect(dialog).toBeVisible({ timeout: 5000 });
 
       const cancelBtn = dialog.locator('button:has-text("No")');
@@ -572,7 +572,7 @@ test.describe('Blockchain Operations', () => {
       const deleteBtn = recordContainer.locator('[data-testid="delete-record"]');
       await deleteBtn.click();
 
-      const dialog = page.locator('[role="dialog"]');
+      const dialog = page.locator('[data-slot="dialog-content"]:has-text("Confirm action")');
       await expect(dialog).toBeVisible({ timeout: 5000 });
 
       const confirmBtn = dialog.locator('button:has-text("Yes")');

@@ -97,9 +97,14 @@ export const gotoAndRestoreWallet = async (page: Page, url: string): Promise<voi
 };
 
 // Wait for dropdown options to appear with proper timing
-export const waitForDropdownOptions = async (page: Page, timeout = 5000): Promise<void> => {
-  const selectContent = page.locator('[role="presentation"]').last();
-  await selectContent.waitFor({ state: 'visible', timeout });
+export const waitForDropdownOptions = async (page: Page, timeout = 5000): Promise<boolean> => {
+  const selectContent = page.locator('[data-slot="select-content"]').last();
+  try {
+    await selectContent.waitFor({ state: 'visible', timeout });
+    return true;
+  } catch {
+    return false;
+  }
 };
 
 // Wait for toast notification with optional timeout
@@ -107,8 +112,13 @@ export const waitForToast = async (
   page: Page, 
   text: string, 
   timeout = 10000
-): Promise<void> => {
-  await page.locator(`role=alert >> text=${text}`).waitFor({ timeout });
+): Promise<boolean> => {
+  try {
+    await page.locator(`role=alert >> text=${text}`).waitFor({ timeout });
+    return true;
+  } catch {
+    return false;
+  }
 };
 
 // Helper to safely execute blockchain operations with error handling

@@ -408,7 +408,7 @@ test.describe('DNS Records Management', () => {
     await expect(recordsContainer).toBeVisible();
 
     const firstRecord = page.locator('.record-container').first();
-    const valueBeforeEdit = await firstRecord.locator('.record-value, [class*="value"]').first().textContent();
+    const valueBeforeEdit = await firstRecord.locator('p').first().textContent();
 
     const editButton = firstRecord.locator('[data-testid="edit-record"]');
     await editButton.click();
@@ -449,7 +449,7 @@ test.describe('DNS Records Management', () => {
     const deleteButton = firstRecord.locator('[data-testid="delete-record"]');
     await deleteButton.click();
 
-    const dialog = page.locator('role=dialog');
+    const dialog = page.locator('[data-slot="dialog-content"]:has-text("Confirm action")');
     await expect(dialog).toBeVisible();
 
     const yesButton = dialog.locator('button:has-text("Yes")');
@@ -480,7 +480,7 @@ test.describe('DNS Records Management', () => {
     const settingsTab = page.locator('[data-testid="tab-settings"]');
     if (await settingsTab.isVisible()) {
       await settingsTab.click();
-      const noRecordsMessage = page.locator('text=/No records found/i, text=/No record/i');
+      const noRecordsMessage = page.getByText(/No records? found/i).or(page.getByText(/No record/i));
       const isVisible = await noRecordsMessage.isVisible().catch(() => false);
       if (isVisible) {
         await expect(noRecordsMessage.first()).toBeVisible();
