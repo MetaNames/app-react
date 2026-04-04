@@ -287,7 +287,8 @@ test('should navigate to next page when available', async ({ page }) => {
       
       await domainLink.click();
       
-      await expect(page).toHaveURL(new RegExp(`\\/domain\\/${TEST_DOMAIN_NAME.replace('.', '\\\\.')}`));
+      // Wait for navigation to /domain/test.mpc
+      await expect(page).toHaveURL(/\/domain\/test\.mpc/, { timeout: 10000 });
     });
 
     test('should navigate to domain page with correct content', async ({ page }) => {

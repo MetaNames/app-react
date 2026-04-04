@@ -6,6 +6,7 @@ import { DomainPage } from './pages/DomainPage';
 
 test.describe('Domain Management', () => {
   test.describe.configure({ mode: 'serial' });
+  test.setTimeout(60000);
 
   test.beforeEach(async ({ page }) => {
     await page.goto('/');

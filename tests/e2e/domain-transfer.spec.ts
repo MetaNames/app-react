@@ -36,7 +36,7 @@ test.describe('Domain Transfer', () => {
       const addressInput = page.getByPlaceholder(PLACEHOLDERS.RECIPIENT_ADDRESS);
       await addressInput.fill(INVALID_ADDRESS_SHORT);
 
-      await expect(addressInput).toHaveClass(/border-destructive/);
+      await expect(addressInput).toHaveClass(/(^| )border-destructive( |$)/);
 
       const errorMsg = page.locator(`p:has-text("${TEXT.ADDRESS_INVALID}")`);
       await expect(errorMsg).toBeVisible();
@@ -46,11 +46,11 @@ test.describe('Domain Transfer', () => {
       const addressInput = page.getByPlaceholder(PLACEHOLDERS.RECIPIENT_ADDRESS);
 
       await addressInput.fill(INVALID_ADDRESS_SHORT);
-      await expect(addressInput).toHaveClass(/border-destructive/);
+      await expect(addressInput).toHaveClass(/(^| )border-destructive( |$)/);
       await expect(page.locator(`p:has-text("${TEXT.ADDRESS_INVALID}")`)).toBeVisible();
 
       await addressInput.fill(VALID_ADDRESS);
-      await expect(addressInput).not.toHaveClass(/border-destructive/);
+      await expect(addressInput).not.toHaveClass(/(^| )border-destructive( |$)/);
       await expect(page.locator(`p:has-text("${TEXT.ADDRESS_INVALID}")`)).not.toBeVisible();
     });
 
