@@ -33,8 +33,8 @@ export async function connectDevPrivateKey(sdk: MetaNamesSdk, privateKey: string
     throw new Error('This method is only available in development mode');
   }
   const mod = await import('partisia-blockchain-applications-crypto') as any;
-  const partiisiaCrypto = mod.default?.partisiaCrypto || mod.partisiaCrypto;
-  const address = partiisiaCrypto.wallet.privateKeyToAccountAddress(privateKey);
+  const partisiaCrypto = mod.default?.partisiaCrypto || mod.partisiaCrypto;
+  const address = partisiaCrypto.wallet.privateKeyToAccountAddress(privateKey);
   sdk.setSigningStrategy('privateKey', privateKey);
   return address;
 }

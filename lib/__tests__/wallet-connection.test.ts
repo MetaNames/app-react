@@ -2,9 +2,22 @@ import { describe, it, expect, vi, beforeEach } from 'vitest';
 import { connectDevPrivateKey, disconnectWallet } from '../wallet';
 import type { MetaNamesSdk } from '@metanames/sdk';
 
-vi.mock('partisia-blockchain-applications-crypto', () => ({
-  privateKeyToAccountAddress: vi.fn((key: string) => `parsed_address_from_${key.slice(0, 8)}`),
-}));
+vi.mock('partisia-blockchain-applications-crypto', async (importOriginal) => {
+  const actual: Record<string, any> = await importOriginal();
+  const mockFn = (key: string) => `parsed_address_from_${key.slice(0, 8)}`;
+  // Avoid spread operator as it can preserve references to the actual module
+  const mock: Record<string, any> = {};
+  for (const k of Object.keys(actual)) {
+    mock[k] = actual[k];
+  }
+  mock.default = undefined;
+  mock.partisiaCrypto = {
+    wallet: {
+      privateKeyToAccountAddress: mockFn,
+    },
+  };
+  return mock;
+});
 
 describe('connectDevPrivateKey', () => {
   let mockSdk: Partial<MetaNamesSdk>;

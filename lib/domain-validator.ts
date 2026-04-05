@@ -15,8 +15,7 @@ export function validateDomainName(name: string): ValidationResult {
 }
 export function normalizeDomain(name: string): string { return name.endsWith('.mpc') ? name : `${name}.mpc`; }
 export function parseSubdomain(name: string): { isSubdomain: boolean; parent: string | null } {
-  let clean = name;
-  while (clean.endsWith('.mpc')) clean = clean.slice(0, -4);
+  let clean = name.endsWith('.mpc') ? name.slice(0, -4) : name;
   const parts = clean.split('.');
   if (parts.length === 1) return { isSubdomain: false, parent: null };
   return { isSubdomain: true, parent: `${parts.slice(1).join('.')}.mpc` };

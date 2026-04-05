@@ -34,7 +34,7 @@ describe('lib/api', () => {
       const { fetchDomain } = await import('../api');
       const result = await fetchDomain('test.mpc');
 
-      expect(result).toEqual({ name: 'test.mpc', owner: '0x1234' });
+      expect(result.data).toEqual({ name: 'test.mpc', owner: '0x1234' });
     });
 
     it('returns null when domain not found', async () => {
@@ -46,7 +46,7 @@ describe('lib/api', () => {
       const { fetchDomain } = await import('../api');
       const result = await fetchDomain('notfound.mpc');
 
-      expect(result).toBeNull();
+      expect(result.data).toBeNull();
     });
 
     it('returns null when response is not ok', async () => {
@@ -55,7 +55,8 @@ describe('lib/api', () => {
       const { fetchDomain } = await import('../api');
       const result = await fetchDomain('test.mpc');
 
-      expect(result).toBeNull();
+      expect(result.data).toBeNull();
+      expect(result.error).toBe('HTTP error undefined');
     });
 
     it('encodes domain name in URL', async () => {
@@ -93,7 +94,7 @@ describe('lib/api', () => {
       const { checkDomain } = await import('../api');
       const result = await checkDomain('sub.test.mpc');
 
-      expect(result).toEqual({ domainPresent: true, parentPresent: true });
+      expect(result.data).toEqual({ domainPresent: true, parentPresent: true });
     });
 
     it('returns false values when response is not ok', async () => {
@@ -102,7 +103,8 @@ describe('lib/api', () => {
       const { checkDomain } = await import('../api');
       const result = await checkDomain('test.mpc');
 
-      expect(result).toEqual({ domainPresent: false, parentPresent: false });
+      expect(result.data).toBeNull();
+      expect(result.error).toBe('HTTP error undefined');
     });
   });
 
@@ -140,7 +142,7 @@ describe('lib/api', () => {
       const { fetchRegistrationFees } = await import('../api');
       const result = await fetchRegistrationFees('test.mpc', 'PARTI');
 
-      expect(result).toEqual({ feesLabel: '10.5', fees: 10.5, symbol: 'PARTI', address: '0x1234' });
+      expect(result.data).toEqual({ feesLabel: '10.5', fees: 10.5, symbol: 'PARTI', address: '0x1234' });
     });
 
     it('returns null when response is not ok', async () => {
@@ -149,7 +151,8 @@ describe('lib/api', () => {
       const { fetchRegistrationFees } = await import('../api');
       const result = await fetchRegistrationFees('test.mpc', 'ETH');
 
-      expect(result).toBeNull();
+      expect(result.data).toBeNull();
+      expect(result.error).toBe('HTTP error undefined');
     });
 
     it('handles all supported BYOC symbols', async () => {
@@ -165,7 +168,7 @@ describe('lib/api', () => {
         const result = await fetchRegistrationFees('test.mpc', symbol);
 
         expect(mockFetch).toHaveBeenCalledWith(`/api/register/test.mpc/fees/${symbol}`);
-        expect(result?.symbol).toBe(symbol);
+        expect(result.data?.symbol).toBe(symbol);
         mockFetch.mockReset();
       }
     });

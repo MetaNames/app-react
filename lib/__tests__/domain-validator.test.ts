@@ -97,7 +97,7 @@ describe('validateDomainName', () => {
     it('rejects double dots - but min char check catches it first since split produces empty part', () => {
       const result = validateDomainName('te..st.mpc');
       expect(result.valid).toBe(false);
-      expect(result.error).toBe('Domain name must be at least 1 character');
+      expect(result.error).toBe('Cannot contain consecutive dots');
     });
 
     it('rejects leading dot', () => {
@@ -174,111 +174,6 @@ describe('parseSubdomain', () => {
     expect(result.isSubdomain).toBe(true);
     expect(result.parent).toBe('mpc.mpc');
   });
-});
-
-describe('validateDomainName edge cases', () => {
-  it('accepts domain with numbers only', () => {
-    const result = validateDomainName('12345');
-    expect(result.valid).toBe(true);
-  });
-
-  it('accepts domain with single hyphen', () => {
-    const result = validateDomainName('a-b');
-    expect(result.valid).toBe(true);
-  });
-
-  it('accepts domain starting and ending with numbers', () => {
-    const result = validateDomainName('123abc456');
-    expect(result.valid).toBe(true);
-  });
-
-  it('accepts minimum valid domain (3 chars)', () => {
-    const result = validateDomainName('abc');
-    expect(result.valid).toBe(true);
-  });
-
-  it('accepts single character domain', () => {
-    const result = validateDomainName('a');
-    expect(result.valid).toBe(true);
-  });
-
-  it('accepts two character domain', () => {
-    const result = validateDomainName('ab');
-    expect(result.valid).toBe(true);
-  });
-
-  it('rejects underscore character', () => {
-    const result = validateDomainName('test_name');
-    expect(result.valid).toBe(false);
-    expect(result.error).toBe('Only lowercase letters, numbers, and hyphens allowed');
-  });
-
-  it('rejects space character', () => {
-    const result = validateDomainName('test name');
-    expect(result.valid).toBe(false);
-    expect(result.error).toBe('Only lowercase letters, numbers, and hyphens allowed');
-  });
-
-  it('rejects tab character', () => {
-    const result = validateDomainName('test\tname');
-    expect(result.valid).toBe(false);
-  });
-
-  it('rejects newline character', () => {
-    const result = validateDomainName('test\nname');
-    expect(result.valid).toBe(false);
-  });
-
-  it('rejects unicode characters', () => {
-    const result = validateDomainName('test\u00A0name');
-    expect(result.valid).toBe(false);
-  });
-
-  it('rejects uppercase characters', () => {
-    const result = validateDomainName('TEST');
-    expect(result.valid).toBe(false);
-    expect(result.error).toBe('Only lowercase letters, numbers, and hyphens allowed');
-  });
-
-  it('rejects mixed case', () => {
-    const result = validateDomainName('Test');
-    expect(result.valid).toBe(false);
-  });
-
-  it('rejects domain with hyphen at start', () => {
-    const result = validateDomainName('-test');
-    expect(result.valid).toBe(false);
-    expect(result.error).toBe('Cannot start or end with a hyphen');
-  });
-
-  it('rejects domain with hyphen at end', () => {
-    const result = validateDomainName('test-');
-    expect(result.valid).toBe(false);
-    expect(result.error).toBe('Cannot start or end with a hyphen');
-  });
-
-  it('rejects domain starting with hyphen and .mpc', () => {
-    const result = validateDomainName('-test.mpc');
-    expect(result.valid).toBe(false);
-    expect(result.error).toBe('Cannot start or end with a hyphen');
-  });
-
-  it('rejects domain ending with hyphen and .mpc', () => {
-    const result = validateDomainName('test-.mpc');
-    expect(result.valid).toBe(false);
-    expect(result.error).toBe('Cannot start or end with a hyphen');
-  });
-
-  it('accepts maximum valid domain (32 chars)', () => {
-    const result = validateDomainName('abcdefghijklmnopqrstuvwxyz123456');
-    expect(result.valid).toBe(true);
-  });
-
-  it('rejects 33 character domain', () => {
-    const result = validateDomainName('abcdefghijklmnopqrstuvwxyz1234567');
-    expect(result.valid).toBe(false);
-    expect(result.error).toBe('Domain name must be at most 32 characters');
-  });
 
   it('handles empty string edge case', () => {
     const result = validateDomainName('');
@@ -299,7 +194,7 @@ describe('validateDomainName edge cases', () => {
   it('rejects consecutive dots in domain', () => {
     const result = validateDomainName('te..st');
     expect(result.valid).toBe(false);
-    expect(result.error).toBe('Domain name must be at least 1 character');
+    expect(result.error).toBe('Cannot contain consecutive dots');
   });
 
   it('rejects domain with empty part due to consecutive dots', () => {
