@@ -11,32 +11,21 @@ import {
 describe('types', () => {
   describe('BYOCSymbol type', () => {
     it('accepts valid BYOC symbols', () => {
-      const symbols: BYOCSymbol[] = ['PARTI', 'BTC', 'ETH', 'USDT', 'TEST_COIN'];
+      const symbols: BYOCSymbol[] = ['TEST_COIN', 'ETH_GOERLI'];
       symbols.forEach((s) => expect(typeof s).toBe('string'));
     });
   });
 
   describe('BYOC_SYMBOLS constant', () => {
-    it('contains all 5 supported symbols', () => {
-      expect(BYOC_SYMBOLS).toHaveLength(5);
-      expect(BYOC_SYMBOLS).toContain('BTC');
-      expect(BYOC_SYMBOLS).toContain('ETH');
-      expect(BYOC_SYMBOLS).toContain('USDT');
-      expect(BYOC_SYMBOLS).toContain('PARTI');
+    it('contains all 2 TESTNET symbols', () => {
+      expect(BYOC_SYMBOLS).toHaveLength(2);
       expect(BYOC_SYMBOLS).toContain('TEST_COIN');
+      expect(BYOC_SYMBOLS).toContain('ETH_GOERLI');
     });
 
     it('does not contain duplicates', () => {
       const unique = new Set(BYOC_SYMBOLS);
       expect(unique.size).toBe(BYOC_SYMBOLS.length);
-    });
-
-    it('is in the expected order', () => {
-      expect(BYOC_SYMBOLS[0]).toBe('BTC');
-      expect(BYOC_SYMBOLS[1]).toBe('ETH');
-      expect(BYOC_SYMBOLS[2]).toBe('USDT');
-      expect(BYOC_SYMBOLS[3]).toBe('PARTI');
-      expect(BYOC_SYMBOLS[4]).toBe('TEST_COIN');
     });
   });
 

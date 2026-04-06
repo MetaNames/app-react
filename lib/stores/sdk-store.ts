@@ -1,17 +1,22 @@
 import { create } from 'zustand';
-import type { BYOCSymbol } from '../types';
 import type { MetaNamesSdk } from '@metanames/sdk';
+import type { BYOCSymbol } from '@metanames/sdk/dist/providers/config';
+
 interface SdkStore {
   metaNamesSdk: MetaNamesSdk | null;
+  availableCoins: BYOCSymbol[];
   selectedCoin: BYOCSymbol;
   setMetaNamesSdk: (sdk: MetaNamesSdk) => void;
   setSelectedCoin: (coin: BYOCSymbol) => void;
 }
-// NOTE: Using `null` instead of `metaNamesSdkFactory()` to avoid SSR issues.
-// `metaNamesSdkFactory()` requires browser APIs. The SdkInitializer in providers
-// calls `setMetaNamesSdk(metaNamesSdkFactory())` on mount to defer SDK creation to the client.
 export const useSdkStore = create<SdkStore>((set) => ({
-  metaNamesSdk: null, selectedCoin: 'TEST_COIN',
-  setMetaNamesSdk: (metaNamesSdk) => set({ metaNamesSdk }),
+  metaNamesSdk: null,
+  availableCoins: [],
+  selectedCoin: 'ETH',
+  setMetaNamesSdk: (metaNamesSdk) => set({
+    metaNamesSdk,
+    availableCoins: metaNamesSdk.config?.byoc?.map(b => b.symbol) as BYOCSymbol[] ?? [],
+    selectedCoin: (metaNamesSdk.config?.byoc?.[0]?.symbol as BYOCSymbol) ?? 'ETH',
+  }),
   setSelectedCoin: (selectedCoin) => set({ selectedCoin }),
 }));

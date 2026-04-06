@@ -111,7 +111,7 @@ export const TEXT = {
 
 // ============== Record Types ==============
 export const RECORD_TYPES = ['bio', 'url', 'email'] as const;
-export const PAYMENT_TOKENS = ['BTC', 'ETH', 'USDT', 'PARTI', 'TEST_COIN'] as const;
+export const PAYMENT_TOKENS = ['BTC', 'ETH', 'USDT', 'TEST_COIN'] as const;
 
 // ============== Validation Messages ==============
 export const VALIDATION_MESSAGES = {

@@ -1,4 +1,5 @@
 import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest';
+import type { BYOCSymbol } from '../types';
 
 const mockFetch = vi.fn();
 global.fetch = mockFetch;
@@ -109,40 +110,40 @@ describe('lib/api', () => {
   });
 
   describe('fetchRegistrationFees', () => {
-    it('calls fetch with correct URL for PARTI coin', async () => {
+    it('calls fetch with correct URL for TEST_COIN', async () => {
       mockFetch.mockResolvedValueOnce({
         ok: true,
-        json: () => Promise.resolve({ feesLabel: '10.5', fees: 10.5, symbol: 'PARTI', address: '0x1234' }),
+        json: () => Promise.resolve({ feesLabel: '10.5', fees: 10.5, symbol: 'TEST_COIN', address: '0x1234' }),
       });
 
       const { fetchRegistrationFees } = await import('../api');
-      await fetchRegistrationFees('test.mpc', 'PARTI');
+      await fetchRegistrationFees('test.mpc', 'TEST_COIN');
 
-      expect(mockFetch).toHaveBeenCalledWith('/api/register/test.mpc/fees/PARTI');
+      expect(mockFetch).toHaveBeenCalledWith('/api/register/test.mpc/fees/TEST_COIN');
     });
 
-    it('calls fetch with correct URL for BTC coin', async () => {
+    it('calls fetch with correct URL for ETH_GOERLI', async () => {
       mockFetch.mockResolvedValueOnce({
         ok: true,
-        json: () => Promise.resolve({ feesLabel: '0.0001', fees: 0.0001, symbol: 'BTC', address: '0x1234' }),
+        json: () => Promise.resolve({ feesLabel: '0.0001', fees: 0.0001, symbol: 'ETH_GOERLI', address: '0x1234' }),
       });
 
       const { fetchRegistrationFees } = await import('../api');
-      await fetchRegistrationFees('mydomain.mpc', 'BTC');
+      await fetchRegistrationFees('mydomain.mpc', 'ETH_GOERLI');
 
-      expect(mockFetch).toHaveBeenCalledWith('/api/register/mydomain.mpc/fees/BTC');
+      expect(mockFetch).toHaveBeenCalledWith('/api/register/mydomain.mpc/fees/ETH_GOERLI');
     });
 
     it('returns fees response when successful', async () => {
       mockFetch.mockResolvedValueOnce({
         ok: true,
-        json: () => Promise.resolve({ feesLabel: '10.5', fees: 10.5, symbol: 'PARTI', address: '0x1234' }),
+        json: () => Promise.resolve({ feesLabel: '10.5', fees: 10.5, symbol: 'TEST_COIN', address: '0x1234' }),
       });
 
       const { fetchRegistrationFees } = await import('../api');
-      const result = await fetchRegistrationFees('test.mpc', 'PARTI');
+      const result = await fetchRegistrationFees('test.mpc', 'TEST_COIN');
 
-      expect(result.data).toEqual({ feesLabel: '10.5', fees: 10.5, symbol: 'PARTI', address: '0x1234' });
+      expect(result.data).toEqual({ feesLabel: '10.5', fees: 10.5, symbol: 'TEST_COIN', address: '0x1234' });
     });
 
     it('returns null when response is not ok', async () => {
@@ -156,7 +157,7 @@ describe('lib/api', () => {
     });
 
     it('handles all supported BYOC symbols', async () => {
-      const symbols: ('PARTI' | 'BTC' | 'ETH' | 'USDT' | 'TEST_COIN')[] = ['PARTI', 'BTC', 'ETH', 'USDT', 'TEST_COIN'];
+      const symbols: BYOCSymbol[] = ['TEST_COIN', 'ETH_GOERLI'];
 
       for (const symbol of symbols) {
         mockFetch.mockResolvedValueOnce({

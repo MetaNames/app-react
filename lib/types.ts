@@ -17,8 +17,11 @@ export interface AlertMessage {
   message: string;
   action?: { label: string; onClick: () => void };
 }
-export type BYOCSymbol = 'PARTI' | 'BTC' | 'ETH' | 'USDT' | 'TEST_COIN';
-export const BYOC_SYMBOLS: BYOCSymbol[] = ['BTC', 'ETH', 'USDT', 'PARTI', 'TEST_COIN'];
+import type { BYOCSymbol as SdkBYOCSymbol } from '@metanames/sdk/dist/providers/config';
+
+export type BYOCSymbol = SdkBYOCSymbol;
+// Testnet coins - for mainnet coins use sdk.config.byoc at runtime
+export const BYOC_SYMBOLS: BYOCSymbol[] = ['TEST_COIN', 'ETH_GOERLI'];
 export interface FeesResponse { feesLabel: string; fees: number; symbol: string; address: string; }
 export interface DomainCheckResponse { domainPresent: boolean; parentPresent: boolean; }
 export type RecordClass = 'Bio'|'Email'|'Uri'|'Wallet'|'Price'|'Avatar'|'Main'|'Twitter'|'Discord';

@@ -11,7 +11,8 @@ import { fetchRegistrationFees } from '@/lib/api';
 import { getAccountBalance } from '@/lib/sdk';
 import { InsufficientBalanceError, isInsufficientBalanceError } from '@/lib/error';
 import { bridgeUrl, explorerTransactionUrl } from '@/lib/url';
-import { BYOC_SYMBOLS, type BYOCSymbol, type FeesResponse } from '@/lib/types';
+import type { FeesResponse } from '@/lib/types';
+import type { BYOCSymbol as SdkBYOCSymbol } from '@metanames/sdk/dist/providers/config';
 import { Minus, Plus, Loader2 } from 'lucide-react';
 import { toast } from 'sonner';
 
@@ -20,7 +21,7 @@ interface DomainPaymentProps { domain: string; mode: 'register' | 'renew'; onSuc
 export function DomainPayment({ domain, mode, onSuccess }: DomainPaymentProps) {
   const router = useRouter();
   const { address } = useWalletStore();
-  const { metaNamesSdk, selectedCoin, setSelectedCoin } = useSdkStore();
+  const { metaNamesSdk, selectedCoin, setSelectedCoin, availableCoins } = useSdkStore();
   const [years, setYears] = useState(1);
   const [fees, setFees] = useState<FeesResponse | null>(null);
   const [feesApproved, setFeesApproved] = useState(false);
@@ -30,7 +31,7 @@ export function DomainPayment({ domain, mode, onSuccess }: DomainPaymentProps) {
     if (!address) return;
     setLoadingFees(true);
     setFeesApproved(false);
-    fetchRegistrationFees(domain, selectedCoin).then(setFees).finally(() => setLoadingFees(false));
+    fetchRegistrationFees(domain, selectedCoin).then(({ data }) => setFees(data)).finally(() => setLoadingFees(false));
   }, [domain, selectedCoin, address]);
 
   const handleApproveFees = async () => {
@@ -39,10 +40,10 @@ export function DomainPayment({ domain, mode, onSuccess }: DomainPaymentProps) {
       const balance = await getAccountBalance(metaNamesSdk, address, selectedCoin);
       const total = (fees.fees || 0) * years;
       if (balance < total) throw new InsufficientBalanceError(selectedCoin);
-      const intent = await metaNamesSdk.domainRepository.approveMintFees(domain, selectedCoin, years);
-      const txHash = await intent.send();
+      const intent = await metaNamesSdk.domainRepository.approveMintFees(domain, selectedCoin as SdkBYOCSymbol, years);
+      const txHash = intent.transactionHash;
       toast('New Transaction submitted', { action: { label: 'View', onClick: () => window.open(explorerTransactionUrl(txHash), '_blank') }, duration: 10000 });
-      await intent.waitForConfirmation();
+      await intent.fetchResult;
       setFeesApproved(true);
     } catch (e) {
       if (isInsufficientBalanceError(e)) {
@@ -60,13 +61,13 @@ export function DomainPayment({ domain, mode, onSuccess }: DomainPaymentProps) {
     if (!metaNamesSdk || !address) return;
     let intent;
     if (mode === 'register') {
-      intent = await metaNamesSdk.domainRepository.register({ domain, to: address, subscriptionYears: years, byocSymbol: selectedCoin });
+      intent = await metaNamesSdk.domainRepository.register({ domain, to: address, subscriptionYears: years, byocSymbol: selectedCoin as SdkBYOCSymbol });
     } else {
-      intent = await metaNamesSdk.domainRepository.renew({ domain, payer: address, byocSymbol: selectedCoin, subscriptionYears: years });
+      intent = await metaNamesSdk.domainRepository.renew({ domain, payer: address, byocSymbol: selectedCoin as SdkBYOCSymbol, subscriptionYears: years });
     }
-    const txHash = await intent.send();
+    const txHash = intent.transactionHash;
     toast('New Transaction submitted', { action: { label: 'View', onClick: () => window.open(explorerTransactionUrl(txHash), '_blank') }, duration: 10000 });
-    await intent.waitForConfirmation();
+    await intent.fetchResult;
     const msg = mode === 'register' ? 'Domain registered successfully!' : 'Domain renewed successfully!';
     toast.success(msg, { action: { label: 'Go to profile', onClick: () => router.push('/profile') } });
     if (onSuccess) onSuccess(); else router.push(`/domain/${domain}`);
@@ -90,9 +91,9 @@ export function DomainPayment({ domain, mode, onSuccess }: DomainPaymentProps) {
         {address && (
           <div className="flex items-center justify-between">
             <span className="font-medium">Pay with</span>
-            <Select value={selectedCoin} onValueChange={(v) => setSelectedCoin(v as BYOCSymbol)}>
+            <Select value={selectedCoin} onValueChange={(v) => setSelectedCoin(v as SdkBYOCSymbol)}>
               <SelectTrigger data-testid="payment-token-select" className="w-40"><SelectValue /></SelectTrigger>
-              <SelectContent>{BYOC_SYMBOLS.map((s) => <SelectItem key={s} value={s}>{s}</SelectItem>)}</SelectContent>
+              <SelectContent>{availableCoins.map((s) => <SelectItem key={s} value={s}>{s}</SelectItem>)}</SelectContent>
             </Select>
           </div>
         )}

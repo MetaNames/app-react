@@ -7,6 +7,7 @@ import { useWalletStore } from '@/lib/stores/wallet-store';
 import { useSdkStore } from '@/lib/stores/sdk-store';
 import { explorerTransactionUrl } from '@/lib/url';
 import { toast } from 'sonner';
+import type { BYOCSymbol as SdkBYOCSymbol } from '@metanames/sdk/dist/providers/config';
 
 interface SubdomainRegistrationProps { domain: string; parentDomain: string; byocSymbol?: string; }
 export function SubdomainRegistration({ domain, parentDomain, byocSymbol }: SubdomainRegistrationProps) {
@@ -16,10 +17,10 @@ export function SubdomainRegistration({ domain, parentDomain, byocSymbol }: Subd
 
   const handleRegister = async () => {
     if (!metaNamesSdk || !address) return;
-    const intent = await metaNamesSdk.domainRepository.register({ domain, parentDomain, to: address, byocSymbol: byocSymbol || 'TEST_COIN' });
-    const txHash = await intent.send();
+    const intent = await metaNamesSdk.domainRepository.register({ domain, parentDomain, to: address, byocSymbol: (byocSymbol || 'TEST_COIN') as SdkBYOCSymbol });
+    const txHash = intent.transactionHash;
     toast('New Transaction submitted', { action: { label: 'View', onClick: () => window.open(explorerTransactionUrl(txHash), '_blank') }, duration: 10000 });
-    await intent.waitForConfirmation();
+    await intent.fetchResult;
     toast.success('Domain registered successfully!', { action: { label: 'Go to profile', onClick: () => router.push('/profile') } });
     router.push(`/domain/${domain}`);
   };

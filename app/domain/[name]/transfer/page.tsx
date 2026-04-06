@@ -24,9 +24,9 @@ export default function TransferPage() {
   const handleTransfer = async () => {
     if (!metaNamesSdk || !address || !isValid) return;
     const intent = await metaNamesSdk.domainRepository.transfer({ domain: domainName, from: address, to: recipient });
-    const txHash = await intent.send();
+    const txHash = intent.transactionHash;
     toast('New Transaction submitted', { action: { label: 'View', onClick: () => window.open(explorerTransactionUrl(txHash), '_blank') }, duration: 10000 });
-    await intent.waitForConfirmation();
+    await intent.fetchResult;
     toast.success('Domain transferred successfully');
     router.push(`/domain/${domainName}`);
   };

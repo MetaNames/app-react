@@ -7,9 +7,9 @@ describe('sdk-store', () => {
     vi.restoreAllMocks();
   });
 
-  it('should have initial selectedCoin as TEST_COIN', () => {
+  it('should have initial selectedCoin as ETH', () => {
     const { result } = renderHook(() => useSdkStore());
-    expect(result.current.selectedCoin).toBe('TEST_COIN');
+    expect(result.current.selectedCoin).toBe('ETH');
   });
 
   it('should have metaNamesSdk as null initially', () => {
@@ -17,44 +17,36 @@ describe('sdk-store', () => {
     expect(result.current.metaNamesSdk).toBeNull();
   });
 
-  it('should set selectedCoin to BTC', () => {
+  it('should set selectedCoin to ETH_GOERLI', () => {
     const { result } = renderHook(() => useSdkStore());
     act(() => {
-      result.current.setSelectedCoin('BTC');
+      result.current.setSelectedCoin('ETH_GOERLI');
     });
-    expect(result.current.selectedCoin).toBe('BTC');
+    expect(result.current.selectedCoin).toBe('ETH_GOERLI');
   });
 
-  it('should set selectedCoin to PARTI', () => {
+  it('should set selectedCoin to TEST_COIN', () => {
     const { result } = renderHook(() => useSdkStore());
     act(() => {
-      result.current.setSelectedCoin('PARTI');
+      result.current.setSelectedCoin('TEST_COIN');
     });
-    expect(result.current.selectedCoin).toBe('PARTI');
+    expect(result.current.selectedCoin).toBe('TEST_COIN');
   });
 
-  it('should set selectedCoin to ETH', () => {
+  it('should set selectedCoin to ETH_GOERLI', () => {
     const { result } = renderHook(() => useSdkStore());
     act(() => {
-      result.current.setSelectedCoin('ETH');
+      result.current.setSelectedCoin('ETH_GOERLI');
     });
-    expect(result.current.selectedCoin).toBe('ETH');
-  });
-
-  it('should set selectedCoin to USDT', () => {
-    const { result } = renderHook(() => useSdkStore());
-    act(() => {
-      result.current.setSelectedCoin('USDT');
-    });
-    expect(result.current.selectedCoin).toBe('USDT');
+    expect(result.current.selectedCoin).toBe('ETH_GOERLI');
   });
 
   it('should set selectedCoin and then change it', () => {
     const { result } = renderHook(() => useSdkStore());
     act(() => {
-      result.current.setSelectedCoin('BTC');
+      result.current.setSelectedCoin('ETH_GOERLI');
     });
-    expect(result.current.selectedCoin).toBe('BTC');
+    expect(result.current.selectedCoin).toBe('ETH_GOERLI');
     act(() => {
       result.current.setSelectedCoin('TEST_COIN');
     });
