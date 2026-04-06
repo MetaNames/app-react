@@ -1,36 +1,110 @@
-This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-app`](https://nextjs.org/docs/app/api-reference/cli/create-next-app).
+# Metanames
+
+A modern web application built with Next.js for managing and interacting with blockchain-based domain names on the Partisia Blockchain.
+
+## Introduction
+
+Metanames provides a user-friendly interface for registering, managing, and transferring blockchain domain names. Built with Next.js and modern React patterns, it offers a seamless experience for Web3 domain management with support for hardware wallets, real-time updates, and comprehensive domain analytics.
+
+## Features
+
+- **Domain Management** - Register, transfer, and manage blockchain domain names
+- **Hardware Wallet Support** - Integration with Ledger devices via WebUSB
+- **Real-time Updates** - Live domain status and transaction tracking
+- **Analytics Dashboard** - Visual charts and statistics for domain data
+- **Dark/Light Theme** - Automatic theme support based on system preferences
+- **Multi-network Support** - Built on Partisia Blockchain infrastructure
+- **Error Tracking** - Sentry integration for production monitoring
+- **Responsive Design** - Works seamlessly across all device sizes
+
+## Tech Stack
+
+- **Framework**: Next.js 16 with React 19
+- **Styling**: Tailwind CSS with shadcn/ui components
+- **State Management**: Zustand
+- **Testing**: Vitest (unit) + Playwright (e2e)
+- **Error Tracking**: Sentry
+- **Charts**: Chart.js with react-chartjs-2
+- **Icons**: Lucide React
+- **Notifications**: Sonner
 
 ## Getting Started
 
-First, run the development server:
+First, install dependencies:
+
+```bash
+npm install
+```
+
+Then, run the development server:
 
 ```bash
 npm run dev
-# or
-yarn dev
-# or
-pnpm dev
-# or
-bun dev
 ```
 
 Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
 
-You can start editing the page by modifying `app/page.tsx`. The page auto-updates as you edit the file.
+## Development
 
-This project uses [`next/font`](https://nextjs.org/docs/app/building-your-application/optimizing/fonts) to automatically optimize and load [Geist](https://vercel.com/font), a new font family for Vercel.
+### Available Scripts
 
-## Learn More
+| Command | Description |
+|---------|-------------|
+| `npm run dev` | Start development server |
+| `npm run build` | Build for production |
+| `npm run start` | Start production server |
+| `npm run lint` | Run ESLint |
+| `npm run test` | Run unit tests with Vitest |
+| `npm run test:run` | Run unit tests once |
+| `npm run test:e2e` | Run end-to-end tests with Playwright |
 
-To learn more about Next.js, take a look at the following resources:
+### Code Style
 
-- [Next.js Documentation](https://nextjs.org/docs) - learn about Next.js features and API.
-- [Learn Next.js](https://nextjs.org/learn) - an interactive Next.js tutorial.
+This project uses ESLint and TypeScript for code quality. Ensure your code passes linting before submitting changes.
 
-You can check out [the Next.js GitHub repository](https://github.com/vercel/next.js) - your feedback and contributions are welcome!
+## Testing
 
-## Deploy on Vercel
+### Unit Tests
 
-The easiest way to deploy your Next.js app is to use the [Vercel Platform](https://vercel.com/new?utm_medium=default-template&filter=next.js&utm_source=create-next-app&utm_campaign=create-next-app-readme) from the creators of Next.js.
+Unit tests are written with Vitest and React Testing Library. Run them with:
 
-Check out our [Next.js deployment documentation](https://nextjs.org/docs/app/building-your-application/deploying) for more details.
+```bash
+npm run test
+```
+
+For continuous testing during development:
+
+```bash
+npm run test
+# in watch mode
+```
+
+To run tests once without watch mode:
+
+```bash
+npm run test:run
+```
+
+### End-to-End Tests
+
+E2E tests use Playwright. First, ensure the development server is running, then:
+
+```bash
+npm run test:e2e
+```
+
+## Contributing
+
+Contributions are welcome! Please feel free to submit a Pull Request.
+
+1. Fork the repository
+2. Create your feature branch (`git checkout -b feature/amazing-feature`)
+3. Commit your changes (`git commit -m 'Add some amazing feature'`)
+4. Push to the branch (`git push origin feature/amazing-feature`)
+5. Open a Pull Request
+
+Please ensure all tests pass and your code follows the project's linting rules before submitting.
+
+## License
+
+This project is licensed under the MIT License - see the [LICENSE](LICENSE) file for details.
