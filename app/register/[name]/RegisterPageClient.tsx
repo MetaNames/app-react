@@ -8,41 +8,46 @@ import { checkDomain } from "@/lib/api";
 import { normalizeDomain, parseSubdomain } from "@/lib/domain-validator";
 import { Loader2 } from "lucide-react";
 
-export function RegisterPageClient({ name }: { name: string }) {
+function useDomainStatus(domainName: string, isSubdomain: boolean) {
   const router = useRouter();
-  const domainName = normalizeDomain(decodeURIComponent(name));
-  const { isSubdomain, parent } = parseSubdomain(domainName);
   const [status, setStatus] = useState<
     "loading" | "available" | "subdomain" | "taken"
   >("loading");
 
-  const checkAndSetStatus = useCallback(
-    async (signal: AbortSignal) => {
-      const result = await checkDomain(domainName);
-      if (signal.aborted) return;
-      if (result.error) {
-        setStatus("available");
-        return;
-      }
-      const { domainPresent, parentPresent } = result.data || {
-        domainPresent: false,
-        parentPresent: false,
-      };
-      if (domainPresent) {
-        router.replace(`/domain/${domainName}`);
-        return;
-      }
-      if (isSubdomain && parentPresent) setStatus("subdomain");
-      else setStatus("available");
-    },
-    [domainName, isSubdomain, router],
-  );
+  const checkAndSetStatus = useCallback(async () => {
+    const result = await checkDomain(domainName);
+    if (result.error) {
+      setStatus("available");
+      return;
+    }
+    const { domainPresent, parentPresent } = result.data || {
+      domainPresent: false,
+      parentPresent: false,
+    };
+    if (domainPresent) {
+      router.replace(`/domain/${domainName}`);
+      return;
+    }
+    if (isSubdomain && parentPresent) setStatus("subdomain");
+    else setStatus("available");
+  }, [domainName, isSubdomain, router]);
 
   useEffect(() => {
     const controller = new AbortController();
-    checkAndSetStatus(controller.signal);
-    return () => controller.abort();
+    const timeoutId = setTimeout(() => checkAndSetStatus(), 0);
+    return () => {
+      clearTimeout(timeoutId);
+      controller.abort();
+    };
   }, [checkAndSetStatus]);
+
+  return status;
+}
+
+export function RegisterPageClient({ name }: { name: string }) {
+  const domainName = normalizeDomain(decodeURIComponent(name));
+  const { isSubdomain, parent } = parseSubdomain(domainName);
+  const status = useDomainStatus(domainName, isSubdomain);
 
   if (status === "loading")
     return (
