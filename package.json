@@ -6,7 +6,7 @@
     "dev": "next dev",
     "build": "next build",
     "start": "next start",
-    "lint": "prettier -c . && eslint",
+    "lint": "tsc && prettier -c . && eslint",
     "format": "prettier --write . && eslint --fix .",
     "test": "vitest",
     "test:run": "vitest run",

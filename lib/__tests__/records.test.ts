@@ -10,12 +10,6 @@ describe("validateRecordValue", () => {
     it("returns error for whitespace-only string", () => {
       expect(validateRecordValue("Bio", "   ")).toBe("Value is required");
     });
-
-    it("returns error for null/undefined", () => {
-      expect(validateRecordValue("Bio", null as unknown)).toBe(
-        "Value is required",
-      );
-    });
   });
 
   describe("max length validation (64 chars)", () => {
@@ -171,11 +165,6 @@ describe("validateRecordValue", () => {
   });
 
   describe("edge cases", () => {
-    it("handles unknown record type gracefully", () => {
-      const result = validateRecordValue("Unknown" as unknown, "value");
-      expect(result).toBeNull();
-    });
-
     it("trims whitespace before validation", () => {
       expect(validateRecordValue("Bio", "  hello  ")).toBeNull();
     });

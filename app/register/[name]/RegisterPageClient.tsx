@@ -3,7 +3,6 @@ import { useRouter } from "next/navigation";
 import { useCallback, useEffect, useState } from "react";
 import { DomainPayment } from "@/components/domain-payment";
 import { SubdomainRegistration } from "@/components/subdomain-registration";
-import { ConnectionRequired } from "@/components/connection-required";
 import { checkDomain } from "@/lib/api";
 import { normalizeDomain, parseSubdomain } from "@/lib/domain-validator";
 import { Loader2 } from "lucide-react";
@@ -59,13 +58,11 @@ export function RegisterPageClient({ name }: { name: string }) {
   return (
     <div className="flex flex-col items-start gap-6 content checkout">
       <h2 className="text-2xl font-bold">Register {domainName}</h2>
-      <ConnectionRequired>
-        {status === "subdomain" && parent ? (
-          <SubdomainRegistration domain={domainName} parentDomain={parent} />
-        ) : (
-          <DomainPayment domain={domainName} mode="register" />
-        )}
-      </ConnectionRequired>
+      {status === "subdomain" && parent ? (
+        <SubdomainRegistration domain={domainName} parentDomain={parent} />
+      ) : (
+        <DomainPayment domain={domainName} mode="register" />
+      )}
     </div>
   );
 }

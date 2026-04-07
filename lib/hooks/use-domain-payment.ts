@@ -52,7 +52,6 @@ export function useDomainPayment({
 
   const loadFees = useCallback(
     async (signal: AbortSignal) => {
-      if (!address) return;
       setLoadingFees(true);
       setFeesApproved(false);
       try {
@@ -63,7 +62,7 @@ export function useDomainPayment({
         if (!signal.aborted) setLoadingFees(false);
       }
     },
-    [domain, selectedCoin, address],
+    [domain, selectedCoin],
   );
 
   useEffect(() => {

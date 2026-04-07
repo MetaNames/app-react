@@ -1,7 +1,6 @@
 "use client";
 import { useParams } from "next/navigation";
 import { DomainPayment } from "@/components/domain-payment";
-import { ConnectionRequired } from "@/components/connection-required";
 import { GoBackButton } from "@/components/go-back-button";
 import { normalizeDomain } from "@/lib/domain-validator";
 
@@ -14,9 +13,7 @@ export default function RenewPage() {
         <GoBackButton href={`/domain/${domainName}`} />
         <h2 className="text-2xl font-bold">Renew domain</h2>
       </div>
-      <ConnectionRequired>
-        <DomainPayment domain={domainName} mode="renew" />
-      </ConnectionRequired>
+      <DomainPayment domain={domainName} mode="renew" />
     </div>
   );
 }

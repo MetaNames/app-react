@@ -9,6 +9,7 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { LoadingButton } from "@/components/loading-button";
+import { RequireWalletConnection } from "@/components/require-wallet-connection";
 import { useDomainPayment } from "@/lib/hooks/use-domain-payment";
 import { Minus, Plus, Loader2 } from "lucide-react";
 import type { BYOCSymbol as SdkBYOCSymbol } from "@metanames/sdk/dist/providers/config";
@@ -69,6 +70,29 @@ export function DomainPayment({ domain, mode, onSuccess }: DomainPaymentProps) {
             </Button>
           </div>
         </div>
+        {loadingFees && (
+          <div className="flex justify-center py-4">
+            <Loader2 className="h-6 w-6 animate-spin text-muted-foreground" />
+          </div>
+        )}
+        {fees && (
+          <div className="flex flex-col gap-2 py-3 border-t border-b">
+            <div className="flex justify-between text-sm">
+              <span className="text-muted-foreground">
+                1 year registration for {domainCharCount} chars
+              </span>
+              <span>
+                {fees.feesLabel} {fees.symbol}
+              </span>
+            </div>
+            <div className="flex justify-between font-medium">
+              <span>Total (excluding network fees)</span>
+              <span>
+                {total} {fees.symbol}
+              </span>
+            </div>
+          </div>
+        )}
         {address && (
           <div className="flex items-center justify-between">
             <span className="font-medium">Pay with</span>
@@ -92,30 +116,7 @@ export function DomainPayment({ domain, mode, onSuccess }: DomainPaymentProps) {
             </Select>
           </div>
         )}
-        {address && loadingFees && (
-          <div className="flex justify-center py-4">
-            <Loader2 className="h-6 w-6 animate-spin text-muted-foreground" />
-          </div>
-        )}
-        {address && fees && (
-          <div className="flex flex-col gap-2 py-3 border-t border-b">
-            <div className="flex justify-between text-sm">
-              <span className="text-muted-foreground">
-                1 year registration for {domainCharCount} chars
-              </span>
-              <span>
-                {fees.feesLabel} {fees.symbol}
-              </span>
-            </div>
-            <div className="flex justify-between font-medium">
-              <span>Total (excluding network fees)</span>
-              <span>
-                {total} {fees.symbol}
-              </span>
-            </div>
-          </div>
-        )}
-        {address && (
+        <RequireWalletConnection>
           <div className="flex flex-col gap-3">
             <LoadingButton
               data-testid="approve-fees"
@@ -137,7 +138,7 @@ export function DomainPayment({ domain, mode, onSuccess }: DomainPaymentProps) {
               {mode === "register" ? "Register domain" : "Renew domain"}
             </LoadingButton>
           </div>
-        )}
+        </RequireWalletConnection>
       </CardContent>
     </Card>
   );
