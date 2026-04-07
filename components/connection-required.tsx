@@ -1,13 +1,14 @@
-"use client";
-import { useWalletStore } from "@/lib/stores/wallet-store";
+interface ConnectionRequiredProps {
+  children: React.ReactNode;
+  fallback?: React.ReactNode;
+  address: string | undefined;
+}
+
 export function ConnectionRequired({
   children,
   fallback,
-}: {
-  children: React.ReactNode;
-  fallback?: React.ReactNode;
-}) {
-  const address = useWalletStore((s) => s.address);
+  address,
+}: ConnectionRequiredProps) {
   if (!address)
     return fallback ? (
       <>{fallback}</>

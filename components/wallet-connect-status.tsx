@@ -1,11 +1,11 @@
-"use client";
 import { Wallet } from "lucide-react";
-import { useWalletStore } from "@/lib/stores/wallet-store";
 import { shortenAddress } from "@/lib/wallet";
 
-export function WalletConnectStatus() {
-  const address = useWalletStore((s) => s.address);
+interface WalletConnectStatusProps {
+  address: string | undefined;
+}
 
+export function WalletConnectStatus({ address }: WalletConnectStatusProps) {
   if (!address) {
     return null;
   }

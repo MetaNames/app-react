@@ -31,43 +31,16 @@ export interface AccountData {
 export const getAccountBalance = async (
   address: string,
 ): Promise<AccountData> => {
-  const body = {
-    query: `query AccountSingleQuery($address: BLOCKCHAIN_ADDRESS!) {
-      account(address: $address) {
-        ...Coins_Account
-      }
-    }
-    fragment Byoc_Account on Account {
-      displayCoins {
-        symbol
-        balance
-        conversionRate
-        balanceAsGas
-      }
-      id
-    }
-    fragment Coins_Account on Account {
-      ...Byoc_Account
-      ...NonBridgeableCoins_Account
-    }
-    fragment NonBridgeableCoins_Account on Account {
-      mpc20Balances {
-        contract
-        symbol
-        balance
-      }
-    }`,
-    variables: { address },
-  };
-
-  const headers = { "Content-Type": "application/json" };
-  const response = await fetch(config.browserUrl, {
+  const response = await fetch("/api/account/balance", {
     method: "POST",
-    body: JSON.stringify(body),
-    headers,
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({ address }),
   });
 
   const data = await response.json();
+  if (!data.data?.account) {
+    throw new Error(data.error || "Failed to fetch account balance");
+  }
   return data.data.account as AccountData;
 };
 

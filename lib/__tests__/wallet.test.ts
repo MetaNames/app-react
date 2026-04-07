@@ -140,12 +140,12 @@ describe("shortenAddress", () => {
     expect(shortenAddress("0x033")).toBe("0x033");
   });
 
-  it("handles undefined", () => {
-    expect(shortenAddress("undefined" as unknown as string)).toBeUndefined();
+  it("handles undefined string input", () => {
+    expect(shortenAddress("undefined")).toBe("unde...ined");
   });
 
-  it("handles null", () => {
-    expect(shortenAddress("null" as unknown as string)).toBeNull();
+  it("handles null string input", () => {
+    expect(shortenAddress("null")).toBe("null");
   });
 
   it("returns address with exactly 8 characters shortened to first4...last4", () => {

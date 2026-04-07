@@ -73,7 +73,7 @@ export default function TransferPage() {
           <p className="text-destructive text-sm">Address is invalid</p>
         )}
       </div>
-      <ConnectionRequired>
+      <ConnectionRequired address={address}>
         <LoadingButton
           disabled={!isValid}
           onClick={handleTransfer}

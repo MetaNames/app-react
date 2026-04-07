@@ -116,7 +116,7 @@ export function DomainPayment({ domain, mode, onSuccess }: DomainPaymentProps) {
             </Select>
           </div>
         )}
-        <RequireWalletConnection>
+        <RequireWalletConnection address={address}>
           <div className="flex flex-col gap-3">
             <LoadingButton
               data-testid="approve-fees"

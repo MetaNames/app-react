@@ -5,6 +5,7 @@ import { Records } from "@/components/records";
 import { GoBackButton } from "@/components/go-back-button";
 import { ConnectionRequired } from "@/components/connection-required";
 import { useSdkStore } from "@/lib/stores/sdk-store";
+import { useWalletStore } from "@/lib/stores/wallet-store";
 import { type RecordRepository } from "@/lib/types";
 import { normalizeDomain } from "@/lib/domain-validator";
 import { Loader2 } from "lucide-react";
@@ -12,6 +13,7 @@ import { Loader2 } from "lucide-react";
 export default function RecordsPage() {
   const { name } = useParams<{ name: string }>();
   const metaNamesSdk = useSdkStore((s) => s.metaNamesSdk);
+  const address = useWalletStore((s) => s.address);
   const [domain, setDomain] = useState<unknown>(null);
   const [loading, setLoading] = useState(true);
   const domainName = normalizeDomain(decodeURIComponent(name));
@@ -47,7 +49,7 @@ export default function RecordsPage() {
     <div className="flex flex-col gap-6 max-w-lg">
       <GoBackButton />
       <h2 className="text-2xl font-bold">Records — {domainName}</h2>
-      <ConnectionRequired>
+      <ConnectionRequired address={address}>
         {domain !== null && (
           <Records
             records={

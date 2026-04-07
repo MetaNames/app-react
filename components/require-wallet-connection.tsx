@@ -1,14 +1,14 @@
-"use client";
-import { useWalletStore } from "@/lib/stores/wallet-store";
 import { WalletConnectButton } from "@/components/wallet-connect-button";
+
+interface RequireWalletConnectionProps {
+  children: React.ReactNode;
+  address: string | undefined;
+}
 
 export function RequireWalletConnection({
   children,
-}: {
-  children: React.ReactNode;
-}) {
-  const address = useWalletStore((s) => s.address);
-
+  address,
+}: RequireWalletConnectionProps) {
   if (!address) {
     return (
       <div className="flex flex-col gap-3">

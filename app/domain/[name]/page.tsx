@@ -1,23 +1,40 @@
+import { notFound } from "next/navigation";
+import { Suspense } from "react";
+import { getDomainData } from "@/lib/data/domain";
+import { normalizeDomain } from "@/lib/domain-validator";
 import { DomainPageClient } from "./DomainPageClient";
+import Loading from "./loading";
 
-export async function generateMetadata({
-  params,
-}: {
+interface PageProps {
   params: Promise<{ name: string }>;
-}) {
+}
+
+export async function generateMetadata({ params }: PageProps) {
   const { name } = await params;
   const domainName = decodeURIComponent(name);
   return {
     title: `${domainName} - MetaNames`,
-    description: `View and manage ${domainName} domain on MetaNames`,
+    description: `View domain information for ${domainName}`,
   };
 }
 
-export default async function DomainPage({
-  params,
-}: {
-  params: Promise<{ name: string }>;
-}) {
+async function DomainPageContent({ domainName }: { domainName: string }) {
+  const domain = await getDomainData(domainName);
+
+  if (!domain) {
+    notFound();
+  }
+
+  return <DomainPageClient initialDomain={domain} />;
+}
+
+export default async function DomainPage({ params }: PageProps) {
   const { name } = await params;
-  return <DomainPageClient name={name} />;
+  const domainName = normalizeDomain(decodeURIComponent(name));
+
+  return (
+    <Suspense fallback={<Loading />}>
+      <DomainPageContent domainName={domainName} />
+    </Suspense>
+  );
 }

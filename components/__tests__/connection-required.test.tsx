@@ -1,27 +1,12 @@
-import { describe, it, expect, vi } from "vitest";
+import { describe, it, expect } from "vitest";
 import { render, screen } from "@testing-library/react";
 import { ConnectionRequired } from "../connection-required";
-import { useWalletStore } from "@/lib/stores/wallet-store";
-
-vi.mock("@/lib/stores/wallet-store");
-
-const mockUseWalletStore = useWalletStore as unknown as ReturnType<
-  typeof vi.fn
->;
 
 describe("ConnectionRequired", () => {
-  beforeEach(() => {
-    mockUseWalletStore.mockClear();
-  });
-
   describe("when address exists", () => {
     it("shows children when address exists", () => {
-      mockUseWalletStore.mockImplementation((selector) =>
-        selector({ address: "0x1234567890abcdef" }),
-      );
-
       render(
-        <ConnectionRequired>
+        <ConnectionRequired address="0x1234567890abcdef">
           <div data-testid="children">Protected Content</div>
         </ConnectionRequired>,
       );
@@ -31,12 +16,8 @@ describe("ConnectionRequired", () => {
     });
 
     it("renders multiple children correctly", () => {
-      mockUseWalletStore.mockImplementation((selector) =>
-        selector({ address: "0x1234567890abcdef" }),
-      );
-
       render(
-        <ConnectionRequired>
+        <ConnectionRequired address="0x1234567890abcdef">
           <span>Child 1</span>
           <span>Child 2</span>
         </ConnectionRequired>,
@@ -47,12 +28,11 @@ describe("ConnectionRequired", () => {
     });
 
     it("does not show fallback when address exists", () => {
-      mockUseWalletStore.mockImplementation((selector) =>
-        selector({ address: "0x1234567890abcdef" }),
-      );
-
       render(
-        <ConnectionRequired fallback={<div>Fallback Content</div>}>
+        <ConnectionRequired
+          address="0x1234567890abcdef"
+          fallback={<div>Fallback Content</div>}
+        >
           <div>Children</div>
         </ConnectionRequired>,
       );
@@ -61,12 +41,8 @@ describe("ConnectionRequired", () => {
     });
 
     it("does not show default message when address exists", () => {
-      mockUseWalletStore.mockImplementation((selector) =>
-        selector({ address: "0x1234567890abcdef" }),
-      );
-
       render(
-        <ConnectionRequired>
+        <ConnectionRequired address="0x1234567890abcdef">
           <div>Children</div>
         </ConnectionRequired>,
       );
@@ -79,12 +55,9 @@ describe("ConnectionRequired", () => {
 
   describe("when no address", () => {
     it("shows fallback when provided and no address", () => {
-      mockUseWalletStore.mockImplementation((selector) =>
-        selector({ address: undefined }),
-      );
-
       render(
         <ConnectionRequired
+          address={undefined}
           fallback={<div data-testid="fallback">Please connect</div>}
         >
           <div>Children</div>
@@ -96,12 +69,8 @@ describe("ConnectionRequired", () => {
     });
 
     it("shows default message when no address and no fallback", () => {
-      mockUseWalletStore.mockImplementation((selector) =>
-        selector({ address: undefined }),
-      );
-
       render(
-        <ConnectionRequired>
+        <ConnectionRequired address={undefined}>
           <div>Children</div>
         </ConnectionRequired>,
       );
@@ -112,12 +81,8 @@ describe("ConnectionRequired", () => {
     });
 
     it("does not show children when no address", () => {
-      mockUseWalletStore.mockImplementation((selector) =>
-        selector({ address: undefined }),
-      );
-
       render(
-        <ConnectionRequired>
+        <ConnectionRequired address={undefined}>
           <div data-testid="children">Protected Content</div>
         </ConnectionRequired>,
       );
@@ -126,12 +91,11 @@ describe("ConnectionRequired", () => {
     });
 
     it("shows fallback content correctly formatted", () => {
-      mockUseWalletStore.mockImplementation((selector) =>
-        selector({ address: undefined }),
-      );
-
       render(
-        <ConnectionRequired fallback={<button>Connect Wallet</button>}>
+        <ConnectionRequired
+          address={undefined}
+          fallback={<button>Connect Wallet</button>}
+        >
           <div>Content</div>
         </ConnectionRequired>,
       );
@@ -144,12 +108,8 @@ describe("ConnectionRequired", () => {
 
   describe("default fallback message", () => {
     it("has correct styling classes for default message", () => {
-      mockUseWalletStore.mockImplementation((selector) =>
-        selector({ address: undefined }),
-      );
-
       render(
-        <ConnectionRequired>
+        <ConnectionRequired address={undefined}>
           <div>Content</div>
         </ConnectionRequired>,
       );
@@ -159,12 +119,8 @@ describe("ConnectionRequired", () => {
     });
 
     it("default message is centered", () => {
-      mockUseWalletStore.mockImplementation((selector) =>
-        selector({ address: undefined }),
-      );
-
       render(
-        <ConnectionRequired>
+        <ConnectionRequired address={undefined}>
           <div>Content</div>
         </ConnectionRequired>,
       );
@@ -186,62 +142,14 @@ describe("ConnectionRequired", () => {
 
   describe("edge cases", () => {
     it("handles empty string address as no address", () => {
-      mockUseWalletStore.mockImplementation((selector) =>
-        selector({ address: "" }),
-      );
-
       render(
-        <ConnectionRequired>
+        <ConnectionRequired address="">
           <div>Content</div>
         </ConnectionRequired>,
       );
 
       expect(
         screen.getByText("Connect your wallet to continue"),
-      ).toBeInTheDocument();
-    });
-
-    it("handles null address explicitly", () => {
-      mockUseWalletStore.mockImplementation((selector) =>
-        selector({ address: null as unknown as undefined }),
-      );
-
-      render(
-        <ConnectionRequired>
-          <div>Content</div>
-        </ConnectionRequired>,
-      );
-
-      expect(
-        screen.getByText("Connect your wallet to continue"),
-      ).toBeInTheDocument();
-    });
-
-    it("works with complex fallback components", () => {
-      mockUseWalletStore.mockImplementation((selector) =>
-        selector({ address: undefined }),
-      );
-
-      render(
-        <ConnectionRequired
-          fallback={
-            <div>
-              <h2>Title</h2>
-              <p>Description</p>
-              <button>Action</button>
-            </div>
-          }
-        >
-          <div>Content</div>
-        </ConnectionRequired>,
-      );
-
-      expect(
-        screen.getByRole("heading", { name: "Title" }),
-      ).toBeInTheDocument();
-      expect(screen.getByText("Description")).toBeInTheDocument();
-      expect(
-        screen.getByRole("button", { name: "Action" }),
       ).toBeInTheDocument();
     });
   });

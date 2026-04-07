@@ -1,5 +1,5 @@
 "use client";
-import { useEffect } from "react";
+import { useEffect, useRef } from "react";
 import { ThemeProvider } from "next-themes";
 import { Toaster } from "@/components/ui/sonner";
 import { toast } from "sonner";
@@ -9,8 +9,13 @@ import { metaNamesSdkFactory } from "@/lib/sdk";
 
 function SdkInitializer() {
   const { metaNamesSdk, setMetaNamesSdk } = useSdkStore();
+  const initialized = useRef(false);
+
   useEffect(() => {
-    if (!metaNamesSdk) setMetaNamesSdk(metaNamesSdkFactory());
+    if (!initialized.current && !metaNamesSdk) {
+      initialized.current = true;
+      setMetaNamesSdk(metaNamesSdkFactory());
+    }
   }, [metaNamesSdk, setMetaNamesSdk]);
   return null;
 }

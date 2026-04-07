@@ -1,10 +1,26 @@
 import { ProfilePageClient } from "./ProfilePageClient";
 
-export const metadata = {
-  title: "Profile - MetaNames",
-  description: "View your domain portfolio",
-};
+export async function generateMetadata({
+  params,
+}: {
+  params: Promise<{ address?: string }>;
+}) {
+  const { address } = await params;
+  const displayAddress = address
+    ? `${address.slice(0, 6)}...${address.slice(-4)}`
+    : "Profile";
+  return {
+    title: `${displayAddress} - MetaNames`,
+    description: address
+      ? `View domain portfolio for ${displayAddress}`
+      : "View your domain portfolio",
+  };
+}
 
-export default function ProfilePage() {
+export default async function ProfilePage({
+  params: _params,
+}: {
+  params: Promise<{ address?: string }>;
+}) {
   return <ProfilePageClient />;
 }

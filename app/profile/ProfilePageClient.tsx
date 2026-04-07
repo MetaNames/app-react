@@ -39,7 +39,7 @@ export function ProfilePageClient() {
 
   useEffect(() => {
     handleLoadDomains();
-  }, []);
+  }, [handleLoadDomains]);
 
   if (!address)
     return (

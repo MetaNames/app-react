@@ -5,20 +5,26 @@ import type { RecordClass, RecordRepository } from "@/lib/types";
 import { toast } from "sonner";
 import { explorerTransactionUrl } from "@/lib/url";
 import { RECORD_CLASS_MAP } from "@/lib/constants";
+import { useRecordStore } from "@/lib/stores/record-store";
 
 interface UseRecordManagementProps {
   type: RecordClass;
   value: string;
-  repository: RecordRepository;
-  onUpdate: () => void;
+  repository?: RecordRepository;
+  onUpdate?: () => void;
 }
 
 export function useRecordManagement({
   type,
   value,
-  repository,
-  onUpdate,
+  repository: propRepository,
+  onUpdate: propOnUpdate,
 }: UseRecordManagementProps) {
+  const storeRepository = useRecordStore((s) => s.repository);
+  const storeOnUpdate = useRecordStore((s) => s.onUpdate);
+
+  const repository = propRepository ?? storeRepository;
+  const onUpdate = propOnUpdate ?? storeOnUpdate;
   const [editing, setEditing] = useState(false);
   const [editValue, setEditValue] = useState(value);
   const [editError, setEditError] = useState<string | null>(null);
@@ -59,7 +65,7 @@ export function useRecordManagement({
       await intent.waitForConfirmation();
       toast.success("Record updated successfully");
       setEditing(false);
-      onUpdate();
+      onUpdate!();
     } finally {
       setSaving(false);
     }
@@ -84,7 +90,7 @@ export function useRecordManagement({
       await intent.waitForConfirmation();
       toast.success("Record deleted successfully");
       setDeleteOpen(false);
-      onUpdate();
+      onUpdate!();
     } finally {
       setDeleting(false);
     }
