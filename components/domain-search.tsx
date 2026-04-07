@@ -72,38 +72,40 @@ export function DomainSearch() {
         />
       </div>
       {error && <p className="text-destructive text-sm">{error}</p>}
-      {(loading || result) && (
-        <Card>
-          <CardContent className="p-4">
-            {loading ? (
-              <div className="flex items-center gap-2 text-muted-foreground">
-                <Loader2 className="h-4 w-4 animate-spin" /> Checking
-                availability...
-              </div>
-            ) : result ? (
-              <Link
-                href={
-                  result.available
-                    ? `/register/${result.name.replace(/\.mpc$/, "")}`
-                    : `/domain/${result.name}`
-                }
-                className="flex items-center justify-between hover:opacity-80 transition-opacity"
-              >
-                <span className="font-medium">{result.name}</span>
-                <Badge
-                  className={
-                    result.available
-                      ? "bg-[hsl(var(--chip-available-bg))] text-[hsl(var(--chip-available-fg))]"
-                      : "bg-[hsl(var(--chip-registered-bg))] text-[hsl(var(--chip-registered-fg))]"
-                  }
-                >
-                  {result.available ? "Available" : "Registered"}
-                </Badge>
-              </Link>
-            ) : null}
-          </CardContent>
-        </Card>
-      )}
+      {loading || result ? (
+        <Link
+          href={
+            result?.available
+              ? `/register/${result.name.replace(/\.mpc$/, "")}`
+              : `/domain/${result?.name}`
+          }
+          className="block"
+        >
+          <Card className="transition-opacity hover:opacity-80 cursor-pointer">
+            <CardContent className="p-4">
+              {loading ? (
+                <div className="flex items-center gap-2 text-muted-foreground">
+                  <Loader2 className="h-4 w-4 animate-spin" /> Checking
+                  availability...
+                </div>
+              ) : result ? (
+                <div className="flex items-center justify-between">
+                  <span className="font-medium">{result.name}</span>
+                  <Badge
+                    className={
+                      result.available
+                        ? "bg-[hsl(var(--chip-available-bg))] text-[hsl(var(--chip-available-fg))]"
+                        : "bg-[hsl(var(--chip-registered-bg))] text-[hsl(var(--chip-registered-fg))]"
+                    }
+                  >
+                    {result.available ? "Available" : "Registered"}
+                  </Badge>
+                </div>
+              ) : null}
+            </CardContent>
+          </Card>
+        </Link>
+      ) : null}
     </div>
   );
 }
