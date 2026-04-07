@@ -10,13 +10,22 @@ import { DomainSearch } from "../domain-search";
 import { useSdkStore } from "@/lib/stores/sdk-store";
 import { validateDomainName } from "@/lib/domain-validator";
 
+const mockFind = vi.hoisted(() => vi.fn());
+
 vi.mock("@/lib/stores/sdk-store", () => {
-  const mockMetaNamesSdk = {
-    domainRepository: { find: vi.fn() },
+  const mockSdk = {
+    domainRepository: { find: mockFind },
   };
   return {
-    useSdkStore: vi.fn().mockReturnValue({
-      metaNamesSdk: mockMetaNamesSdk,
+    useSdkStore: vi.fn().mockImplementation((selector) => {
+      const state = {
+        metaNamesSdk: mockSdk,
+        availableCoins: [],
+        selectedCoin: "ETH",
+        setMetaNamesSdk: vi.fn(),
+        setSelectedCoin: vi.fn(),
+      };
+      return selector ? selector(state) : state;
     }),
   };
 });
@@ -29,17 +38,9 @@ vi.mock("@/lib/domain-validator", () => ({
 }));
 
 describe("DomainSearch", () => {
-  const mockFind = vi.fn();
-  const mockMetaNamesSdk = {
-    domainRepository: { find: mockFind },
-  };
-
   beforeEach(() => {
     vi.clearAllMocks();
     mockFind.mockResolvedValue(null);
-    (useSdkStore as unknown as ReturnType<typeof vi.fn>).mockReturnValue({
-      metaNamesSdk: mockMetaNamesSdk,
-    });
     (validateDomainName as unknown as ReturnType<typeof vi.fn>).mockReturnValue(
       {
         valid: true,
