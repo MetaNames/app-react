@@ -9,9 +9,9 @@ export interface Domain {
   records: Record<string, string>;
 }
 export interface RecordRepository {
-  create(params: { class: RecordClass; data: string }): Promise<any>;
-  update(params: { class: RecordClass; data: string }): Promise<any>;
-  delete(recordClass: RecordClass): Promise<any>;
+  create(params: { class: RecordClass; data: string }): Promise<void>;
+  update(params: { class: RecordClass; data: string }): Promise<void>;
+  delete(recordClass: RecordClass): Promise<void>;
 }
 export interface AlertMessage {
   message: string;

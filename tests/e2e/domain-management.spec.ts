@@ -1,6 +1,6 @@
 import { test, expect } from "@playwright/test";
 import { connectWallet, gotoAndRestoreWallet } from "./helpers/wallet-helper";
-import { SELECTORS, TEXT, CSS_CLASSES, TEST_DOMAIN_NAME } from "./constants";
+import { TEXT, CSS_CLASSES, TEST_DOMAIN_NAME } from "./constants";
 import {
   navigateToSettingsTab,
   expectSectionConditional,
@@ -134,8 +134,6 @@ test.describe("Domain Management", () => {
   test("settings tab shows Records editor and action buttons", async ({
     page,
   }) => {
-    const domainPage = new DomainPage(page);
-
     if (!(await gotoAndRestoreWallet(page, `/domain/${TEST_DOMAIN_NAME}`))) {
       test.skip(true, "Wallet not available");
     }

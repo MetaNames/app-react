@@ -25,36 +25,68 @@ vi.mock("@/lib/records", () => ({
 }));
 
 vi.mock("@/components/ui/button", () => ({
-  Button: vi.fn(({ children, disabled, ...props }: any) => (
-    <button disabled={disabled} data-testid={props["data-testid"]} {...props}>
-      {children}
-    </button>
-  )),
+  Button: vi.fn(
+    ({
+      children,
+      disabled,
+      ...props
+    }: {
+      children: React.ReactNode;
+      disabled?: boolean;
+      [key: string]: unknown;
+    }) => (
+      <button disabled={disabled} data-testid={props["data-testid"]} {...props}>
+        {children}
+      </button>
+    ),
+  ),
 }));
 
 let mockOnValueChange: ((value: string) => void) | null = null;
 
 vi.mock("@/components/ui/select", () => ({
-  Select: ({ children, value, onValueChange }: any) => {
-    mockOnValueChange = onValueChange;
+  Select: ({
+    children,
+    value,
+    onValueChange,
+  }: {
+    children: React.ReactNode;
+    value?: string;
+    onValueChange?: (value: string) => void;
+  }) => {
+    mockOnValueChange = onValueChange ?? null;
     return (
       <div data-testid="select" data-value={value}>
         {children}
       </div>
     );
   },
-  SelectTrigger: ({ children, ...props }: any) => (
-    <button {...props}>{children}</button>
-  ),
-  SelectValue: ({ placeholder }: any) => (
+  SelectTrigger: ({
+    children,
+    ...props
+  }: {
+    children: React.ReactNode;
+    [key: string]: unknown;
+  }) => <button {...props}>{children}</button>,
+  SelectValue: ({ placeholder }: { placeholder?: string }) => (
     <span>{placeholder || "Select value"}</span>
   ),
-  SelectContent: ({ children }: any) => <div>{children}</div>,
-  SelectItem: ({ children, value, ...props }: any) => (
+  SelectContent: ({ children }: { children: React.ReactNode }) => (
+    <div>{children}</div>
+  ),
+  SelectItem: ({
+    children,
+    value,
+    ...props
+  }: {
+    children: React.ReactNode;
+    value?: string;
+    [key: string]: unknown;
+  }) => (
     <div
       data-testid={`select-option-${value}`}
       data-value={value}
-      onClick={() => mockOnValueChange?.(value)}
+      onClick={() => value && mockOnValueChange?.(value)}
       {...props}
     >
       {children}
@@ -63,23 +95,45 @@ vi.mock("@/components/ui/select", () => ({
 }));
 
 vi.mock("@/components/ui/card", () => ({
-  Card: ({ children, className }: any) => (
-    <div className={className}>{children}</div>
+  Card: ({
+    children,
+    className,
+  }: {
+    children: React.ReactNode;
+    className?: string;
+  }) => <div className={className}>{children}</div>,
+  CardHeader: ({ children }: { children: React.ReactNode }) => (
+    <div>{children}</div>
   ),
-  CardHeader: ({ children }: any) => <div>{children}</div>,
-  CardTitle: ({ children }: any) => <div>{children}</div>,
-  CardContent: ({ children }: any) => <div>{children}</div>,
+  CardTitle: ({ children }: { children: React.ReactNode }) => (
+    <div>{children}</div>
+  ),
+  CardContent: ({ children }: { children: React.ReactNode }) => (
+    <div>{children}</div>
+  ),
 }));
 
 vi.mock("@/components/ui/textarea", () => ({
-  Textarea: vi.fn(({ value, onChange, placeholder, ...props }: any) => (
-    <textarea
-      value={value}
-      onChange={onChange}
-      placeholder={placeholder}
-      {...props}
-    />
-  )),
+  Textarea: vi.fn(
+    ({
+      value,
+      onChange,
+      placeholder,
+      ...props
+    }: {
+      value?: string;
+      onChange?: React.ChangeEventHandler<HTMLTextAreaElement>;
+      placeholder?: string;
+      [key: string]: unknown;
+    }) => (
+      <textarea
+        value={value}
+        onChange={onChange}
+        placeholder={placeholder}
+        {...props}
+      />
+    ),
+  ),
 }));
 
 const mockRepository = {

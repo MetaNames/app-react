@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
 import { MetaNamesSdk, Enviroment } from "@metanames/sdk";
+import type { BYOCSymbol } from "@metanames/sdk/dist/providers/config";
 function getSdk() {
   const sdk = new MetaNamesSdk(
     process.env.NEXT_PUBLIC_ENV !== "prod"
@@ -18,7 +19,7 @@ export async function GET(
     const domainName = name.endsWith(".mpc") ? name : `${name}.mpc`;
     const fees = await sdk.domainRepository.calculateMintFees(
       domainName,
-      coin as any,
+      coin as BYOCSymbol,
     );
     if (!fees)
       return NextResponse.json({ error: "Not found" }, { status: 404 });

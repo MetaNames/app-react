@@ -1,21 +1,22 @@
 "use client";
-import { useEffect, useState } from "react";
+import { useCallback, useEffect, useState } from "react";
 import { useParams } from "next/navigation";
 import { Records } from "@/components/records";
 import { GoBackButton } from "@/components/go-back-button";
 import { ConnectionRequired } from "@/components/connection-required";
 import { useSdkStore } from "@/lib/stores/sdk-store";
+import { type RecordRepository } from "@/lib/types";
 import { normalizeDomain } from "@/lib/domain-validator";
 import { Loader2 } from "lucide-react";
 
 export default function RecordsPage() {
   const { name } = useParams<{ name: string }>();
   const { metaNamesSdk } = useSdkStore();
-  const [domain, setDomain] = useState<any>(null);
+  const [domain, setDomain] = useState<unknown>(null);
   const [loading, setLoading] = useState(true);
   const domainName = normalizeDomain(decodeURIComponent(name));
 
-  const load = async () => {
+  const load = useCallback(async () => {
     if (!metaNamesSdk) return;
     setLoading(true);
     try {
@@ -23,10 +24,11 @@ export default function RecordsPage() {
     } finally {
       setLoading(false);
     }
-  };
+  }, [metaNamesSdk, domainName]);
+
   useEffect(() => {
     load();
-  }, [name, metaNamesSdk]);
+  }, [load]);
 
   if (loading)
     return (
@@ -39,10 +41,16 @@ export default function RecordsPage() {
       <GoBackButton />
       <h2 className="text-2xl font-bold">Records — {domainName}</h2>
       <ConnectionRequired>
-        {domain && (
+        {domain !== null && (
           <Records
-            records={domain.records ?? {}}
-            repository={domain.getRecordRepository(metaNamesSdk)}
+            records={
+              (domain as { records?: Record<string, string> }).records ?? {}
+            }
+            repository={(
+              domain as {
+                getRecordRepository: (sdk: unknown) => RecordRepository;
+              }
+            ).getRecordRepository(metaNamesSdk)}
             onUpdate={load}
           />
         )}

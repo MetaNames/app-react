@@ -1,5 +1,5 @@
 "use client";
-import { useState, useEffect, useMemo } from "react";
+import { useState, useMemo } from "react";
 import { Button } from "@/components/ui/button";
 import {
   DropdownMenu,
@@ -29,12 +29,8 @@ export function WalletConnectButton() {
   const { metaNamesSdk } = useSdkStore();
   const [devKey, setDevKey] = useState("");
   const [open, setOpen] = useState(false);
-  const [mounted, setMounted] = useState(false);
+  const [mounted] = useState(true);
   const isValidKey = useMemo(() => validatePrivateKey(devKey), [devKey]);
-
-  useEffect(() => {
-    setMounted(true);
-  }, []);
 
   const handleConnect = async (type: "metamask" | "partisia" | "ledger") => {
     if (!metaNamesSdk) return;
@@ -47,8 +43,8 @@ export function WalletConnectButton() {
       setAddress(addr);
       setOpen(false);
       toast.success("Wallet connected");
-    } catch (e: any) {
-      toast.error(e?.message ?? "Failed to connect wallet");
+    } catch (e) {
+      toast.error((e as Error)?.message ?? "Failed to connect wallet");
     }
   };
 
@@ -63,8 +59,8 @@ export function WalletConnectButton() {
       setAddress(addr);
       setOpen(false);
       toast.success("Dev wallet connected");
-    } catch (e: any) {
-      toast.error(e?.message ?? "Failed to connect");
+    } catch (e) {
+      toast.error((e as Error)?.message ?? "Failed to connect");
     }
   };
 

@@ -28,7 +28,6 @@ import {
   navigateToSettingsTab,
   waitForDropdown,
   waitForDomainTitle,
-  selectFirstDropdownOption,
 } from "./fixtures/shared";
 import { DomainPage } from "./pages/DomainPage";
 
@@ -565,10 +564,6 @@ test.describe("DNS Records Management", () => {
     await expect(recordsContainer).toBeVisible();
 
     const firstRecord = page.locator(CSS_CLASSES.RECORD_CONTAINER).first();
-    const valueBeforeEdit = await firstRecord
-      .locator("p")
-      .first()
-      .textContent();
 
     const editButton = firstRecord.locator(SELECTORS.EDIT_RECORD);
     await editButton.click();

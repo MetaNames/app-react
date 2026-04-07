@@ -3,7 +3,7 @@
  */
 
 import { type Page, type Locator, expect } from "@playwright/test";
-import { SELECTORS, TEXT, CSS_CLASSES, PLACEHOLDERS } from "../constants";
+import { SELECTORS, TEXT, CSS_CLASSES } from "../constants";
 
 export class RegisterPage {
   readonly page: Page;

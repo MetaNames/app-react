@@ -1,6 +1,5 @@
 "use client";
 import { useEffect, useRef } from "react";
-import Link from "next/link";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Chip } from "@/components/chip";
 import { Records } from "@/components/records";
@@ -14,7 +13,7 @@ import {
   SOCIAL_RECORD_TYPES,
   type Domain as DomainType,
 } from "@/lib/types";
-import { createRecordRepository, isUrlRecord } from "@/lib/records";
+import { createRecordRepository } from "@/lib/records";
 import { useRouter } from "next/navigation";
 
 interface DomainProps {

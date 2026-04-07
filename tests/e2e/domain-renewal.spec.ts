@@ -7,19 +7,12 @@
  */
 
 import { test, expect } from "@playwright/test";
-import {
-  SELECTORS,
-  TEXT,
-  CSS_CLASSES,
-  TEST_DOMAIN_NAME,
-  VISIBILITY_TIMEOUT_MS,
-} from "./constants";
+import { TEXT, CSS_CLASSES, TEST_DOMAIN_NAME } from "./constants";
 import {
   connectWallet,
   executeBlockchainOp,
   gotoAndRestoreWallet,
 } from "./helpers/wallet-helper";
-import { RegisterPage } from "./pages/RegisterPage";
 
 test.describe("Domain Renewal", () => {
   test.setTimeout(60000);

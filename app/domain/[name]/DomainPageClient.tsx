@@ -1,7 +1,8 @@
 "use client";
-import { useParams, useRouter } from "next/navigation";
-import { useEffect, useState } from "react";
+import { useRouter } from "next/navigation";
+import { useCallback, useEffect, useState, useTransition } from "react";
 import { Domain } from "@/components/domain";
+import { type Domain as DomainType } from "@/lib/types";
 import { useSdkStore } from "@/lib/stores/sdk-store";
 import { useWalletStore } from "@/lib/stores/wallet-store";
 import { Loader2 } from "lucide-react";
@@ -12,12 +13,14 @@ export function DomainPageClient({ name }: { name: string }) {
   const router = useRouter();
   const { metaNamesSdk } = useSdkStore();
   const lastRefreshed = useWalletStore((s) => s.lastRefreshed);
-  const [domain, setDomain] = useState<any>(null);
+  const [domain, setDomain] = useState<unknown>(null);
   const [loading, setLoading] = useState(true);
+  const [, startTransition] = useTransition();
 
-  const load = async () => {
+  const load = useCallback(async () => {
     if (!metaNamesSdk) return;
-    setLoading(true);
+    // Only set loading true if not already loading (for refresh scenarios)
+    setLoading((prev) => (prev ? prev : true));
     try {
       const domainName = normalizeDomain(decodeURIComponent(name));
       const d = await metaNamesSdk.domainRepository.find(domainName);
@@ -27,16 +30,19 @@ export function DomainPageClient({ name }: { name: string }) {
         setLoading(false);
         return;
       }
-      setDomain(d);
-      setLoading(false);
+      startTransition(() => {
+        setDomain(d);
+        setLoading(false);
+      });
     } catch {
       setLoading(false);
     }
-  };
+  }, [metaNamesSdk, name, router]);
 
   useEffect(() => {
+    // eslint-disable-next-line react-hooks/set-state-in-effect
     load();
-  }, [name, metaNamesSdk, lastRefreshed]);
+  }, [load, lastRefreshed]);
 
   if (loading)
     return (
@@ -45,5 +51,5 @@ export function DomainPageClient({ name }: { name: string }) {
       </div>
     );
   if (!domain) return null;
-  return <Domain domain={domain} onRefresh={load} />;
+  return <Domain domain={domain as DomainType} onRefresh={load} />;
 }

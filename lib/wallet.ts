@@ -1,19 +1,26 @@
 import type { MetaNamesSdk } from "@metanames/sdk";
+import type { MetaMaskSdk } from "@metanames/sdk/dist/interface";
+import type { PermissionTypes } from "partisia-blockchain-applications-sdk/lib/sdk-listeners";
 import { config } from "./config";
+
+interface EthereumProvider extends MetaMaskSdk {
+  isMetaMask?: boolean;
+}
+
 export async function connectMetaMask(sdk: MetaNamesSdk): Promise<string> {
-  const eth = (window as any).ethereum;
-  if (!eth) throw new Error("MetaMask not found");
+  const eth = window as unknown as EthereumProvider;
+  if (!eth?.isMetaMask) throw new Error("MetaMask not found");
   await eth.request({
     method: "wallet_requestSnaps",
     params: { "npm:@partisiablockchain/snap": {} },
   });
-  const res = await eth.request({
+  const res = (await eth.request({
     method: "wallet_invokeSnap",
     params: {
       snapId: "npm:@partisiablockchain/snap",
       request: { method: "get_address" },
     },
-  });
+  })) as { address?: string };
   if (!res?.address) throw new Error("No address from MetaMask");
   sdk.setSigningStrategy("MetaMask", eth);
   return res.address;
@@ -26,10 +33,10 @@ export async function connectPartisiaWallet(
   const client = new PartisiaSdk();
   await client.connect({
     chainId: config.chainId,
-    permissions: ["sign"] as any,
+    permissions: ["sign"] as PermissionTypes[],
     dappName: "MetaNames",
   });
-  const address = (client as any).connection?.account?.address;
+  const address = client.connection?.account?.address;
   if (!address) throw new Error("No address from Partisia Wallet");
   sdk.setSigningStrategy("partisiaSdk", client);
   return address;
@@ -53,8 +60,8 @@ export async function connectDevPrivateKey(
   if (process.env.NODE_ENV === "production") {
     throw new Error("This method is only available in development mode");
   }
-  const mod = (await import("partisia-blockchain-applications-crypto")) as any;
-  const partisiaCrypto = mod.default?.partisiaCrypto || mod.partisiaCrypto;
+  const mod = await import("partisia-blockchain-applications-crypto");
+  const partisiaCrypto = mod.default?.partisiaCrypto ?? mod.partisiaCrypto;
   const address = partisiaCrypto.wallet.privateKeyToAccountAddress(privateKey);
   sdk.setSigningStrategy("privateKey", privateKey);
   return address;

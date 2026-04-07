@@ -33,22 +33,46 @@ vi.mock("@/components/ui/button", () => ({
 }));
 
 vi.mock("@/components/ui/dialog", () => ({
-  Dialog: ({ children, open, onOpenChange }: any) =>
+  Dialog: ({
+    children,
+    open,
+    onOpenChange,
+  }: {
+    children: React.ReactNode;
+    open: boolean;
+    onOpenChange?: (open: boolean) => void;
+  }) =>
     open ? (
       <div role="dialog" onChange={() => onOpenChange?.(false)}>
         {children}
       </div>
     ) : null,
-  DialogContent: ({ children }: any) => <div>{children}</div>,
-  DialogHeader: ({ children }: any) => <div>{children}</div>,
-  DialogTitle: ({ children }: any) => <h2>{children}</h2>,
-  DialogFooter: ({ children }: any) => <div>{children}</div>,
+  DialogContent: ({ children }: { children: React.ReactNode }) => (
+    <div>{children}</div>
+  ),
+  DialogHeader: ({ children }: { children: React.ReactNode }) => (
+    <div>{children}</div>
+  ),
+  DialogTitle: ({ children }: { children: React.ReactNode }) => (
+    <h2>{children}</h2>
+  ),
+  DialogFooter: ({ children }: { children: React.ReactNode }) => (
+    <div>{children}</div>
+  ),
 }));
 
 vi.mock("@/components/ui/textarea", () => ({
-  Textarea: vi.fn(({ value, onChange, ...props }: any) => (
-    <textarea value={value} onChange={onChange} {...props} />
-  )),
+  Textarea: vi.fn(
+    ({
+      value,
+      onChange,
+      ...props
+    }: {
+      value?: string;
+      onChange?: React.ChangeEventHandler<HTMLTextAreaElement>;
+      [key: string]: unknown;
+    }) => <textarea value={value} onChange={onChange} {...props} />,
+  ),
 }));
 
 const mockRepository = {

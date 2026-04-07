@@ -2,18 +2,23 @@
 import { useEffect, useState } from "react";
 import { Domain } from "@/components/domain";
 import { useSdkStore } from "@/lib/stores/sdk-store";
+import type { Domain as DomainType } from "@/lib/types";
 import { Loader2 } from "lucide-react";
 
 export function TldPageClient() {
   const { metaNamesSdk } = useSdkStore();
-  const [tldDomain, setTldDomain] = useState<any>(null);
+  const [tldDomain, setTldDomain] = useState<DomainType | null>(null);
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
     if (!metaNamesSdk) return;
     const contractAddress = metaNamesSdk.config.contractAddress;
-    (metaNamesSdk.domainRepository.find as any)("mpc.mpc")
-      .then((d: any) =>
+    (
+      metaNamesSdk.domainRepository.find as (
+        name: string,
+      ) => Promise<DomainType | null>
+    )("mpc.mpc")
+      .then((d) =>
         setTldDomain(
           d ?? {
             name: "mpc",
@@ -24,7 +29,6 @@ export function TldPageClient() {
             expiresAt: null,
             parentId: null,
             records: {},
-            getRecordRepository: () => null,
           },
         ),
       )

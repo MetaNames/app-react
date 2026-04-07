@@ -19,10 +19,8 @@ import {
   PLACEHOLDERS,
   VISIBILITY_TIMEOUT_MS,
   PAYMENT_TOKENS,
-  TEST_DOMAIN_NAME,
 } from "./constants";
-import { RegisterPage } from "./pages/RegisterPage";
-import { generateTestDomain, waitForSpinner } from "./fixtures/shared";
+import { generateTestDomain } from "./fixtures/shared";
 
 test.describe("Domain Registration", () => {
   test.beforeEach(async ({ page }) => {

@@ -1,6 +1,5 @@
 import { test, expect } from "@playwright/test";
 import {
-  SELECTORS,
   TEXT,
   CSS_CLASSES,
   VALID_ADDRESS,

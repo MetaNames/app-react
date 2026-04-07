@@ -1,4 +1,4 @@
-import { describe, it, expect, vi, beforeEach, afterEach } from "vitest";
+import { describe, it, expect, vi, afterEach } from "vitest";
 import { renderHook, act } from "@testing-library/react";
 import { useSdkStore } from "../stores/sdk-store";
 
@@ -57,7 +57,11 @@ describe("sdk-store", () => {
     const { result } = renderHook(() => useSdkStore());
     const mockSdk = { name: "mocked-sdk" };
     act(() => {
-      result.current.setMetaNamesSdk(mockSdk as any);
+      result.current.setMetaNamesSdk(
+        mockSdk as unknown as Parameters<
+          typeof result.current.setMetaNamesSdk
+        >[0],
+      );
     });
     expect(result.current.metaNamesSdk).toBe(mockSdk);
   });
@@ -67,11 +71,19 @@ describe("sdk-store", () => {
     const mockSdk1 = { name: "mocked-sdk-1" };
     const mockSdk2 = { name: "mocked-sdk-2" };
     act(() => {
-      result.current.setMetaNamesSdk(mockSdk1 as any);
+      result.current.setMetaNamesSdk(
+        mockSdk1 as unknown as Parameters<
+          typeof result.current.setMetaNamesSdk
+        >[0],
+      );
     });
     expect(result.current.metaNamesSdk).toBe(mockSdk1);
     act(() => {
-      result.current.setMetaNamesSdk(mockSdk2 as any);
+      result.current.setMetaNamesSdk(
+        mockSdk2 as unknown as Parameters<
+          typeof result.current.setMetaNamesSdk
+        >[0],
+      );
     });
     expect(result.current.metaNamesSdk).toBe(mockSdk2);
   });

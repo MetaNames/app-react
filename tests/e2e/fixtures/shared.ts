@@ -8,7 +8,6 @@
 import { type Page, type Locator, expect } from "@playwright/test";
 import {
   SELECTORS,
-  TEXT,
   DEBOUNCE_MS,
   SPINNER_TIMEOUT_MS,
   VISIBILITY_TIMEOUT_MS,

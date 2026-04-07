@@ -1,5 +1,5 @@
 "use client";
-import { useParams, useRouter } from "next/navigation";
+import { useRouter } from "next/navigation";
 import { useEffect, useState } from "react";
 import { DomainPayment } from "@/components/domain-payment";
 import { SubdomainRegistration } from "@/components/subdomain-registration";

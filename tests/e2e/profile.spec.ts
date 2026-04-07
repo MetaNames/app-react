@@ -2,7 +2,6 @@ import { test, expect } from "@playwright/test";
 import {
   SELECTORS,
   TEXT,
-  CSS_CLASSES,
   PAGINATION_WAIT_MS,
   TEST_DOMAIN_NAME,
 } from "./constants";

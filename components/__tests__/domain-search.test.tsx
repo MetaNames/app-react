@@ -8,7 +8,7 @@ import {
 } from "@testing-library/react";
 import { DomainSearch } from "../domain-search";
 import { useSdkStore } from "@/lib/stores/sdk-store";
-import { validateDomainName, normalizeDomain } from "@/lib/domain-validator";
+import { validateDomainName } from "@/lib/domain-validator";
 
 vi.mock("@/lib/stores/sdk-store", () => ({
   useSdkStore: vi.fn(),

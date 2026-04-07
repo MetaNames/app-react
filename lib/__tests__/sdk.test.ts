@@ -83,9 +83,13 @@ describe("lib/sdk", () => {
         accountRepository: {
           getBalance: vi.fn().mockResolvedValue(100),
         },
-      } as any;
+      };
       const { getAccountBalance } = await import("../sdk");
-      const balance = await getAccountBalance(mockSdk, "0x1234", "PARTI");
+      const balance = await getAccountBalance(
+        mockSdk as unknown as Parameters<typeof getAccountBalance>[0],
+        "0x1234",
+        "PARTI",
+      );
       expect(balance).toBe(100);
     });
 
@@ -94,9 +98,13 @@ describe("lib/sdk", () => {
         accountRepository: {
           getBalance: vi.fn().mockRejectedValue(new Error("Network error")),
         },
-      } as any;
+      };
       const { getAccountBalance } = await import("../sdk");
-      const balance = await getAccountBalance(mockSdk, "0x1234", "PARTI");
+      const balance = await getAccountBalance(
+        mockSdk as unknown as Parameters<typeof getAccountBalance>[0],
+        "0x1234",
+        "PARTI",
+      );
       expect(balance).toBe(0);
     });
 
@@ -105,9 +113,13 @@ describe("lib/sdk", () => {
         accountRepository: {
           getBalance: vi.fn().mockResolvedValue("not a number"),
         },
-      } as any;
+      };
       const { getAccountBalance } = await import("../sdk");
-      const balance = await getAccountBalance(mockSdk, "0x1234", "PARTI");
+      const balance = await getAccountBalance(
+        mockSdk as unknown as Parameters<typeof getAccountBalance>[0],
+        "0x1234",
+        "PARTI",
+      );
       expect(balance).toBe(0);
     });
   });

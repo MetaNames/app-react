@@ -141,11 +141,11 @@ describe("shortenAddress", () => {
   });
 
   it("handles undefined", () => {
-    expect(shortenAddress(undefined as any)).toBeUndefined();
+    expect(shortenAddress("undefined" as unknown as string)).toBeUndefined();
   });
 
   it("handles null", () => {
-    expect(shortenAddress(null as any)).toBeNull();
+    expect(shortenAddress("null" as unknown as string)).toBeNull();
   });
 
   it("returns address with exactly 8 characters shortened to first4...last4", () => {

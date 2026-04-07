@@ -11,7 +11,7 @@ function SdkInitializer() {
   const { metaNamesSdk, setMetaNamesSdk } = useSdkStore();
   useEffect(() => {
     if (!metaNamesSdk) setMetaNamesSdk(metaNamesSdkFactory());
-  }, []);
+  }, [metaNamesSdk, setMetaNamesSdk]);
   return null;
 }
 

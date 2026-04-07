@@ -1,5 +1,6 @@
 import { NextResponse } from "next/server";
 import { MetaNamesSdk, Enviroment } from "@metanames/sdk";
+import type { Domain } from "@metanames/sdk/dist/models/domain";
 export async function GET() {
   try {
     const sdk = new MetaNamesSdk(
@@ -11,7 +12,7 @@ export async function GET() {
     const recent = all
       ? [...all]
           .sort(
-            (a: any, b: any) =>
+            (a: Domain, b: Domain) =>
               new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime(),
           )
           .slice(0, 10)

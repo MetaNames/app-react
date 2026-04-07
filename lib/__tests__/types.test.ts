@@ -111,7 +111,7 @@ describe("Domain interface structure", () => {
       expiresAt: new Date(),
       parentId: null,
       records: {},
-      getRecordRepository: (sdk: any) => null,
+      getRecordRepository: (_sdk: unknown) => null,
     };
 
     expect(domain.name).toBe("test.mpc");
@@ -135,7 +135,7 @@ describe("Domain interface structure", () => {
       expiresAt: new Date(),
       parentId: "test.mpc",
       records: {},
-      getRecordRepository: (sdk: any) => null,
+      getRecordRepository: (_sdk: unknown) => null,
     };
 
     expect(subdomain.name).toBe("sub.test.mpc");
@@ -146,11 +146,11 @@ describe("Domain interface structure", () => {
 describe("RecordRepository interface structure", () => {
   it("has correct method signatures", () => {
     const repository = {
-      create: async (params: { class: string; data: string }) =>
+      create: async (_params: { class: string; data: string }) =>
         Promise.resolve({}),
-      update: async (params: { class: string; data: string }) =>
+      update: async (_params: { class: string; data: string }) =>
         Promise.resolve({}),
-      delete: async (recordClass: string) => Promise.resolve({}),
+      delete: async (_recordClass: string) => Promise.resolve({}),
     };
 
     expect(typeof repository.create).toBe("function");

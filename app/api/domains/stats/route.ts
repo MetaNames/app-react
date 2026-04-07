@@ -1,5 +1,6 @@
 import { NextResponse } from "next/server";
 import { MetaNamesSdk, Enviroment } from "@metanames/sdk";
+import type { Domain } from "@metanames/sdk/dist/models/domain";
 export async function GET() {
   try {
     const sdk = new MetaNamesSdk(
@@ -9,12 +10,12 @@ export async function GET() {
     );
     let domainCount = 0,
       ownerCount = 0,
-      recentDomains: any[] = [];
+      recentDomains: Domain[] = [];
     try {
       const domains = await sdk.domainRepository.getAll();
       if (domains) {
         domainCount = domains.length;
-        ownerCount = new Set(domains.map((d: any) => d.owner)).size;
+        ownerCount = new Set(domains.map((d: Domain) => d.owner)).size;
       }
     } catch (e) {
       console.error("Error fetching domains:", e);
@@ -24,7 +25,7 @@ export async function GET() {
       if (all) {
         recentDomains = [...all]
           .sort(
-            (a: any, b: any) =>
+            (a: Domain, b: Domain) =>
               new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime(),
           )
           .slice(0, 5);

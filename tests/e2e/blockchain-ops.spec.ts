@@ -13,7 +13,6 @@ import { test, expect, type Page } from "@playwright/test";
 import {
   connectWallet,
   restoreWalletConnection,
-  waitForToast,
   executeBlockchainOp,
   TEST_DOMAIN,
   gotoAndRestoreWallet,
@@ -28,10 +27,8 @@ import {
 } from "./constants";
 import {
   navigateToSettingsTab,
-  waitForSpinner,
   waitForDropdown,
   waitForDomainTitle,
-  selectFirstDropdownOption,
 } from "./fixtures/shared";
 import { RegisterPage } from "./pages/RegisterPage";
 import { DomainPage } from "./pages/DomainPage";

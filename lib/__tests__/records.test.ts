@@ -12,7 +12,9 @@ describe("validateRecordValue", () => {
     });
 
     it("returns error for null/undefined", () => {
-      expect(validateRecordValue("Bio", null as any)).toBe("Value is required");
+      expect(validateRecordValue("Bio", null as unknown)).toBe(
+        "Value is required",
+      );
     });
   });
 
@@ -170,7 +172,7 @@ describe("validateRecordValue", () => {
 
   describe("edge cases", () => {
     it("handles unknown record type gracefully", () => {
-      const result = validateRecordValue("Unknown" as any, "value");
+      const result = validateRecordValue("Unknown" as unknown, "value");
       expect(result).toBeNull();
     });
 

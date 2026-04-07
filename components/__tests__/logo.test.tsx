@@ -116,7 +116,6 @@ describe("Logo", () => {
     it("SVG comes before text", () => {
       render(<Logo />);
       const link = screen.getByRole("link");
-      const childNodes = Array.from(link.childNodes);
       // First child should be the SVG (or a text node with whitespace before SVG)
       expect(link.firstChild).toBeDefined();
     });

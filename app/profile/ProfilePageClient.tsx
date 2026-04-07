@@ -1,26 +1,45 @@
 "use client";
-import { useEffect, useState } from "react";
+import { useEffect, useState, useTransition, useEffectEvent } from "react";
 import { DomainsTable } from "@/components/domains-table";
 import { Chip } from "@/components/chip";
 import { useWalletStore } from "@/lib/stores/wallet-store";
 import { useSdkStore } from "@/lib/stores/sdk-store";
 import { explorerAddressUrl } from "@/lib/url";
+import type { Domain } from "@/lib/types";
 import { Loader2 } from "lucide-react";
 
 export function ProfilePageClient() {
   const { address } = useWalletStore();
   const { metaNamesSdk } = useSdkStore();
-  const [domains, setDomains] = useState<any[]>([]);
+  const [domains, setDomains] = useState<Domain[]>([]);
   const [loading, setLoading] = useState(false);
+  const [, startTransition] = useTransition();
 
-  useEffect(() => {
+  const handleLoadDomains = useEffectEvent(() => {
     if (!address || !metaNamesSdk) return;
     setLoading(true);
-    (metaNamesSdk.domainRepository.findByOwner as any)(address)
-      .then(setDomains)
-      .catch(() => setDomains([]))
-      .finally(() => setLoading(false));
-  }, [address, metaNamesSdk]);
+    (
+      metaNamesSdk.domainRepository.findByOwner as (
+        addr: string,
+      ) => Promise<Domain[]>
+    )(address)
+      .then((result) => {
+        startTransition(() => {
+          setDomains(result);
+          setLoading(false);
+        });
+      })
+      .catch(() => {
+        startTransition(() => {
+          setDomains([]);
+          setLoading(false);
+        });
+      });
+  });
+
+  useEffect(() => {
+    handleLoadDomains();
+  }, []);
 
   if (!address)
     return (
