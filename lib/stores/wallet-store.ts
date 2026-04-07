@@ -1,5 +1,5 @@
-import { create } from 'zustand';
-import type { AlertMessage } from '../types';
+import { create } from "zustand";
+import type { AlertMessage } from "../types";
 interface WalletStore {
   address: string | undefined;
   alertMessage: AlertMessage | undefined;
@@ -11,7 +11,10 @@ interface WalletStore {
   triggerRefresh: () => void;
 }
 export const useWalletStore = create<WalletStore>((set) => ({
-  address: undefined, alertMessage: undefined, alertTransaction: undefined, lastRefreshed: null,
+  address: undefined,
+  alertMessage: undefined,
+  alertTransaction: undefined,
+  lastRefreshed: null,
   setAddress: (address) => set({ address }),
   setAlertMessage: (alertMessage) => set({ alertMessage }),
   setAlertTransaction: (alertTransaction) => set({ alertTransaction }),

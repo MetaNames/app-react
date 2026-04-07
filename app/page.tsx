@@ -1,4 +1,4 @@
-import { DomainSearch } from '@/components/domain-search';
+import { DomainSearch } from "@/components/domain-search";
 
 export default function HomePage() {
   return (
@@ -8,7 +8,8 @@ export default function HomePage() {
           Your identity on Partisia Blockchain
         </h1>
         <p className="text-base sm:text-lg text-muted-foreground">
-          Register a <span className="font-semibold text-primary">.mpc</span> domain name and take control of your Web3 identity.
+          Register a <span className="font-semibold text-primary">.mpc</span>{" "}
+          domain name and take control of your Web3 identity.
         </p>
       </div>
       <div className="w-full max-w-xl px-4">

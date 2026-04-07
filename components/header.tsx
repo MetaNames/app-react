@@ -1,11 +1,11 @@
-'use client';
-import { useState } from 'react';
-import Link from 'next/link';
-import { Logo } from '@/components/logo';
-import { WalletConnectButton } from '@/components/wallet-connect-button';
-import { Badge } from '@/components/ui/badge';
-import { config } from '@/lib/config';
-import { Menu, X } from 'lucide-react';
+"use client";
+import { useState } from "react";
+import Link from "next/link";
+import { Logo } from "@/components/logo";
+import { WalletConnectButton } from "@/components/wallet-connect-button";
+import { Badge } from "@/components/ui/badge";
+import { config } from "@/lib/config";
+import { Menu, X } from "lucide-react";
 
 export function Header() {
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
@@ -42,7 +42,11 @@ export function Header() {
             className="p-2 hover:bg-muted rounded-md transition-colors md:hidden"
             aria-label="Toggle menu"
           >
-            {mobileMenuOpen ? <X className="h-5 w-5" /> : <Menu className="h-5 w-5" />}
+            {mobileMenuOpen ? (
+              <X className="h-5 w-5" />
+            ) : (
+              <Menu className="h-5 w-5" />
+            )}
           </button>
         </div>
       </div>

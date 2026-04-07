@@ -1,6 +1,10 @@
-import { RegisterPageClient } from './RegisterPageClient';
+import { RegisterPageClient } from "./RegisterPageClient";
 
-export async function generateMetadata({ params }: { params: Promise<{ name: string }> }) {
+export async function generateMetadata({
+  params,
+}: {
+  params: Promise<{ name: string }>;
+}) {
   const { name } = await params;
   const domainName = decodeURIComponent(name);
   return {
@@ -9,7 +13,11 @@ export async function generateMetadata({ params }: { params: Promise<{ name: str
   };
 }
 
-export default async function RegisterPage({ params }: { params: Promise<{ name: string }> }) {
+export default async function RegisterPage({
+  params,
+}: {
+  params: Promise<{ name: string }>;
+}) {
   const { name } = await params;
   return <RegisterPageClient name={name} />;
 }

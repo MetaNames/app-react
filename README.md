@@ -48,14 +48,14 @@ Open [http://localhost:3000](http://localhost:3000) with your browser to see the
 
 ### Available Scripts
 
-| Command | Description |
-|---------|-------------|
-| `npm run dev` | Start development server |
-| `npm run build` | Build for production |
-| `npm run start` | Start production server |
-| `npm run lint` | Run ESLint |
-| `npm run test` | Run unit tests with Vitest |
-| `npm run test:run` | Run unit tests once |
+| Command            | Description                          |
+| ------------------ | ------------------------------------ |
+| `npm run dev`      | Start development server             |
+| `npm run build`    | Build for production                 |
+| `npm run start`    | Start production server              |
+| `npm run lint`     | Run ESLint                           |
+| `npm run test`     | Run unit tests with Vitest           |
+| `npm run test:run` | Run unit tests once                  |
 | `npm run test:e2e` | Run end-to-end tests with Playwright |
 
 ### Code Style

@@ -1,7 +1,7 @@
-'use client';
-import { Wallet } from 'lucide-react';
-import { useWalletStore } from '@/lib/stores/wallet-store';
-import { shortenAddress } from '@/lib/wallet';
+"use client";
+import { Wallet } from "lucide-react";
+import { useWalletStore } from "@/lib/stores/wallet-store";
+import { shortenAddress } from "@/lib/wallet";
 
 export function WalletConnectStatus() {
   const { address } = useWalletStore();

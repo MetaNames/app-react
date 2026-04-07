@@ -633,15 +633,15 @@
 
 ```typescript
 interface Domain {
-	name: string; // "example.mpc"
-	nameWithoutTLD: string; // "example"
-	owner: string; // "0x..."
-	tokenId: number;
-	createdAt: Date;
-	expiresAt: Date | null;
-	parentId: string | null; // "test.mpc" for "sub.test.mpc"
-	records: Record<string, any>;
-	getRecordRepository(sdk): RecordRepository;
+  name: string; // "example.mpc"
+  nameWithoutTLD: string; // "example"
+  owner: string; // "0x..."
+  tokenId: number;
+  createdAt: Date;
+  expiresAt: Date | null;
+  parentId: string | null; // "test.mpc" for "sub.test.mpc"
+  records: Record<string, any>;
+  getRecordRepository(sdk): RecordRepository;
 }
 ```
 
@@ -649,9 +649,9 @@ interface Domain {
 
 ```typescript
 interface RecordRepository {
-	create(params: { class: string; data: string }): Promise<ITransactionIntent>;
-	update(params: { class: string; data: string }): Promise<ITransactionIntent>;
-	delete(recordClass: string): Promise<ITransactionIntent>;
+  create(params: { class: string; data: string }): Promise<ITransactionIntent>;
+  update(params: { class: string; data: string }): Promise<ITransactionIntent>;
+  delete(recordClass: string): Promise<ITransactionIntent>;
 }
 ```
 
@@ -661,47 +661,47 @@ Use Zustand for lightweight, React-friendly global state. These replace the Svel
 
 ```typescript
 // lib/stores/wallet-store.ts
-import { create } from 'zustand';
+import { create } from "zustand";
 
 interface WalletStore {
-	address: string | undefined;
-	alertMessage: string | AlertMessage | undefined;
-	alertTransaction: string | undefined;
-	refresh: boolean;
-	setAddress: (address: string | undefined) => void;
-	setAlertMessage: (message: string | AlertMessage | undefined) => void;
-	setAlertTransaction: (txHash: string | undefined) => void;
-	setRefresh: (value: boolean) => void;
+  address: string | undefined;
+  alertMessage: string | AlertMessage | undefined;
+  alertTransaction: string | undefined;
+  refresh: boolean;
+  setAddress: (address: string | undefined) => void;
+  setAlertMessage: (message: string | AlertMessage | undefined) => void;
+  setAlertTransaction: (txHash: string | undefined) => void;
+  setRefresh: (value: boolean) => void;
 }
 
 export const useWalletStore = create<WalletStore>((set) => ({
-	address: undefined,
-	alertMessage: undefined,
-	alertTransaction: undefined,
-	refresh: false,
-	setAddress: (address) => set({ address }),
-	setAlertMessage: (alertMessage) => set({ alertMessage }),
-	setAlertTransaction: (alertTransaction) => set({ alertTransaction }),
-	setRefresh: (refresh) => set({ refresh })
+  address: undefined,
+  alertMessage: undefined,
+  alertTransaction: undefined,
+  refresh: false,
+  setAddress: (address) => set({ address }),
+  setAlertMessage: (alertMessage) => set({ alertMessage }),
+  setAlertTransaction: (alertTransaction) => set({ alertTransaction }),
+  setRefresh: (refresh) => set({ refresh }),
 }));
 ```
 
 ```typescript
 // lib/stores/sdk-store.ts
-import { create } from 'zustand';
+import { create } from "zustand";
 
 interface SdkStore {
-	metaNamesSdk: MetaNamesSdk;
-	selectedCoin: BYOCSymbol;
-	setMetaNamesSdk: (sdk: MetaNamesSdk) => void;
-	setSelectedCoin: (coin: BYOCSymbol) => void;
+  metaNamesSdk: MetaNamesSdk;
+  selectedCoin: BYOCSymbol;
+  setMetaNamesSdk: (sdk: MetaNamesSdk) => void;
+  setSelectedCoin: (coin: BYOCSymbol) => void;
 }
 
 export const useSdkStore = create<SdkStore>((set) => ({
-	metaNamesSdk: metaNamesSdkFactory(),
-	selectedCoin: initialByoc,
-	setMetaNamesSdk: (metaNamesSdk) => set({ metaNamesSdk }),
-	setSelectedCoin: (selectedCoin) => set({ selectedCoin })
+  metaNamesSdk: metaNamesSdkFactory(),
+  selectedCoin: initialByoc,
+  setMetaNamesSdk: (metaNamesSdk) => set({ metaNamesSdk }),
+  setSelectedCoin: (selectedCoin) => set({ selectedCoin }),
 }));
 ```
 
@@ -716,17 +716,17 @@ export const useSdkStore = create<SdkStore>((set) => ({
 
 ## 6. Record Type Specifications
 
-| Type     | Category | Max Length | Validation         |
-| -------- | -------- | ---------- | ------------------ |
-| Bio      | Profile  | 64         | Text               |
-| Email    | Profile  | 64         | Text               |
-| Uri      | Profile  | 64         | Valid URL          |
-| Wallet   | Profile  | 64         | Blockchain address |
-| Price    | Profile  | 64         | Number + "$"       |
-| Avatar   | Profile  | 64         | URL                |
-| Main     | Profile  | 64         | Text               |
-| Twitter  | Social   | 64         | Text               |
-| Discord  | Social   | 64         | Text               |
+| Type    | Category | Max Length | Validation         |
+| ------- | -------- | ---------- | ------------------ |
+| Bio     | Profile  | 64         | Text               |
+| Email   | Profile  | 64         | Text               |
+| Uri     | Profile  | 64         | Valid URL          |
+| Wallet  | Profile  | 64         | Blockchain address |
+| Price   | Profile  | 64         | Number + "$"       |
+| Avatar  | Profile  | 64         | URL                |
+| Main    | Profile  | 64         | Text               |
+| Twitter | Social   | 64         | Text               |
+| Discord | Social   | 64         | Text               |
 
 ---
 
@@ -800,59 +800,59 @@ shadcn/ui uses CSS custom properties for theming. Define these in `app/globals.c
 
 ```css
 @layer base {
-	:root {
-		/* Core palette */
-		--background: 0 0% 94%; /* #f0f0f0 */
-		--foreground: 0 0% 10%;
-		--card: 0 0% 100%; /* #fff */
-		--card-foreground: 0 0% 10%;
-		--popover: 0 0% 100%;
-		--popover-foreground: 0 0% 10%;
-		--primary: 253 98% 64%; /* #6849fe */
-		--primary-foreground: 0 0% 100%;
-		--secondary: 240 7% 44%; /* #676778 */
-		--secondary-foreground: 0 0% 100%;
-		--muted: 0 0% 90%;
-		--muted-foreground: 240 7% 44%;
-		--accent: 253 98% 64%;
-		--accent-foreground: 0 0% 100%;
-		--destructive: 0 72% 30%; /* red-900 */
-		--destructive-foreground: 0 0% 100%;
-		--border: 0 0% 80%;
-		--input: 0 0% 80%;
-		--ring: 253 98% 64%; /* primary */
+  :root {
+    /* Core palette */
+    --background: 0 0% 94%; /* #f0f0f0 */
+    --foreground: 0 0% 10%;
+    --card: 0 0% 100%; /* #fff */
+    --card-foreground: 0 0% 10%;
+    --popover: 0 0% 100%;
+    --popover-foreground: 0 0% 10%;
+    --primary: 253 98% 64%; /* #6849fe */
+    --primary-foreground: 0 0% 100%;
+    --secondary: 240 7% 44%; /* #676778 */
+    --secondary-foreground: 0 0% 100%;
+    --muted: 0 0% 90%;
+    --muted-foreground: 240 7% 44%;
+    --accent: 253 98% 64%;
+    --accent-foreground: 0 0% 100%;
+    --destructive: 0 72% 30%; /* red-900 */
+    --destructive-foreground: 0 0% 100%;
+    --border: 0 0% 80%;
+    --input: 0 0% 80%;
+    --ring: 253 98% 64%; /* primary */
 
-		/* Custom app tokens */
-		--link: 253 97% 71%; /* #866efe */
-		--link-visited: 253 97% 46%; /* #866efe -35% lightness */
-		--chip-available-bg: 88 50% 67%; /* light-green-400 + whiteness */
-		--chip-available-fg: 88 50% 25%; /* light-green-900 */
-		--chip-registered-bg: 253 98% 85%; /* primary + 60% whiteness */
-		--chip-registered-fg: 253 98% 51%; /* primary - 20% lightness */
-	}
+    /* Custom app tokens */
+    --link: 253 97% 71%; /* #866efe */
+    --link-visited: 253 97% 46%; /* #866efe -35% lightness */
+    --chip-available-bg: 88 50% 67%; /* light-green-400 + whiteness */
+    --chip-available-fg: 88 50% 25%; /* light-green-900 */
+    --chip-registered-bg: 253 98% 85%; /* primary + 60% whiteness */
+    --chip-registered-fg: 253 98% 51%; /* primary - 20% lightness */
+  }
 
-	.dark {
-		--background: 0 0% 21%; /* #363535 */
-		--foreground: 253 100% 90%; /* #d5ccff */
-		--card: 240 6% 12%; /* grey-900 + blue +4 */
-		--card-foreground: 253 100% 90%;
-		--popover: 240 6% 12%;
-		--popover-foreground: 253 100% 90%;
-		--primary: 253 98% 64%; /* #6849fe (same) */
-		--primary-foreground: 0 0% 100%;
-		--secondary: 253 100% 87%; /* #d0c7ff */
-		--secondary-foreground: 0 0% 10%;
-		--muted: 0 0% 25%;
-		--muted-foreground: 253 100% 87%;
-		--destructive: 0 65% 45%; /* red-700 */
-		--destructive-foreground: 0 0% 100%;
-		--border: 0 0% 30%;
-		--input: 0 0% 30%;
-		--ring: 253 98% 64%;
+  .dark {
+    --background: 0 0% 21%; /* #363535 */
+    --foreground: 253 100% 90%; /* #d5ccff */
+    --card: 240 6% 12%; /* grey-900 + blue +4 */
+    --card-foreground: 253 100% 90%;
+    --popover: 240 6% 12%;
+    --popover-foreground: 253 100% 90%;
+    --primary: 253 98% 64%; /* #6849fe (same) */
+    --primary-foreground: 0 0% 100%;
+    --secondary: 253 100% 87%; /* #d0c7ff */
+    --secondary-foreground: 0 0% 10%;
+    --muted: 0 0% 25%;
+    --muted-foreground: 253 100% 87%;
+    --destructive: 0 65% 45%; /* red-700 */
+    --destructive-foreground: 0 0% 100%;
+    --border: 0 0% 30%;
+    --input: 0 0% 30%;
+    --ring: 253 98% 64%;
 
-		--link: 253 100% 94%; /* text-color + 20% lightness */
-		--link-visited: 253 100% 90%; /* text-color + 10% lightness */
-	}
+    --link: 253 100% 94%; /* text-color + 20% lightness */
+    --link-visited: 253 100% 90%; /* text-color + 10% lightness */
+  }
 }
 ```
 
@@ -1183,14 +1183,14 @@ All are React client components (`'use client'`):
 // walletStore.alertTransaction = txHash → snackbar.open()
 
 // Next.js (Sonner) pattern:
-import { toast } from 'sonner';
+import { toast } from "sonner";
 
-toast('New Transaction submitted', {
-	action: {
-		label: 'View',
-		onClick: () => window.open(explorerTransactionUrl(txHash), '_blank')
-	},
-	duration: 10000
+toast("New Transaction submitted", {
+  action: {
+    label: "View",
+    onClick: () => window.open(explorerTransactionUrl(txHash), "_blank"),
+  },
+  duration: 10000,
 });
 ```
 
@@ -1202,12 +1202,12 @@ toast('New Transaction submitted', {
 
 // Next.js (shadcn Tabs):
 <Tabs defaultValue="details">
-	<TabsList>
-		<TabsTrigger value="details">details</TabsTrigger>
-		<TabsTrigger value="settings">settings</TabsTrigger>
-	</TabsList>
-	<TabsContent value="details">...</TabsContent>
-	<TabsContent value="settings">...</TabsContent>
+  <TabsList>
+    <TabsTrigger value="details">details</TabsTrigger>
+    <TabsTrigger value="settings">settings</TabsTrigger>
+  </TabsList>
+  <TabsContent value="details">...</TabsContent>
+  <TabsContent value="settings">...</TabsContent>
 </Tabs>
 ```
 

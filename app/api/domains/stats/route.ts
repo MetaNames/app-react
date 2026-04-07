@@ -1,26 +1,51 @@
-import { NextResponse } from 'next/server';
-import { MetaNamesSdk, Enviroment } from '@metanames/sdk';
+import { NextResponse } from "next/server";
+import { MetaNamesSdk, Enviroment } from "@metanames/sdk";
 export async function GET() {
   try {
-    const sdk = new MetaNamesSdk(process.env.NEXT_PUBLIC_ENV !== 'prod' ? Enviroment.testnet : Enviroment.mainnet);
-    let domainCount = 0, ownerCount = 0, recentDomains: any[] = [];
+    const sdk = new MetaNamesSdk(
+      process.env.NEXT_PUBLIC_ENV !== "prod"
+        ? Enviroment.testnet
+        : Enviroment.mainnet,
+    );
+    let domainCount = 0,
+      ownerCount = 0,
+      recentDomains: any[] = [];
     try {
       const domains = await sdk.domainRepository.getAll();
-      if (domains) { domainCount = domains.length; ownerCount = new Set(domains.map((d: any) => d.owner)).size; }
+      if (domains) {
+        domainCount = domains.length;
+        ownerCount = new Set(domains.map((d: any) => d.owner)).size;
+      }
     } catch (e) {
-      console.error('Error fetching domains:', e);
+      console.error("Error fetching domains:", e);
     }
     try {
       const all = await sdk.domainRepository.getAll();
       if (all) {
-        recentDomains = [...all].sort((a: any, b: any) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime()).slice(0, 5);
+        recentDomains = [...all]
+          .sort(
+            (a: any, b: any) =>
+              new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime(),
+          )
+          .slice(0, 5);
       }
     } catch (e) {
-      console.error('Error fetching recent domains:', e);
+      console.error("Error fetching recent domains:", e);
     }
-    return NextResponse.json({ domainCount, ownerCount, recentDomains, error: null }, { headers: { 'Cache-Control': 'public, s-maxage=600' } });
+    return NextResponse.json(
+      { domainCount, ownerCount, recentDomains, error: null },
+      { headers: { "Cache-Control": "public, s-maxage=600" } },
+    );
   } catch (e) {
-    console.error('Error in stats route:', e);
-    return NextResponse.json({ domainCount: 0, ownerCount: 0, recentDomains: [], error: 'Failed to fetch stats' }, { status: 500 });
+    console.error("Error in stats route:", e);
+    return NextResponse.json(
+      {
+        domainCount: 0,
+        ownerCount: 0,
+        recentDomains: [],
+        error: "Failed to fetch stats",
+      },
+      { status: 500 },
+    );
   }
 }

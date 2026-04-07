@@ -1,8 +1,8 @@
-import { ProfilePageClient } from './ProfilePageClient';
+import { ProfilePageClient } from "./ProfilePageClient";
 
 export const metadata = {
-  title: 'Profile - MetaNames',
-  description: 'View your domain portfolio',
+  title: "Profile - MetaNames",
+  description: "View your domain portfolio",
 };
 
 export default function ProfilePage() {

@@ -2,8 +2,8 @@
  * Page Object for domain registration pages (/register/:name).
  */
 
-import { type Page, type Locator, expect } from '@playwright/test';
-import { SELECTORS, TEXT, CSS_CLASSES, PLACEHOLDERS } from '../constants';
+import { type Page, type Locator, expect } from "@playwright/test";
+import { SELECTORS, TEXT, CSS_CLASSES, PLACEHOLDERS } from "../constants";
 
 export class RegisterPage {
   readonly page: Page;
@@ -11,10 +11,10 @@ export class RegisterPage {
   // Main elements
   readonly heading: Locator;
   readonly checkoutContent: Locator;
-  
+
   // Wallet prompts
   readonly connectWalletPrompt: Locator;
-  
+
   // Payment form
   readonly paymentTokenSelect: Locator;
   readonly addYearButton: Locator;
@@ -24,7 +24,7 @@ export class RegisterPage {
   readonly totalPrice: Locator;
   readonly registerButton: Locator;
   readonly approveFeesButton: Locator;
-  
+
   // Subdomain elements
   readonly subdomainTitle: Locator;
   readonly parentChip: Locator;
@@ -32,21 +32,25 @@ export class RegisterPage {
 
   constructor(page: Page) {
     this.page = page;
-    
-    this.heading = page.locator('h2');
+
+    this.heading = page.locator("h2");
     this.checkoutContent = page.locator(CSS_CLASSES.CONTENT_CHECKOUT);
-    
+
     this.connectWalletPrompt = page.getByText(TEXT.CONNECT_WALLET_PROMPT);
-    
+
     this.paymentTokenSelect = page.locator(SELECTORS.PAYMENT_TOKEN_SELECT);
     this.addYearButton = page.locator(`button[aria-label="${TEXT.ADD_YEAR}"]`);
-    this.removeYearButton = page.locator(`button[aria-label="${TEXT.REMOVE_YEAR}"]`);
+    this.removeYearButton = page.locator(
+      `button[aria-label="${TEXT.REMOVE_YEAR}"]`,
+    );
     this.yearDisplay = page.getByText(/\d+ year/).first();
     this.priceBreakdown = page.getByText(/1 year registration/);
-    this.totalPrice = page.getByText('Total (excluding network fees)');
-    this.registerButton = page.locator(`button:has-text("${TEXT.REGISTER_DOMAIN}")`);
+    this.totalPrice = page.getByText("Total (excluding network fees)");
+    this.registerButton = page.locator(
+      `button:has-text("${TEXT.REGISTER_DOMAIN}")`,
+    );
     this.approveFeesButton = page.locator(SELECTORS.APPROVE_FEES);
-    
+
     this.subdomainTitle = page.locator('[data-slot="card-title"]');
     this.parentChip = page.getByText(/Parent:/);
     this.freePrice = page.getByText(/FREE/);

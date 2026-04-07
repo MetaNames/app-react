@@ -1,6 +1,10 @@
-import { DomainPageClient } from './DomainPageClient';
+import { DomainPageClient } from "./DomainPageClient";
 
-export async function generateMetadata({ params }: { params: Promise<{ name: string }> }) {
+export async function generateMetadata({
+  params,
+}: {
+  params: Promise<{ name: string }>;
+}) {
   const { name } = await params;
   const domainName = decodeURIComponent(name);
   return {
@@ -9,7 +13,11 @@ export async function generateMetadata({ params }: { params: Promise<{ name: str
   };
 }
 
-export default async function DomainPage({ params }: { params: Promise<{ name: string }> }) {
+export default async function DomainPage({
+  params,
+}: {
+  params: Promise<{ name: string }>;
+}) {
   const { name } = await params;
   return <DomainPageClient name={name} />;
 }

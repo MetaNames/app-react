@@ -1,12 +1,12 @@
-'use client';
-import { useParams, useRouter } from 'next/navigation';
-import { useEffect, useState } from 'react';
-import { Domain } from '@/components/domain';
-import { useSdkStore } from '@/lib/stores/sdk-store';
-import { useWalletStore } from '@/lib/stores/wallet-store';
-import { Loader2 } from 'lucide-react';
-import { toast } from 'sonner';
-import { normalizeDomain } from '@/lib/domain-validator';
+"use client";
+import { useParams, useRouter } from "next/navigation";
+import { useEffect, useState } from "react";
+import { Domain } from "@/components/domain";
+import { useSdkStore } from "@/lib/stores/sdk-store";
+import { useWalletStore } from "@/lib/stores/wallet-store";
+import { Loader2 } from "lucide-react";
+import { toast } from "sonner";
+import { normalizeDomain } from "@/lib/domain-validator";
 
 export function DomainPageClient({ name }: { name: string }) {
   const router = useRouter();
@@ -22,8 +22,8 @@ export function DomainPageClient({ name }: { name: string }) {
       const domainName = normalizeDomain(decodeURIComponent(name));
       const d = await metaNamesSdk.domainRepository.find(domainName);
       if (!d) {
-        toast.error('Domain not found. Register it now!');
-        router.replace(`/register/${domainName.replace(/\.mpc$/, '')}`);
+        toast.error("Domain not found. Register it now!");
+        router.replace(`/register/${domainName.replace(/\.mpc$/, "")}`);
         setLoading(false);
         return;
       }
@@ -34,9 +34,16 @@ export function DomainPageClient({ name }: { name: string }) {
     }
   };
 
-  useEffect(() => { load(); }, [name, metaNamesSdk, lastRefreshed]);
+  useEffect(() => {
+    load();
+  }, [name, metaNamesSdk, lastRefreshed]);
 
-  if (loading) return <div className="flex justify-center py-24"><Loader2 className="h-8 w-8 animate-spin text-primary" /></div>;
+  if (loading)
+    return (
+      <div className="flex justify-center py-24">
+        <Loader2 className="h-8 w-8 animate-spin text-primary" />
+      </div>
+    );
   if (!domain) return null;
   return <Domain domain={domain} onRefresh={load} />;
 }

@@ -1,8 +1,8 @@
-import { TldPageClient } from './TldPageClient';
+import { TldPageClient } from "./TldPageClient";
 
 export const metadata = {
-  title: 'TLD Information - MetaNames',
-  description: 'View Top-Level Domain information',
+  title: "TLD Information - MetaNames",
+  description: "View Top-Level Domain information",
 };
 
 export default function TldPage() {
