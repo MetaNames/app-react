@@ -1,6 +1,4 @@
 "use client";
-import { useState, useEffect } from "react";
-import { useRouter } from "next/navigation";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import {
@@ -11,19 +9,9 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { LoadingButton } from "@/components/loading-button";
-import { useWalletStore } from "@/lib/stores/wallet-store";
-import { useSdkStore } from "@/lib/stores/sdk-store";
-import { fetchRegistrationFees } from "@/lib/api";
-import { getAccountBalance } from "@/lib/sdk";
-import {
-  InsufficientBalanceError,
-  isInsufficientBalanceError,
-} from "@/lib/error";
-import { bridgeUrl, explorerTransactionUrl } from "@/lib/url";
-import type { FeesResponse } from "@/lib/types";
-import type { BYOCSymbol as SdkBYOCSymbol } from "@metanames/sdk/dist/providers/config";
+import { useDomainPayment } from "@/lib/hooks/use-domain-payment";
 import { Minus, Plus, Loader2 } from "lucide-react";
-import { toast } from "sonner";
+import type { BYOCSymbol as SdkBYOCSymbol } from "@metanames/sdk/dist/providers/config";
 
 interface DomainPaymentProps {
   domain: string;
@@ -32,109 +20,21 @@ interface DomainPaymentProps {
 }
 
 export function DomainPayment({ domain, mode, onSuccess }: DomainPaymentProps) {
-  const router = useRouter();
-  const { address } = useWalletStore();
-  const { metaNamesSdk, selectedCoin, setSelectedCoin, availableCoins } =
-    useSdkStore();
-  const [years, setYears] = useState(1);
-  const [fees, setFees] = useState<FeesResponse | null>(null);
-  const [feesApproved, setFeesApproved] = useState(false);
-  const [loadingFees, setLoadingFees] = useState(false);
-
-  useEffect(() => {
-    if (!address) return;
-    setLoadingFees(true);
-    setFeesApproved(false);
-    fetchRegistrationFees(domain, selectedCoin)
-      .then(({ data }) => setFees(data))
-      .finally(() => setLoadingFees(false));
-  }, [domain, selectedCoin, address]);
-
-  const handleApproveFees = async () => {
-    if (!metaNamesSdk || !address || !fees) return;
-    try {
-      const balance = await getAccountBalance(
-        metaNamesSdk,
-        address,
-        selectedCoin,
-      );
-      const total = (fees.fees || 0) * years;
-      if (balance < total) throw new InsufficientBalanceError(selectedCoin);
-      const intent = await metaNamesSdk.domainRepository.approveMintFees(
-        domain,
-        selectedCoin as SdkBYOCSymbol,
-        years,
-      );
-      const txHash = intent.transactionHash;
-      toast("New Transaction submitted", {
-        action: {
-          label: "View",
-          onClick: () => window.open(explorerTransactionUrl(txHash), "_blank"),
-        },
-        duration: 10000,
-      });
-      await intent.fetchResult;
-      setFeesApproved(true);
-    } catch (e) {
-      if (isInsufficientBalanceError(e)) {
-        toast(`Insufficient balance for ${e.coin}`, {
-          duration: 5000,
-          action: {
-            label: "Add funds",
-            onClick: () => window.open(bridgeUrl(), "_blank"),
-          },
-        });
-      } else {
-        throw e;
-      }
-    }
-  };
-
-  const handleSubmit = async () => {
-    if (!metaNamesSdk || !address) return;
-    let intent;
-    if (mode === "register") {
-      intent = await metaNamesSdk.domainRepository.register({
-        domain,
-        to: address,
-        subscriptionYears: years,
-        byocSymbol: selectedCoin as SdkBYOCSymbol,
-      });
-    } else {
-      intent = await metaNamesSdk.domainRepository.renew({
-        domain,
-        payer: address,
-        byocSymbol: selectedCoin as SdkBYOCSymbol,
-        subscriptionYears: years,
-      });
-    }
-    const txHash = intent.transactionHash;
-    toast("New Transaction submitted", {
-      action: {
-        label: "View",
-        onClick: () => window.open(explorerTransactionUrl(txHash), "_blank"),
-      },
-      duration: 10000,
-    });
-    await intent.fetchResult;
-    const msg =
-      mode === "register"
-        ? "Domain registered successfully!"
-        : "Domain renewed successfully!";
-    toast.success(msg, {
-      action: {
-        label: "Go to profile",
-        onClick: () => router.push("/profile"),
-      },
-    });
-    if (onSuccess) onSuccess();
-    else router.push(`/domain/${domain}`);
-  };
-
-  const total = fees
-    ? (parseFloat(String(fees.feesLabel)) * years).toFixed(4)
-    : "—";
-  const domainCharCount = domain.replace(/\.mpc$/, "").split(".")[0].length;
+  const {
+    years,
+    setYears,
+    fees,
+    feesApproved,
+    loadingFees,
+    address,
+    selectedCoin,
+    setSelectedCoin,
+    availableCoins,
+    total,
+    domainCharCount,
+    handleApproveFees,
+    handleSubmit,
+  } = useDomainPayment({ domain, mode, onSuccess });
 
   return (
     <Card className="w-full max-w-lg content checkout">

@@ -9,8 +9,8 @@ import type { Domain } from "@/lib/types";
 import { Loader2 } from "lucide-react";
 
 export function ProfilePageClient() {
-  const { address } = useWalletStore();
-  const { metaNamesSdk } = useSdkStore();
+  const address = useWalletStore((s) => s.address);
+  const metaNamesSdk = useSdkStore((s) => s.metaNamesSdk);
   const [domains, setDomains] = useState<Domain[]>([]);
   const [loading, setLoading] = useState(false);
   const [, startTransition] = useTransition();

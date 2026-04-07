@@ -1,5 +1,5 @@
 "use client";
-import { useState, useEffect, useRef } from "react";
+import { useState, useEffect, useCallback } from "react";
 import Link from "next/link";
 import { Input } from "@/components/ui/input";
 import { Card, CardContent } from "@/components/ui/card";
@@ -16,8 +16,28 @@ export function DomainSearch() {
   } | null>(null);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
-  const { metaNamesSdk } = useSdkStore();
-  const debounceRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const metaNamesSdk = useSdkStore((s) => s.metaNamesSdk);
+
+  const searchDomain = useCallback(
+    async (searchQuery: string, signal: AbortSignal) => {
+      if (!metaNamesSdk) return;
+      setLoading(true);
+      try {
+        const domainName = normalizeDomain(searchQuery);
+        const domain = await metaNamesSdk.domainRepository.find(domainName);
+        if (signal.aborted) return;
+        setResult({ name: domainName, available: domain == null });
+      } catch (e) {
+        if (signal.aborted) return;
+        console.error("Error searching domain:", e);
+        setError("Failed to search domain. Please try again.");
+        setResult(null);
+      } finally {
+        if (!signal.aborted) setLoading(false);
+      }
+    },
+    [metaNamesSdk],
+  );
 
   useEffect(() => {
     if (!query) {
@@ -32,26 +52,13 @@ export function DomainSearch() {
       return;
     }
     setError(null);
-    if (debounceRef.current) clearTimeout(debounceRef.current);
-    debounceRef.current = setTimeout(async () => {
-      if (!metaNamesSdk) return;
-      setLoading(true);
-      try {
-        const domainName = normalizeDomain(query);
-        const domain = await metaNamesSdk.domainRepository.find(domainName);
-        setResult({ name: domainName, available: domain == null });
-      } catch (e) {
-        console.error("Error searching domain:", e);
-        setError("Failed to search domain. Please try again.");
-        setResult(null);
-      } finally {
-        setLoading(false);
-      }
-    }, 400);
+    const controller = new AbortController();
+    const timer = setTimeout(() => searchDomain(query, controller.signal), 400);
     return () => {
-      if (debounceRef.current) clearTimeout(debounceRef.current);
+      clearTimeout(timer);
+      controller.abort();
     };
-  }, [query, metaNamesSdk]);
+  }, [query, searchDomain]);
 
   return (
     <div className="w-full max-w-xl mx-auto flex flex-col gap-3">

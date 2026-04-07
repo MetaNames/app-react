@@ -4,7 +4,7 @@ import { useWalletStore } from "@/lib/stores/wallet-store";
 import { shortenAddress } from "@/lib/wallet";
 
 export function WalletConnectStatus() {
-  const { address } = useWalletStore();
+  const address = useWalletStore((s) => s.address);
 
   if (!address) {
     return null;

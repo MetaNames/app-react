@@ -25,8 +25,9 @@ import { config } from "@/lib/config";
 import { toast } from "sonner";
 
 export function WalletConnectButton() {
-  const { address, setAddress } = useWalletStore();
-  const { metaNamesSdk } = useSdkStore();
+  const address = useWalletStore((s) => s.address);
+  const setAddress = useWalletStore((s) => s.setAddress);
+  const metaNamesSdk = useSdkStore((s) => s.metaNamesSdk);
   const [devKey, setDevKey] = useState("");
   const [open, setOpen] = useState(false);
   const [mounted] = useState(true);

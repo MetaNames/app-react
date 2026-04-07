@@ -20,8 +20,8 @@ export function SubdomainRegistration({
   byocSymbol,
 }: SubdomainRegistrationProps) {
   const router = useRouter();
-  const { address } = useWalletStore();
-  const { metaNamesSdk } = useSdkStore();
+  const address = useWalletStore((s) => s.address);
+  const metaNamesSdk = useSdkStore((s) => s.metaNamesSdk);
 
   const handleRegister = async () => {
     if (!metaNamesSdk || !address) return;

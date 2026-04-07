@@ -71,55 +71,136 @@ describe("lib/sdk", () => {
   });
 
   describe("getAccountBalance", () => {
-    it("returns 0 when accountRepository is not available", async () => {
-      const { getAccountBalance, metaNamesSdkFactory } = await import("../sdk");
-      const sdk = metaNamesSdkFactory();
-      const balance = await getAccountBalance(sdk, "0x1234", "PARTI");
-      expect(balance).toBe(0);
+    it("returns account data with displayCoins and mpc20Balances", async () => {
+      process.env.NEXT_PUBLIC_ENV = "test";
+      vi.stubGlobal(
+        "fetch",
+        vi.fn().mockResolvedValue({
+          ok: true,
+          json: async () => ({
+            data: {
+              account: {
+                displayCoins: [
+                  {
+                    symbol: "PARTI",
+                    balance: "100.5",
+                    conversionRate: "1",
+                    balanceAsGas: "10",
+                  },
+                ],
+                mpc20Balances: [],
+              },
+            },
+          }),
+        }),
+      );
+
+      const { getAccountBalance } = await import("../sdk");
+      const result = await getAccountBalance("0x1234");
+      expect(result.displayCoins).toHaveLength(1);
+      expect(result.displayCoins[0].symbol).toBe("PARTI");
+      expect(result.displayCoins[0].balance).toBe("100.5");
     });
 
-    it("returns balance when accountRepository returns a number", async () => {
-      const mockSdk = {
-        accountRepository: {
-          getBalance: vi.fn().mockResolvedValue(100),
-        },
-      };
-      const { getAccountBalance } = await import("../sdk");
-      const balance = await getAccountBalance(
-        mockSdk as unknown as Parameters<typeof getAccountBalance>[0],
-        "0x1234",
-        "PARTI",
+    it("returns empty arrays when account has no coins", async () => {
+      process.env.NEXT_PUBLIC_ENV = "test";
+      vi.stubGlobal(
+        "fetch",
+        vi.fn().mockResolvedValue({
+          ok: true,
+          json: async () => ({
+            data: {
+              account: {
+                displayCoins: [],
+                mpc20Balances: [],
+              },
+            },
+          }),
+        }),
       );
-      expect(balance).toBe(100);
+
+      const { getAccountBalance } = await import("../sdk");
+      const result = await getAccountBalance("0x1234");
+      expect(result.displayCoins).toHaveLength(0);
+      expect(result.mpc20Balances).toHaveLength(0);
     });
 
-    it("returns 0 when accountRepository throws error", async () => {
-      const mockSdk = {
-        accountRepository: {
-          getBalance: vi.fn().mockRejectedValue(new Error("Network error")),
-        },
-      };
-      const { getAccountBalance } = await import("../sdk");
-      const balance = await getAccountBalance(
-        mockSdk as unknown as Parameters<typeof getAccountBalance>[0],
-        "0x1234",
-        "PARTI",
+    it("throws error when fetch fails", async () => {
+      process.env.NEXT_PUBLIC_ENV = "test";
+      vi.stubGlobal(
+        "fetch",
+        vi.fn().mockRejectedValue(new Error("Network error")),
       );
-      expect(balance).toBe(0);
+
+      const { getAccountBalance } = await import("../sdk");
+      await expect(getAccountBalance("0x1234")).rejects.toThrow(
+        "Network error",
+      );
+    });
+  });
+
+  describe("getAccountBalanceForCoin", () => {
+    it("returns balance for specific coin", async () => {
+      process.env.NEXT_PUBLIC_ENV = "test";
+      vi.stubGlobal(
+        "fetch",
+        vi.fn().mockResolvedValue({
+          ok: true,
+          json: async () => ({
+            data: {
+              account: {
+                displayCoins: [
+                  {
+                    symbol: "PARTI",
+                    balance: "100.5",
+                    conversionRate: "1",
+                    balanceAsGas: "10",
+                  },
+                  {
+                    symbol: "USDC",
+                    balance: "50",
+                    conversionRate: "1",
+                    balanceAsGas: "0",
+                  },
+                ],
+                mpc20Balances: [],
+              },
+            },
+          }),
+        }),
+      );
+
+      const { getAccountBalanceForCoin } = await import("../sdk");
+      const balance = await getAccountBalanceForCoin("0x1234", "PARTI");
+      expect(balance).toBe(100.5);
     });
 
-    it("returns 0 when getBalance returns non-number", async () => {
-      const mockSdk = {
-        accountRepository: {
-          getBalance: vi.fn().mockResolvedValue("not a number"),
-        },
-      };
-      const { getAccountBalance } = await import("../sdk");
-      const balance = await getAccountBalance(
-        mockSdk as unknown as Parameters<typeof getAccountBalance>[0],
-        "0x1234",
-        "PARTI",
+    it("returns 0 when coin not found", async () => {
+      process.env.NEXT_PUBLIC_ENV = "test";
+      vi.stubGlobal(
+        "fetch",
+        vi.fn().mockResolvedValue({
+          ok: true,
+          json: async () => ({
+            data: {
+              account: {
+                displayCoins: [
+                  {
+                    symbol: "PARTI",
+                    balance: "100.5",
+                    conversionRate: "1",
+                    balanceAsGas: "10",
+                  },
+                ],
+                mpc20Balances: [],
+              },
+            },
+          }),
+        }),
       );
+
+      const { getAccountBalanceForCoin } = await import("../sdk");
+      const balance = await getAccountBalanceForCoin("0x1234", "USDC");
       expect(balance).toBe(0);
     });
   });

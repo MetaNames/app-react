@@ -16,8 +16,8 @@ export default function TransferPage() {
   const { name } = useParams<{ name: string }>();
   const router = useRouter();
   const domainName = normalizeDomain(decodeURIComponent(name));
-  const { address } = useWalletStore();
-  const { metaNamesSdk } = useSdkStore();
+  const address = useWalletStore((s) => s.address);
+  const metaNamesSdk = useSdkStore((s) => s.metaNamesSdk);
   const [recipient, setRecipient] = useState("");
   const isValid = validateAddress(recipient);
 

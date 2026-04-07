@@ -1,5 +1,4 @@
 "use client";
-import { useState } from "react";
 import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/textarea";
 import {
@@ -10,11 +9,9 @@ import {
   DialogFooter,
 } from "@/components/ui/dialog";
 import { Pencil, Trash2, X, Check } from "lucide-react";
-import { validateRecordValue, isUrlRecord } from "@/lib/records";
+import { isUrlRecord } from "@/lib/records";
 import type { RecordClass, RecordRepository } from "@/lib/types";
-import { toast } from "sonner";
-import { explorerTransactionUrl } from "@/lib/url";
-import { RECORD_CLASS_MAP } from "@/lib/constants";
+import { useRecordManagement } from "@/lib/hooks/use-record-management";
 
 interface RecordProps {
   type: RecordClass;
@@ -24,70 +21,21 @@ interface RecordProps {
 }
 
 export function Record({ type, value, repository, onUpdate }: RecordProps) {
-  const [editing, setEditing] = useState(false);
-  const [editValue, setEditValue] = useState(value);
-  const [editError, setEditError] = useState<string | null>(null);
-  const [deleteOpen, setDeleteOpen] = useState(false);
-  const [saving, setSaving] = useState(false);
-  const [deleting, setDeleting] = useState(false);
-
-  const handleSave = async () => {
-    if (saving) return;
-    const err = validateRecordValue(type, editValue);
-    if (err) {
-      setEditError(err);
-      return;
-    }
-    const classInfo = RECORD_CLASS_MAP[type];
-    if (!classInfo) return;
-    setSaving(true);
-    try {
-      // @ts-expect-error - SDK expects number, not string RecordClass
-      const intent = await repository.update({
-        class: classInfo.value,
-        data: editValue,
-      });
-      const txHash = await intent.send();
-      toast("New Transaction submitted", {
-        action: {
-          label: "View",
-          onClick: () => window.open(explorerTransactionUrl(txHash), "_blank"),
-        },
-        duration: 10000,
-      });
-      await intent.waitForConfirmation();
-      toast.success("Record updated successfully");
-      setEditing(false);
-      onUpdate();
-    } finally {
-      setSaving(false);
-    }
-  };
-
-  const handleDelete = async () => {
-    if (deleting) return;
-    const classInfo = RECORD_CLASS_MAP[type];
-    if (!classInfo) return;
-    setDeleting(true);
-    try {
-      // @ts-expect-error - SDK expects number, not string RecordClass
-      const intent = await repository.delete(classInfo.value);
-      const txHash = await intent.send();
-      toast("New Transaction submitted", {
-        action: {
-          label: "View",
-          onClick: () => window.open(explorerTransactionUrl(txHash), "_blank"),
-        },
-        duration: 10000,
-      });
-      await intent.waitForConfirmation();
-      toast.success("Record deleted successfully");
-      setDeleteOpen(false);
-      onUpdate();
-    } finally {
-      setDeleting(false);
-    }
-  };
+  const {
+    editing,
+    editValue,
+    editError,
+    deleteOpen,
+    saving,
+    deleting,
+    handleSave,
+    handleDelete,
+    cancelEdit,
+    setEditing,
+    setEditValue,
+    setEditError,
+    setDeleteOpen,
+  } = useRecordManagement({ type, value, repository, onUpdate });
 
   return (
     <div className="record-container flex items-start gap-3 py-3 border-b last:border-0">
@@ -147,11 +95,7 @@ export function Record({ type, value, repository, onUpdate }: RecordProps) {
               size="icon"
               variant="ghost"
               data-testid="cancel-edit"
-              onClick={() => {
-                setEditing(false);
-                setEditValue(value);
-                setEditError(null);
-              }}
+              onClick={cancelEdit}
               disabled={saving}
             >
               <X className="h-4 w-4" />

@@ -1,6 +1,6 @@
 "use client";
 import { useRouter } from "next/navigation";
-import { useEffect, useState } from "react";
+import { useCallback, useEffect, useState } from "react";
 import { DomainPayment } from "@/components/domain-payment";
 import { SubdomainRegistration } from "@/components/subdomain-registration";
 import { ConnectionRequired } from "@/components/connection-required";
@@ -16,8 +16,10 @@ export function RegisterPageClient({ name }: { name: string }) {
     "loading" | "available" | "subdomain" | "taken"
   >("loading");
 
-  useEffect(() => {
-    checkDomain(domainName).then((result) => {
+  const checkAndSetStatus = useCallback(
+    async (signal: AbortSignal) => {
+      const result = await checkDomain(domainName);
+      if (signal.aborted) return;
       if (result.error) {
         setStatus("available");
         return;
@@ -32,8 +34,15 @@ export function RegisterPageClient({ name }: { name: string }) {
       }
       if (isSubdomain && parentPresent) setStatus("subdomain");
       else setStatus("available");
-    });
-  }, [domainName, isSubdomain, parent, router]);
+    },
+    [domainName, isSubdomain, router],
+  );
+
+  useEffect(() => {
+    const controller = new AbortController();
+    checkAndSetStatus(controller.signal);
+    return () => controller.abort();
+  }, [checkAndSetStatus]);
 
   if (status === "loading")
     return (

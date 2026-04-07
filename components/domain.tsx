@@ -114,8 +114,8 @@ function DetailsContent({
 }
 
 export function Domain({ domain, isTld = false, onRefresh }: DomainProps) {
-  const { address } = useWalletStore();
-  const { metaNamesSdk } = useSdkStore();
+  const address = useWalletStore((s) => s.address);
+  const metaNamesSdk = useSdkStore((s) => s.metaNamesSdk);
   const router = useRouter();
   const isOwner =
     address &&

@@ -50,8 +50,8 @@ export function Records({ records, repository, onUpdate }: RecordsProps) {
     }
     setAdding(true);
     try {
-      // @ts-expect-error - SDK expects number, not string RecordClass
-      const intent = await repository.create({
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      const intent = await (repository as any).create({
         class: classInfo.value,
         data: newValue,
       });

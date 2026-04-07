@@ -11,7 +11,7 @@ import { normalizeDomain } from "@/lib/domain-validator";
 
 export function DomainPageClient({ name }: { name: string }) {
   const router = useRouter();
-  const { metaNamesSdk } = useSdkStore();
+  const metaNamesSdk = useSdkStore((s) => s.metaNamesSdk);
   const lastRefreshed = useWalletStore((s) => s.lastRefreshed);
   const [domain, setDomain] = useState<unknown>(null);
   const [loading, setLoading] = useState(true);

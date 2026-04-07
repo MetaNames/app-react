@@ -11,23 +11,30 @@ import { Loader2 } from "lucide-react";
 
 export default function RecordsPage() {
   const { name } = useParams<{ name: string }>();
-  const { metaNamesSdk } = useSdkStore();
+  const metaNamesSdk = useSdkStore((s) => s.metaNamesSdk);
   const [domain, setDomain] = useState<unknown>(null);
   const [loading, setLoading] = useState(true);
   const domainName = normalizeDomain(decodeURIComponent(name));
 
-  const load = useCallback(async () => {
-    if (!metaNamesSdk) return;
-    setLoading(true);
-    try {
-      setDomain(await metaNamesSdk.domainRepository.find(domainName));
-    } finally {
-      setLoading(false);
-    }
-  }, [metaNamesSdk, domainName]);
+  const load = useCallback(
+    async (signal?: AbortSignal) => {
+      if (!metaNamesSdk) return;
+      setLoading(true);
+      try {
+        const result = await metaNamesSdk.domainRepository.find(domainName);
+        if (signal?.aborted) return;
+        setDomain(result);
+      } finally {
+        if (!signal?.aborted) setLoading(false);
+      }
+    },
+    [metaNamesSdk, domainName],
+  );
 
   useEffect(() => {
-    load();
+    const controller = new AbortController();
+    load(controller.signal);
+    return () => controller.abort();
   }, [load]);
 
   if (loading)
