@@ -52,33 +52,6 @@ export function DomainPayment({ domain, mode, onSuccess }: DomainPaymentProps) {
         </CardTitle>
       </CardHeader>
       <CardContent className="flex flex-col gap-6">
-        <RequireWalletConnection address={address}>
-          <div className="flex items-center justify-between">
-            <span className="font-medium">Duration</span>
-            <div className="flex items-center gap-3">
-              <Button
-                variant="outline"
-                size="icon"
-                aria-label="remove-year"
-                disabled={years <= 1}
-                onClick={decrementYears}
-              >
-                <Minus className="h-4 w-4" />
-              </Button>
-              <span className="w-20 text-center font-medium">
-                {years} {years === 1 ? "year" : "years"}
-              </span>
-              <Button
-                variant="outline"
-                size="icon"
-                aria-label="add-year"
-                onClick={incrementYears}
-              >
-                <Plus className="h-4 w-4" />
-              </Button>
-            </div>
-          </div>
-        </RequireWalletConnection>
         {loadingFees && (
           <div className="flex justify-center py-4">
             <Loader2 className="h-6 w-6 animate-spin text-muted-foreground" />

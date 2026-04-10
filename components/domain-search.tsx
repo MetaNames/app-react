@@ -1,6 +1,7 @@
 "use client";
-import { useState, useEffect, useCallback } from "react";
+import { useState, useEffect, useCallback, useRef } from "react";
 import Link from "next/link";
+import { useRouter } from "next/navigation";
 import { Input } from "@/components/ui/input";
 import { Card, CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
@@ -17,6 +18,8 @@ export function DomainSearch() {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const metaNamesSdk = useSdkStore((s) => s.metaNamesSdk);
+  const abortControllerRef = useRef<AbortController | null>(null);
+  const router = useRouter();
 
   const searchDomain = useCallback(
     async (searchQuery: string, signal: AbortSignal) => {
@@ -39,6 +42,24 @@ export function DomainSearch() {
     [metaNamesSdk],
   );
 
+  const triggerSearch = useCallback(() => {
+    if (!query) return;
+    const validation = validateDomainName(query);
+    if (!validation.valid) {
+      setError(validation.error ?? "Invalid domain");
+      setResult(null);
+      setLoading(false);
+      return;
+    }
+    setError(null);
+    setLoading(true);
+    if (abortControllerRef.current) {
+      abortControllerRef.current.abort();
+    }
+    abortControllerRef.current = new AbortController();
+    searchDomain(query, abortControllerRef.current.signal);
+  }, [query, searchDomain]);
+
   useEffect(() => {
     if (!query) {
       setResult(null);
@@ -53,6 +74,7 @@ export function DomainSearch() {
     }
     setError(null);
     const controller = new AbortController();
+    abortControllerRef.current = controller;
     const timer = setTimeout(() => searchDomain(query, controller.signal), 400);
     return () => {
       clearTimeout(timer);
@@ -69,6 +91,19 @@ export function DomainSearch() {
           placeholder="Search for a .mpc domain..."
           value={query}
           onChange={(e) => setQuery(e.target.value.toLowerCase())}
+          onKeyDown={(e) => {
+            if (e.key === "Enter") {
+              e.preventDefault();
+              if (result && !loading) {
+                const href = result.available
+                  ? `/register/${result.name.replace(/\.mpc$/, "")}`
+                  : `/domain/${result.name}`;
+                router.push(href);
+              } else {
+                triggerSearch();
+              }
+            }
+          }}
         />
       </div>
       {error && <p className="text-destructive text-sm">{error}</p>}

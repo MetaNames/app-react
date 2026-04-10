@@ -45,6 +45,15 @@
 | 3    | After 400ms debounce timer expires                                  | System calls `sdk.domainRepository.find(domainName)` to check availability |
 | 4    | Blockchain API responds                                             | System displays result card below search input                             |
 
+**Alternative: Immediate Search with Enter Key**
+
+| Step | User Action                            | System Response                                                                |
+| ---- | -------------------------------------- | ------------------------------------------------------------------------------ |
+| 1    | User types domain name in search field | Text appears in input field                                                    |
+| 2    | User presses Enter key                 | If result exists: navigate to `/register/{name}` or `/domain/{name}`           |
+| 2b   | If no result yet                       | System immediately calls `sdk.domainRepository.find(domainName)` (no debounce) |
+| 3    | Blockchain API responds (for 2b)       | System displays result card below search input                                 |
+
 **Result States:**
 
 - **Domain Registered:** Badge shows "Registered" (purple), card is clickable `<Link>` to `/domain/{name}`
@@ -180,13 +189,13 @@
 | 3    | User selects a token                                                      | Dropdown closes, selection updated in `useSdkStore.selectedCoin` |
 | 4    | System fetches fees for new token                                         | Price breakdown updates via `/api/register/{name}/fees/{coin}`   |
 
-#### 3.3 Year Selector
+#### 3.3 Year Selector (Wallet-Connected)
 
-**Test:** `tests/e2e/domain-registration.spec.ts:25-50`
+**Test:** `tests/e2e/domain-registration.spec.ts:128-144`
 
 | Step | User Action                                         | System Response                                |
 | ---- | --------------------------------------------------- | ---------------------------------------------- |
-| 1    | User views registration page                        | Default year count is 1, displays "1 year"     |
+| 1    | User views registration page (wallet connected)     | Default year count is 1, displays "1 year"     |
 | 2    | User clicks `+` button `[aria-label="add-year"]`    | Year count increments to 2, displays "2 years" |
 | 3    | User clicks `-` button `[aria-label="remove-year"]` | Year count decrements back to 1                |
 | 4    | System recalculates total fees                      | Total = `feesLabel × years`                    |
@@ -195,6 +204,7 @@
 
 - Minimum: 1 year (remove button disabled at 1)
 - No maximum specified
+- Year selector is only visible after wallet is connected
 
 #### 3.4 Price Breakdown
 
@@ -232,12 +242,12 @@
 
 #### 3.7 Connect Wallet Prompt
 
-**Test:** `tests/e2e/domain-registration.spec.ts:83-91`
+**Test:** `tests/e2e/domain-registration.spec.ts:25-38`
 
-| State                | UI Behavior                                                              |
-| -------------------- | ------------------------------------------------------------------------ |
-| Wallet NOT connected | Page body shows "Connect your wallet" message (via `ConnectionRequired`) |
-| Wallet connected     | Payment form fully visible, no connect prompt                            |
+| State                | UI Behavior                                                                                   |
+| -------------------- | --------------------------------------------------------------------------------------------- |
+| Wallet NOT connected | Single `WalletConnectButton` shown at end of form (after price breakdown and token selection) |
+| Wallet connected     | Payment form fully visible (duration selector, approve fees, register buttons)                |
 
 ---
 

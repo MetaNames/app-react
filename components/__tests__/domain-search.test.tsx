@@ -36,6 +36,12 @@ vi.mock("@/lib/domain-validator", () => ({
   ),
 }));
 
+vi.mock("next/navigation", () => ({
+  useRouter: () => ({
+    push: vi.fn(),
+  }),
+}));
+
 describe("DomainSearch", () => {
   beforeEach(() => {
     vi.clearAllMocks();
@@ -242,5 +248,62 @@ describe("DomainSearch", () => {
     expect(mockFind).toHaveBeenCalledTimes(1);
 
     vi.useRealTimers();
+  });
+
+  describe("Enter key search", () => {
+    it("triggers search immediately on Enter key", async () => {
+      mockFind.mockResolvedValue(null);
+
+      render(<DomainSearch />);
+      const input = screen.getByPlaceholderText("Search for a .mpc domain...");
+
+      await act(async () => {
+        fireEvent.change(input, { target: { value: "entertest" } });
+      });
+
+      expect(mockFind).not.toHaveBeenCalled();
+
+      await act(async () => {
+        fireEvent.keyDown(input, { key: "Enter" });
+      });
+
+      expect(mockFind).toHaveBeenCalledTimes(1);
+      expect(mockFind).toHaveBeenCalledWith("entertest.mpc");
+    });
+
+    it("does not trigger search on Enter when input is empty", async () => {
+      render(<DomainSearch />);
+      const input = screen.getByPlaceholderText("Search for a .mpc domain...");
+
+      await act(async () => {
+        fireEvent.keyDown(input, { key: "Enter" });
+      });
+
+      expect(mockFind).not.toHaveBeenCalled();
+    });
+
+    it("shows validation error on Enter for invalid domain", async () => {
+      (
+        validateDomainName as unknown as ReturnType<typeof vi.fn>
+      ).mockReturnValue({
+        valid: false,
+        error: "Invalid domain format",
+      });
+
+      render(<DomainSearch />);
+      const input = screen.getByPlaceholderText("Search for a .mpc domain...");
+
+      await act(async () => {
+        fireEvent.change(input, { target: { value: "invalid@" } });
+      });
+
+      await act(async () => {
+        fireEvent.keyDown(input, { key: "Enter" });
+      });
+
+      await waitFor(() => {
+        expect(screen.getByText("Invalid domain format")).toBeInTheDocument();
+      });
+    });
   });
 });

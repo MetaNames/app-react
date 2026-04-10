@@ -129,4 +129,39 @@ test.describe("Domain Search", () => {
     await input.clear();
     await expect(page.getByText("Registered")).not.toBeVisible();
   });
+
+  test("should trigger search immediately on Enter key", async ({ page }) => {
+    const input = getSearchInput(page);
+    await input.fill("enterkeytest");
+
+    const spinner = page.locator(CSS_CLASSES.ANIMATE_SPIN);
+    await expect(spinner).toBeVisible({ timeout: SPINNER_TIMEOUT_MS });
+  });
+
+  test("should show available badge after Enter key search", async ({
+    page,
+  }) => {
+    const input = getSearchInput(page);
+    const testDomain = generateTestDomain("zzzenter");
+    await input.fill(testDomain);
+    await input.press("Enter");
+
+    const availableBadge = page.getByText("Available");
+    await expect(availableBadge).toBeVisible({ timeout: LONG_API_TIMEOUT_MS });
+  });
+
+  test("should navigate to register page when pressing Enter on available domain", async ({
+    page,
+  }) => {
+    const input = getSearchInput(page);
+    const testDomain = generateTestDomain("zzznavig");
+    await input.fill(testDomain);
+    await page.waitForTimeout(DEBOUNCE_MS);
+
+    const availableBadge = page.getByText("Available");
+    await expect(availableBadge).toBeVisible({ timeout: LONG_API_TIMEOUT_MS });
+
+    await input.press("Enter");
+    await expect(page).toHaveURL(/\/register\//);
+  });
 });
