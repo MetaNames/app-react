@@ -1,3 +1,5 @@
+"use client";
+
 interface ConnectionRequiredProps {
   children: React.ReactNode;
   fallback?: React.ReactNode;

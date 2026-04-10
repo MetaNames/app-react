@@ -26,13 +26,16 @@ export function validateRecordValue(
 export const isUrlRecord = (type: RecordClass) =>
   ["Uri", "Avatar"].includes(type);
 
-export function createRecordRepository(sdk: MetaNamesSdk): RecordRepository {
-  return {
-    // @ts-expect-error - recordRepository not typed in SDK
-    create: (params) => sdk.recordRepository.create(params),
-    // @ts-expect-error - recordRepository not typed in SDK
-    update: (params) => sdk.recordRepository.update(params),
-    // @ts-expect-error - recordRepository not typed in SDK
-    delete: (recordClass) => sdk.recordRepository.delete(recordClass),
-  };
+/**
+ * Fetch the SDK Domain object and derive its RecordRepository.
+ * This is the correct pattern: find the domain first, then call getRecordRepository.
+ */
+export async function createRecordRepository(
+  sdk: MetaNamesSdk,
+  domainName: string,
+): Promise<RecordRepository | null> {
+  const sdkDomain = await sdk.domainRepository.find(domainName);
+  if (!sdkDomain) return null;
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  return (sdkDomain as any).getRecordRepository(sdk) as RecordRepository;
 }

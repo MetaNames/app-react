@@ -8,10 +8,15 @@ export interface Domain {
   parentId: string | null;
   records: Record<string, string>;
 }
+export interface ITransactionIntent {
+  transactionHash: string;
+  fetchResult: Promise<{ transactionHash: string; hasError: boolean; errorMessage?: string }>;
+}
+
 export interface RecordRepository {
-  create(params: { class: RecordClass; data: string }): Promise<void>;
-  update(params: { class: RecordClass; data: string }): Promise<void>;
-  delete(recordClass: RecordClass): Promise<void>;
+  create(params: { class: number; data: string }): Promise<ITransactionIntent>;
+  update(params: { class: number; data: string }): Promise<ITransactionIntent>;
+  delete(recordClass: number): Promise<ITransactionIntent>;
 }
 export interface AlertMessage {
   message: string;

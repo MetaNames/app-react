@@ -7,7 +7,7 @@ import { TEST_DOMAIN } from "./helpers/wallet-helper";
 
 // ============== Test Data ==============
 export const TEST_DOMAIN_NAME = TEST_DOMAIN;
-export const TEST_SUBDOMAIN = "sub.test.mpc";
+export const TEST_SUBDOMAIN = "sub.name.mpc";
 export const TLD_NAME = "mpc";
 
 // Valid and invalid test addresses
@@ -23,7 +23,7 @@ export const LONG_API_TIMEOUT_MS = 15000;
 export const SDK_INIT_TIMEOUT_MS = 3000;
 export const WALLET_CONNECT_TIMEOUT_MS = 5000;
 export const VISIBILITY_TIMEOUT_MS = 2000;
-export const DROPWDOWN_TIMEOUT_MS = 5000;
+export const DROPDOWN_TIMEOUT_MS = 5000;
 export const PAGINATION_WAIT_MS = 300;
 
 // ============== Selectors ==============

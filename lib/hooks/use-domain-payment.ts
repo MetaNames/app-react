@@ -1,5 +1,5 @@
 "use client";
-import { useState, useEffect, useCallback } from "react";
+import { useState, useEffect, useCallback, useMemo } from "react";
 import { useRouter } from "next/navigation";
 import { useWalletStore } from "@/lib/stores/wallet-store";
 import { useSdkStore } from "@/lib/stores/sdk-store";
@@ -11,7 +11,7 @@ import {
 } from "@/lib/error";
 import { bridgeUrl, explorerTransactionUrl } from "@/lib/url";
 import type { FeesResponse } from "@/lib/types";
-import type { BYOCSymbol as SdkBYOCSymbol } from "@metanames/sdk/dist/providers/config";
+import type { BYOCSymbol } from "@metanames/sdk/dist/providers/config";
 import { toast } from "sonner";
 
 interface UseDomainPaymentProps {
@@ -28,7 +28,7 @@ interface UseDomainPaymentReturn {
   loadingFees: boolean;
   address: string | undefined;
   selectedCoin: string;
-  setSelectedCoin: (coin: SdkBYOCSymbol) => void;
+  setSelectedCoin: (coin: BYOCSymbol) => void;
   availableCoins: string[];
   total: string;
   domainCharCount: number;
@@ -43,8 +43,25 @@ export function useDomainPayment({
 }: UseDomainPaymentProps): UseDomainPaymentReturn {
   const router = useRouter();
   const { address } = useWalletStore();
-  const { metaNamesSdk, selectedCoin, setSelectedCoin, availableCoins } =
-    useSdkStore();
+  const metaNamesSdk = useSdkStore((s) => s.metaNamesSdk);
+  const setSelectedCoin = useSdkStore((s) => s.setSelectedCoin);
+  const _selectedCoin = useSdkStore((s) => s._selectedCoin);
+
+  const availableCoins = useMemo(
+    () =>
+      (metaNamesSdk?.config?.byoc?.map((b) => b.symbol) as BYOCSymbol[]) ?? [],
+    [metaNamesSdk],
+  );
+
+  const selectedCoin = useMemo(() => {
+    if (
+      _selectedCoin &&
+      (availableCoins.length === 0 || availableCoins.includes(_selectedCoin))
+    ) {
+      return _selectedCoin;
+    }
+    return availableCoins[0] ?? "ETH";
+  }, [_selectedCoin, availableCoins]);
   const [years, setYears] = useState(1);
   const [fees, setFees] = useState<FeesResponse | null>(null);
   const [feesApproved, setFeesApproved] = useState(false);
@@ -71,15 +88,15 @@ export function useDomainPayment({
     return () => controller.abort();
   }, [loadFees]);
 
-  const handleApproveFees = async () => {
+  const handleApproveFees = useCallback(async () => {
     if (!metaNamesSdk || !address || !fees) return;
     try {
       const balance = await getAccountBalanceForCoin(address, selectedCoin);
-      const total = (fees.fees || 0) * years;
+      const total = parseFloat(String(fees.feesLabel)) * years;
       if (balance < total) throw new InsufficientBalanceError(selectedCoin);
       const intent = await metaNamesSdk.domainRepository.approveMintFees(
         domain,
-        selectedCoin as SdkBYOCSymbol,
+        selectedCoin as BYOCSymbol,
         years,
       );
       const txHash = intent.transactionHash;
@@ -105,9 +122,9 @@ export function useDomainPayment({
         throw e;
       }
     }
-  };
+  }, [metaNamesSdk, address, fees, selectedCoin, years, domain]);
 
-  const handleSubmit = async () => {
+  const handleSubmit = useCallback(async () => {
     if (!metaNamesSdk || !address) return;
     let intent;
     if (mode === "register") {
@@ -115,13 +132,13 @@ export function useDomainPayment({
         domain,
         to: address,
         subscriptionYears: years,
-        byocSymbol: selectedCoin as SdkBYOCSymbol,
+        byocSymbol: selectedCoin as BYOCSymbol,
       });
     } else {
       intent = await metaNamesSdk.domainRepository.renew({
         domain,
         payer: address,
-        byocSymbol: selectedCoin as SdkBYOCSymbol,
+        byocSymbol: selectedCoin as BYOCSymbol,
         subscriptionYears: years,
       });
     }
@@ -146,7 +163,16 @@ export function useDomainPayment({
     });
     if (onSuccess) onSuccess();
     else router.push(`/domain/${domain}`);
-  };
+  }, [
+    metaNamesSdk,
+    address,
+    mode,
+    domain,
+    years,
+    selectedCoin,
+    onSuccess,
+    router,
+  ]);
 
   const total = fees
     ? (parseFloat(String(fees.feesLabel)) * years).toFixed(4)

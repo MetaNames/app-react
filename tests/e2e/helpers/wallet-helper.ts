@@ -10,7 +10,8 @@
  * All blockchain operations should be wrapped in try-catch.
  */
 
-import { Page } from "@playwright/test";
+import { Page, expect } from "@playwright/test";
+import { log } from "console";
 
 // Get the testnet private key from environment
 export const getTestPrivateKey = (): string => {
@@ -23,13 +24,9 @@ export const getTestPrivateKey = (): string => {
 
 // Shared wallet connection helper that reads from process.env.TESTNET_PRIVATE_KEY
 // Returns true if connected, false if SDK not ready (caller should skip test)
+// No sessionStorage persistence - wallet must be reconnected on each page reload
 export const connectWallet = async (page: Page): Promise<boolean> => {
   const privateKey = getTestPrivateKey();
-
-  // Store the private key in sessionStorage before connecting
-  await page.evaluate((key) => {
-    sessionStorage.setItem("testWalletPrivateKey", key);
-  }, privateKey);
 
   // Check if already connected
   const walletConnected = await page
@@ -39,42 +36,38 @@ export const connectWallet = async (page: Page): Promise<boolean> => {
     .catch(() => false);
   if (walletConnected) return true;
 
-  // Wait for SDK initialization (it's deferred via useEffect)
-  await page.waitForTimeout(3000);
-
-  // Open dropdown
   const connectBtn = page
     .locator('[data-testid="wallet-connect-button"]')
     .first();
+  await connectBtn.waitFor({ state: "visible", timeout: 15000 });
   await connectBtn.click();
-  await page.waitForTimeout(500);
 
-  // Fill dev key and connect
-  const devKeyInput = page.locator("input.dev-key-input");
-  await devKeyInput.waitFor({ state: "visible", timeout: 10000 });
+  const devKeyInput = page.locator('[data-testid="dev-key-input"]');
+  const walletConnectedEl = page.locator('[data-testid="wallet-connected"]');
+
+  const winner = await Promise.race([
+    devKeyInput
+      .waitFor({ state: "visible", timeout: 10000 })
+      .then(() => "devKey"),
+    walletConnectedEl
+      .waitFor({ state: "visible", timeout: 5000 })
+      .then(() => "connected"),
+  ]);
+
+  if (winner === "connected") {
+    return true;
+  }
+
   await devKeyInput.fill(privateKey);
 
-  const devConnectBtn = page.locator("button.dev-key-connect");
+  const devConnectBtn = page.locator('[data-testid="dev-key-connect-button"]');
   await devConnectBtn.waitFor({ state: "visible", timeout: 5000 });
+  await expect(devConnectBtn).toBeEnabled({ timeout: 5000 });
   await devConnectBtn.click();
 
-  // Wait for wallet connected indicator or SDK not ready toast
-  try {
-    await page
-      .locator('[data-testid="wallet-connected"]')
-      .waitFor({ state: "visible", timeout: 5000 });
-    return true;
-  } catch {
-    // Check if SDK not ready
-    const sdkNotReadyToast = page.locator("text=SDK not ready");
-    if (
-      await sdkNotReadyToast.isVisible({ timeout: 1000 }).catch(() => false)
-    ) {
-      console.log("SDK not ready, skipping test...");
-      return false;
-    }
-    return false;
-  }
+  await walletConnectedEl.waitFor({ state: "visible", timeout: 10000 });
+
+  return true;
 };
 
 // Helper to check if wallet is actually connected and ready
@@ -90,58 +83,14 @@ export const isWalletConnected = async (page: Page): Promise<boolean> => {
   }
 };
 
-// Helper to restore wallet connection after page reload
-// Returns true if wallet restored, false if failed
-export const restoreWalletConnection = async (page: Page): Promise<boolean> => {
-  const storedKey = await page.evaluate(() =>
-    sessionStorage.getItem("testWalletPrivateKey"),
-  );
-  if (!storedKey) {
-    console.log("No stored wallet key found, cannot restore");
-    return false;
-  }
-
-  // Check if already connected
-  if (await isWalletConnected(page)) return true;
-
-  // Wait for SDK initialization after navigation (it's deferred via useEffect)
-  await page.waitForTimeout(3000);
-
-  const connectBtn = page
-    .locator('[data-testid="wallet-connect-button"]')
-    .first();
-  await connectBtn.click();
-  await page.waitForTimeout(500);
-
-  const devKeyInput = page.locator("input.dev-key-input");
-  await devKeyInput.waitFor({ state: "visible", timeout: 10000 });
-  await devKeyInput.fill(storedKey);
-
-  const devConnectBtn = page.locator("button.dev-key-connect");
-  await devConnectBtn.click();
-
-  // Wait for wallet-connected indicator with retries
-  try {
-    await page
-      .locator('[data-testid="wallet-connected"]')
-      .waitFor({ state: "visible", timeout: 10000 });
-    return true;
-  } catch {
-    return false;
-  }
-};
-
-// Navigate to a page and restore wallet connection if needed
-// Falls back to full connectWallet if restore fails (e.g. sessionStorage empty)
+// Navigate to a page and ensure wallet is connected
+// Clears any persisted wallet state for clean reconnect on each navigation
 // Returns true if wallet connected, false if failed
 export const gotoAndRestoreWallet = async (
   page: Page,
   url: string,
 ): Promise<boolean> => {
   await page.goto(url);
-  const restored = await restoreWalletConnection(page);
-  if (restored) return true;
-  // Fall back to full connection (handles case where connectWallet was never called)
   return await connectWallet(page);
 };
 
@@ -188,7 +137,7 @@ export const executeBlockchainOp = async <T>(
 };
 
 // Default test domain for blockchain operations
-export const TEST_DOMAIN = "test.mpc";
+export const TEST_DOMAIN = "name.mpc";
 
 // Helper to verify wallet is connected and owns the domain by checking settings tab visibility
 export const ensureDomainOwnership = async (

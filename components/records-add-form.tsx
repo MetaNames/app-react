@@ -53,12 +53,11 @@ export function RecordsAddForm({
     }
     setAdding(true);
     try {
-      // eslint-disable-next-line @typescript-eslint/no-explicit-any
-      const intent = await (repository as any).create({
+      const intent = await repository.create({
         class: classInfo.value,
         data: newValue,
       });
-      const txHash = await intent.send();
+      const txHash = intent.transactionHash;
       toast("New Transaction submitted", {
         action: {
           label: "View",
@@ -66,7 +65,7 @@ export function RecordsAddForm({
         },
         duration: 10000,
       });
-      await intent.waitForConfirmation();
+      await intent.fetchResult;
       toast.success("Record added successfully");
       setNewType("");
       setNewValue("");

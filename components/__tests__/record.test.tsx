@@ -81,15 +81,25 @@ const mockRepository = {
   delete: vi.fn(),
 };
 
+vi.mock("@/lib/stores/record-store", () => ({
+  useRecordStore: vi.fn((selector) => {
+    const state = {
+      repository: mockRepository,
+      setRepository: vi.fn(),
+      clear: vi.fn(),
+    };
+    return selector ? selector(state) : state;
+  }),
+}));
+
 const createMockIntent = () => ({
-  send: vi.fn().mockResolvedValue("mock-tx-hash"),
-  waitForConfirmation: vi.fn().mockResolvedValue(undefined),
+  transactionHash: "mock-tx-hash",
+  fetchResult: Promise.resolve({ transactionHash: "mock-tx-hash", hasError: false }),
 });
 
 const defaultProps = {
   type: "Bio" as const,
   value: "Test bio value",
-  repository: mockRepository,
   onUpdate: vi.fn(),
 };
 

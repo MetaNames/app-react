@@ -10,31 +10,16 @@ import {
 } from "@/components/ui/dialog";
 import { Pencil, Trash2, X, Check } from "lucide-react";
 import { isUrlRecord } from "@/lib/records";
-import type { RecordClass, RecordRepository } from "@/lib/types";
+import type { RecordClass } from "@/lib/types";
 import { useRecordManagement } from "@/lib/hooks/use-record-management";
-import { useRecordStore } from "@/lib/stores/record-store";
 
 interface RecordProps {
   type: RecordClass;
   value: string;
-  /** @deprecated Use RecordStore instead */
-  repository?: RecordRepository;
-  /** @deprecated Use RecordStore instead */
   onUpdate?: () => void;
 }
 
-export function Record({
-  type,
-  value,
-  repository: propRepository,
-  onUpdate: propOnUpdate,
-}: RecordProps) {
-  const storeRepository = useRecordStore((s) => s.repository);
-  const storeOnUpdate = useRecordStore((s) => s.onUpdate);
-
-  const repository = propRepository ?? storeRepository;
-  const onUpdate = propOnUpdate ?? storeOnUpdate;
-
+export function Record({ type, value, onUpdate }: RecordProps) {
   const {
     editing,
     editValue,
@@ -49,12 +34,7 @@ export function Record({
     setEditValue,
     setEditError,
     setDeleteOpen,
-  } = useRecordManagement({
-    type,
-    value,
-    repository: repository!,
-    onUpdate: onUpdate!,
-  });
+  } = useRecordManagement({ type, value, onUpdate: onUpdate! });
 
   return (
     <div className="record-container flex items-start gap-3 py-3 border-b last:border-0">

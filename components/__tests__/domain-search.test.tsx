@@ -7,7 +7,6 @@ import {
   act,
 } from "@testing-library/react";
 import { DomainSearch } from "../domain-search";
-import { useSdkStore } from "@/lib/stores/sdk-store";
 import { validateDomainName } from "@/lib/domain-validator";
 
 const mockFind = vi.hoisted(() => vi.fn());
@@ -211,7 +210,7 @@ describe("DomainSearch", () => {
   });
 
   // TODO: Fix Zustand mocking - vi.mock doesn't properly intercept create() stores
-  it.skip("debounces the search (does not search on every keystroke)", async () => {
+  it("debounces the search (does not search on every keystroke)", async () => {
     mockFind.mockResolvedValue(null);
     vi.useFakeTimers();
 

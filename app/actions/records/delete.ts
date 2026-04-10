@@ -8,7 +8,7 @@ import type {
 } from "@/lib/actions/types";
 import { validateDomainName } from "@/lib/actions/validation";
 import { ValidationError, ActionError } from "@/lib/actions/errors";
-import type { RecordClass } from "@/lib/types";
+import type { RecordClassEnum } from "@metanames/sdk";
 
 export async function deleteRecord(
   input: DeleteRecordInput,
@@ -24,9 +24,15 @@ export async function deleteRecord(
   const sdk = getServerSdkInstance();
 
   try {
-    // @ts-expect-error - recordRepository not typed in SDK
-    const intent = await sdk.recordRepository.delete(
-      recordClass as RecordClass,
+    const domainEntity = await sdk.domainRepository.find(normalizedDomain);
+    if (!domainEntity) {
+      throw new ActionError("Domain not found", "DOMAIN_NOT_FOUND");
+    }
+
+    const recordRepo = domainEntity.getRecordRepository(sdk);
+
+    const intent = await recordRepo.delete(
+      recordClass as unknown as RecordClassEnum,
     );
 
     await intent.fetchResult;

@@ -1,5 +1,6 @@
 "use server";
 
+import { revalidatePath } from "next/cache";
 import { getServerSdkInstance } from "@/lib/actions/sdk";
 import type { BYOCSymbol } from "@/lib/types";
 import { validateDomainName } from "@/lib/actions/validation";
@@ -42,6 +43,8 @@ export async function approveMintFees(
     );
 
     await intent.fetchResult;
+
+    revalidatePath(`/domain/${normalizedDomain}`);
 
     return {
       success: true,

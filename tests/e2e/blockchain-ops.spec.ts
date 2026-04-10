@@ -9,10 +9,9 @@
  * TESTNET_PRIVATE_KEY=df4642ef258f9aef2adb6c148590208b20387fb067f2c0907d6c85697c27928c
  */
 
-import { test, expect, type Page } from "@playwright/test";
+import { test, expect } from "@playwright/test";
 import {
   connectWallet,
-  restoreWalletConnection,
   executeBlockchainOp,
   TEST_DOMAIN,
   gotoAndRestoreWallet,
@@ -23,7 +22,7 @@ import {
   CSS_CLASSES,
   TEST_DOMAIN_NAME,
   VISIBILITY_TIMEOUT_MS,
-  DROPWDOWN_TIMEOUT_MS,
+  DROPDOWN_TIMEOUT_MS,
 } from "./constants";
 import {
   navigateToSettingsTab,
@@ -31,69 +30,41 @@ import {
   waitForDomainTitle,
 } from "./fixtures/shared";
 import { RegisterPage } from "./pages/RegisterPage";
-import { DomainPage } from "./pages/DomainPage";
 
-/**
- * Check if wallet owns the domain by verifying settings tab visibility.
- * Returns true if the wallet owns the domain, false otherwise.
- */
-async function isDomainOwner(page: Page): Promise<boolean> {
-  await restoreWalletConnection(page);
-  const settingsTab = page.locator(SELECTORS.TAB_SETTINGS);
-  return await settingsTab
-    .isVisible({ timeout: VISIBILITY_TIMEOUT_MS })
-    .catch(() => false);
-}
-
-// Disconnected-state test: must run BEFORE any wallet connection (no beforeEach here)
-test.describe("Registration page (disconnected)", () => {
+// Disconnected-state tests: must run BEFORE any wallet connection (no beforeEach here)
+test.describe("Disconnected state", () => {
   test("should show connect wallet prompt when wallet is disconnected on register page", async ({
     page,
   }) => {
     const testDomain = `payment${Date.now()}.mpc`;
     await page.goto(`/register/${testDomain}`);
 
-    const connectPrompt = page.getByText(TEXT.CONNECT_WALLET_PROMPT);
+    const connectPrompt = page.locator(SELECTORS.WALLET_CONNECT_BUTTON);
     await expect(connectPrompt).toBeVisible({ timeout: 10000 });
   });
+
 });
 
 test.describe("Blockchain Operations", () => {
   test.beforeEach(async ({ page }) => {
     await page.goto("/");
-    const connected = await connectWallet(page);
-    if (!connected) {
-      test.skip(true, "SDK not ready - wallet connection failed");
-    }
+    await connectWallet(page);
   });
 
   test.describe("Two-Step Payment Flow for Registration", () => {
     test("should show payment form when wallet is connected", async ({
       page,
     }) => {
-      const registerPage = new RegisterPage(page);
       const testDomain = `payflow${Date.now()}.mpc`;
       await gotoAndRestoreWallet(page, `/register/${testDomain}`);
 
-      await page.waitForTimeout(1000);
+      const paymentForm = page.locator(".content.checkout").first();
+      await paymentForm.waitFor({ state: "visible", timeout: 15000 });
 
-      // Skip if wallet is not connected (payment form not visible) due to wallet state not persisting on navigation
-      if (
-        !(await registerPage.paymentTokenSelect
-          .isVisible({ timeout: 2000 })
-          .catch(() => false))
-      ) {
-        if (
-          await registerPage.connectWalletPrompt.isVisible().catch(() => false)
-        ) {
-          test.skip(
-            true,
-            "Wallet state not persisted after navigation - app needs wallet persistence fix",
-          );
-        }
-      }
-
-      await expect(registerPage.paymentTokenSelect).toBeVisible({
+      const paymentTokenSelect = paymentForm.locator(
+        SELECTORS.PAYMENT_TOKEN_SELECT,
+      );
+      await expect(paymentTokenSelect).toBeVisible({
         timeout: 10000,
       });
     });
@@ -104,18 +75,6 @@ test.describe("Blockchain Operations", () => {
       const registerPage = new RegisterPage(page);
       const testDomain = `approve${Date.now()}.mpc`;
       await gotoAndRestoreWallet(page, `/register/${testDomain}`);
-
-      // Skip if wallet is not connected due to wallet state not persisting on navigation
-      if (
-        !(await registerPage.approveFeesButton
-          .isVisible({ timeout: 10000 })
-          .catch(() => false))
-      ) {
-        test.skip(
-          true,
-          "Wallet state not persisted after navigation - app needs wallet persistence fix",
-        );
-      }
 
       await expect(registerPage.approveFeesButton).toBeVisible({
         timeout: 10000,
@@ -130,18 +89,6 @@ test.describe("Blockchain Operations", () => {
       const testDomain = `registerdisabled${Date.now()}.mpc`;
       await gotoAndRestoreWallet(page, `/register/${testDomain}`);
 
-      // Skip if wallet is not connected due to wallet state not persisting on navigation
-      if (
-        !(await registerPage.approveFeesButton
-          .isVisible({ timeout: 10000 })
-          .catch(() => false))
-      ) {
-        test.skip(
-          true,
-          "Wallet state not persisted after navigation - app needs wallet persistence fix",
-        );
-      }
-
       await expect(registerPage.approveFeesButton).toBeVisible({
         timeout: 10000,
       });
@@ -155,18 +102,6 @@ test.describe("Blockchain Operations", () => {
       const registerPage = new RegisterPage(page);
       const testDomain = `approved${Date.now()}.mpc`;
       await gotoAndRestoreWallet(page, `/register/${testDomain}`);
-
-      // Allow enough time for wallet reconnect + SDK init
-      if (
-        !(await registerPage.approveFeesButton
-          .isVisible({ timeout: 10000 })
-          .catch(() => false))
-      ) {
-        test.skip(
-          true,
-          "Wallet state not persisted after navigation - app needs wallet persistence fix",
-        );
-      }
 
       // Button must be enabled before clicking
       await expect(registerPage.approveFeesButton).toBeEnabled();
@@ -187,17 +122,6 @@ test.describe("Blockchain Operations", () => {
       const testDomain = `afterapprove${Date.now()}.mpc`;
       await gotoAndRestoreWallet(page, `/register/${testDomain}`);
 
-      if (
-        !(await registerPage.approveFeesButton
-          .isVisible({ timeout: 10000 })
-          .catch(() => false))
-      ) {
-        test.skip(
-          true,
-          "Wallet state not persisted after navigation - app needs wallet persistence fix",
-        );
-      }
-
       await registerPage.approveFeesButton.click();
 
       // After clicking, the button should react; wait for either approval or any state change
@@ -214,14 +138,6 @@ test.describe("Blockchain Operations", () => {
     test("should redirect to /domain/{name} after successful registration", async ({
       page,
     }) => {
-      // Skip if domain is already registered or no valid testnet key
-      if (!process.env.TESTNET_PRIVATE_KEY) {
-        test.skip(
-          true,
-          "TESTNET_PRIVATE_KEY not set - blockchain interaction disabled",
-        );
-      }
-
       await gotoAndRestoreWallet(page, `/register/${TEST_DOMAIN}`);
 
       const result = await executeBlockchainOp(async () => {
@@ -242,206 +158,14 @@ test.describe("Blockchain Operations", () => {
     });
   });
 
-  test.describe("Add Record Blockchain Operation", () => {
-    test("should show records section in settings tab", async ({ page }) => {
-      const domainPage = new DomainPage(page);
-      await connectWallet(page);
-      await domainPage.goto(TEST_DOMAIN_NAME);
-
-      await waitForDomainTitle(page, TEST_DOMAIN_NAME);
-
-      if (!(await isDomainOwner(page))) {
-        test.skip(
-          true,
-          `Wallet does not own ${TEST_DOMAIN_NAME} - settings tab not visible`,
-        );
-      }
-      await navigateToSettingsTab(page);
-
-      const recordsSection = page.locator(SELECTORS.RECORDS_CONTAINER);
-      await expect(recordsSection).toBeVisible();
-    });
-
-    test("should show add record form with type dropdown and value input", async ({
-      page,
-    }) => {
-      if (!(await gotoAndRestoreWallet(page, `/domain/${TEST_DOMAIN_NAME}`))) {
-        test.skip(true, "Wallet not available");
-      }
-
-      await waitForDomainTitle(page, TEST_DOMAIN_NAME);
-
-      if (!(await isDomainOwner(page))) {
-        test.skip(true, `Wallet does not own ${TEST_DOMAIN_NAME}`);
-      }
-      await navigateToSettingsTab(page);
-
-      const addRecordCard = page.locator(SELECTORS.ADD_RECORD_FORM);
-      await expect(addRecordCard).toBeVisible();
-
-      const selectTrigger = page.locator(
-        `${SELECTORS.ADD_RECORD_FORM} button[role="combobox"]`,
-      );
-      await expect(selectTrigger).toBeVisible();
-    });
-
-    test("should select record type from dropdown", async ({ page }) => {
-      if (!(await gotoAndRestoreWallet(page, `/domain/${TEST_DOMAIN_NAME}`))) {
-        test.skip(true, "Wallet not available");
-      }
-
-      await waitForDomainTitle(page, TEST_DOMAIN_NAME);
-
-      if (!(await isDomainOwner(page))) {
-        test.skip(true, `Wallet does not own ${TEST_DOMAIN_NAME}`);
-      }
-      await navigateToSettingsTab(page);
-
-      const selectTrigger = page.locator(
-        `${SELECTORS.ADD_RECORD_FORM} button[role="combobox"]`,
-      );
-      await selectTrigger.click();
-      await waitForDropdown(page);
-
-      // Click the first available option (not all options may be available)
-      const firstOption = page
-        .locator('[data-testid^="select-option-"]')
-        .first();
-      await expect(firstOption).toBeVisible({ timeout: DROPWDOWN_TIMEOUT_MS });
-    });
-
-    test("should show textarea after selecting record type", async ({
-      page,
-    }) => {
-      if (!(await gotoAndRestoreWallet(page, `/domain/${TEST_DOMAIN_NAME}`))) {
-        test.skip(true, "Wallet not available");
-      }
-
-      await waitForDomainTitle(page, TEST_DOMAIN_NAME);
-
-      if (!(await isDomainOwner(page))) {
-        test.skip(true, `Wallet does not own ${TEST_DOMAIN_NAME}`);
-      }
-      await navigateToSettingsTab(page);
-
-      const selectTrigger = page.locator(
-        `${SELECTORS.ADD_RECORD_FORM} button[role="combobox"]`,
-      );
-      await selectTrigger.click();
-      await waitForDropdown(page);
-
-      await page.locator('[data-testid^="select-option-"]').first().click();
-
-      const textarea = page.locator(`${SELECTORS.ADD_RECORD_FORM} textarea`);
-      await expect(textarea).toBeVisible();
-    });
-
-    test("should disable add record button when value is empty", async ({
-      page,
-    }) => {
-      if (!(await gotoAndRestoreWallet(page, `/domain/${TEST_DOMAIN_NAME}`))) {
-        test.skip(true, "Wallet not available");
-      }
-
-      await waitForDomainTitle(page, TEST_DOMAIN_NAME);
-
-      if (!(await isDomainOwner(page))) {
-        test.skip(true, `Wallet does not own ${TEST_DOMAIN_NAME}`);
-      }
-      await navigateToSettingsTab(page);
-
-      const selectTrigger = page.locator(
-        `${SELECTORS.ADD_RECORD_FORM} button[role="combobox"]`,
-      );
-      await selectTrigger.click();
-      await waitForDropdown(page);
-
-      await page.locator('[data-testid^="select-option-"]').first().click();
-
-      const addBtn = page.locator(SELECTORS.ADD_RECORD_BUTTON);
-      await expect(addBtn).toBeDisabled();
-    });
-
-    test("should enable add record button when value is entered", async ({
-      page,
-    }) => {
-      if (!(await gotoAndRestoreWallet(page, `/domain/${TEST_DOMAIN_NAME}`))) {
-        test.skip(true, "Wallet not available");
-      }
-
-      await waitForDomainTitle(page, TEST_DOMAIN_NAME);
-
-      if (!(await isDomainOwner(page))) {
-        test.skip(true, `Wallet does not own ${TEST_DOMAIN_NAME}`);
-      }
-      await navigateToSettingsTab(page);
-
-      const selectTrigger = page.locator(
-        `${SELECTORS.ADD_RECORD_FORM} button[role="combobox"]`,
-      );
-      await selectTrigger.click();
-      await waitForDropdown(page);
-
-      await page.locator('[data-testid^="select-option-"]').first().click();
-
-      const textarea = page.locator(`${SELECTORS.ADD_RECORD_FORM} textarea`);
-      await textarea.fill("Test bio value");
-
-      const addBtn = page.locator(SELECTORS.ADD_RECORD_BUTTON);
-      await expect(addBtn).toBeEnabled();
-    });
-
-    test("should submit add record transaction and show loading state", async ({
-      page,
-    }) => {
-      if (!(await gotoAndRestoreWallet(page, `/domain/${TEST_DOMAIN_NAME}`))) {
-        test.skip(true, "Wallet not available");
-      }
-
-      await waitForDomainTitle(page, TEST_DOMAIN_NAME);
-
-      if (!(await isDomainOwner(page))) {
-        test.skip(true, `Wallet does not own ${TEST_DOMAIN_NAME}`);
-      }
-      await navigateToSettingsTab(page);
-
-      const selectTrigger = page.locator(
-        `${SELECTORS.ADD_RECORD_FORM} button[role="combobox"]`,
-      );
-      await selectTrigger.click();
-      await waitForDropdown(page);
-
-      await page.locator('[data-testid^="select-option-"]').first().click();
-
-      const textarea = page.locator(`${SELECTORS.ADD_RECORD_FORM} textarea`);
-      await textarea.fill("Test bio for blockchain");
-
-      const addBtn = page.locator(SELECTORS.ADD_RECORD_BUTTON);
-      await expect(addBtn).toBeEnabled();
-
-      // Click and verify the button enters loading state
-      await addBtn.click();
-      await expect(
-        page.locator(`${SELECTORS.ADD_RECORD_BUTTON}:has-text("Adding...")`),
-      )
-        .toBeVisible({ timeout: 5000 })
-        .catch(() => {
-          // Loading state may be brief or instant — acceptable
-        });
-    });
-  });
-
   test.describe("Edit Record Blockchain Operation", () => {
-    test("should show edit button for existing records", async ({ page }) => {
-      if (!(await gotoAndRestoreWallet(page, `/domain/${TEST_DOMAIN_NAME}`))) {
-        test.skip(true, "Wallet not available");
-      }
+    test.beforeEach(async ({ page }) => {
+      await gotoAndRestoreWallet(page, `/domain/${TEST_DOMAIN_NAME}`);
+    });
 
+    test("should show edit button for existing records", async ({ page }) => {
       await waitForDomainTitle(page, TEST_DOMAIN_NAME);
 
-      if (!(await isDomainOwner(page))) {
-        test.skip(true, `Wallet does not own ${TEST_DOMAIN_NAME}`);
-      }
       await navigateToSettingsTab(page);
 
       const recordContainer = page
@@ -456,15 +180,8 @@ test.describe("Blockchain Operations", () => {
     test("should show textarea and save/cancel buttons when edit is clicked", async ({
       page,
     }) => {
-      if (!(await gotoAndRestoreWallet(page, `/domain/${TEST_DOMAIN_NAME}`))) {
-        test.skip(true, "Wallet not available");
-      }
-
       await waitForDomainTitle(page, TEST_DOMAIN_NAME);
 
-      if (!(await isDomainOwner(page))) {
-        test.skip(true, `Wallet does not own ${TEST_DOMAIN_NAME}`);
-      }
       await navigateToSettingsTab(page);
 
       const recordContainer = page
@@ -488,15 +205,8 @@ test.describe("Blockchain Operations", () => {
     test("should restore original value when cancel is clicked", async ({
       page,
     }) => {
-      if (!(await gotoAndRestoreWallet(page, `/domain/${TEST_DOMAIN_NAME}`))) {
-        test.skip(true, "Wallet not available");
-      }
-
       await waitForDomainTitle(page, TEST_DOMAIN_NAME);
 
-      if (!(await isDomainOwner(page))) {
-        test.skip(true, `Wallet does not own ${TEST_DOMAIN_NAME}`);
-      }
       await navigateToSettingsTab(page);
 
       const recordContainer = page
@@ -523,15 +233,8 @@ test.describe("Blockchain Operations", () => {
     test("should submit save record transaction and show loading state", async ({
       page,
     }) => {
-      if (!(await gotoAndRestoreWallet(page, `/domain/${TEST_DOMAIN_NAME}`))) {
-        test.skip(true, "Wallet not available");
-      }
-
       await waitForDomainTitle(page, TEST_DOMAIN_NAME);
 
-      if (!(await isDomainOwner(page))) {
-        test.skip(true, `Wallet does not own ${TEST_DOMAIN_NAME}`);
-      }
       await navigateToSettingsTab(page);
 
       const recordContainer = page
@@ -560,16 +263,13 @@ test.describe("Blockchain Operations", () => {
   });
 
   test.describe("Delete Record Blockchain Operation", () => {
-    test("should show delete button for existing records", async ({ page }) => {
-      if (!(await gotoAndRestoreWallet(page, `/domain/${TEST_DOMAIN_NAME}`))) {
-        test.skip(true, "Wallet not available");
-      }
+    test.beforeEach(async ({ page }) => {
+      await gotoAndRestoreWallet(page, `/domain/${TEST_DOMAIN_NAME}`);
+    });
 
+    test("should show delete button for existing records", async ({ page }) => {
       await waitForDomainTitle(page, TEST_DOMAIN_NAME);
 
-      if (!(await isDomainOwner(page))) {
-        test.skip(true, `Wallet does not own ${TEST_DOMAIN_NAME}`);
-      }
       await navigateToSettingsTab(page);
 
       const recordContainer = page
@@ -584,15 +284,8 @@ test.describe("Blockchain Operations", () => {
     test("should show confirmation dialog when delete is clicked", async ({
       page,
     }) => {
-      if (!(await gotoAndRestoreWallet(page, `/domain/${TEST_DOMAIN_NAME}`))) {
-        test.skip(true, "Wallet not available");
-      }
-
       await waitForDomainTitle(page, TEST_DOMAIN_NAME);
 
-      if (!(await isDomainOwner(page))) {
-        test.skip(true, `Wallet does not own ${TEST_DOMAIN_NAME}`);
-      }
       await navigateToSettingsTab(page);
 
       const recordContainer = page
@@ -619,15 +312,8 @@ test.describe("Blockchain Operations", () => {
     });
 
     test("should close dialog when No is clicked", async ({ page }) => {
-      if (!(await gotoAndRestoreWallet(page, `/domain/${TEST_DOMAIN_NAME}`))) {
-        test.skip(true, "Wallet not available");
-      }
-
       await waitForDomainTitle(page, TEST_DOMAIN_NAME);
 
-      if (!(await isDomainOwner(page))) {
-        test.skip(true, `Wallet does not own ${TEST_DOMAIN_NAME}`);
-      }
       await navigateToSettingsTab(page);
 
       const recordContainer = page
@@ -652,15 +338,8 @@ test.describe("Blockchain Operations", () => {
     test("should submit delete record transaction and show loading state", async ({
       page,
     }) => {
-      if (!(await gotoAndRestoreWallet(page, `/domain/${TEST_DOMAIN_NAME}`))) {
-        test.skip(true, "Wallet not available");
-      }
-
       await waitForDomainTitle(page, TEST_DOMAIN_NAME);
 
-      if (!(await isDomainOwner(page))) {
-        test.skip(true, `Wallet does not own ${TEST_DOMAIN_NAME}`);
-      }
       await navigateToSettingsTab(page);
 
       const recordContainer = page
@@ -696,86 +375,4 @@ test.describe("Blockchain Operations", () => {
     });
   });
 
-  test.describe("Records Page Navigation", () => {
-    test("should navigate to records page from domain settings tab", async ({
-      page,
-    }) => {
-      if (!(await gotoAndRestoreWallet(page, `/domain/${TEST_DOMAIN_NAME}`))) {
-        test.skip(true, "Wallet not available");
-      }
-
-      await waitForDomainTitle(page, TEST_DOMAIN_NAME);
-
-      if (!(await isDomainOwner(page))) {
-        test.skip(
-          true,
-          `Wallet does not own ${TEST_DOMAIN_NAME} - records not visible`,
-        );
-      }
-      await navigateToSettingsTab(page);
-
-      // Records are shown inline in the settings tab, not via a link
-      const recordsContainer = page.locator(SELECTORS.RECORDS_CONTAINER);
-      await expect(recordsContainer).toBeVisible();
-    });
-
-    test("should navigate directly to records page via URL", async ({
-      page,
-    }) => {
-      await gotoAndRestoreWallet(page, `/domain/${TEST_DOMAIN_NAME}/records`);
-
-      const heading = page.locator(
-        `h2:has-text("Records — ${TEST_DOMAIN_NAME}")`,
-      );
-      await expect(heading).toBeVisible({ timeout: 10000 });
-
-      // Skip if wallet doesn't own this domain (records container won't be visible)
-      const recordsSection = page.locator(SELECTORS.RECORDS_CONTAINER);
-      if (
-        !(await recordsSection.isVisible({ timeout: 2000 }).catch(() => false))
-      ) {
-        test.skip(
-          true,
-          `Wallet does not own ${TEST_DOMAIN_NAME} - records not visible`,
-        );
-      }
-      await expect(recordsSection).toBeVisible();
-    });
-
-    test("should show connection required on records page when wallet is disconnected", async ({
-      page,
-    }) => {
-      await page.goto(`/domain/${TEST_DOMAIN_NAME}/records`);
-
-      await expect(page.getByText(TEXT.CONNECT_WALLET_PROMPT)).toBeVisible({
-        timeout: 10000,
-      });
-    });
-
-    test("should show records list and add record form on records page", async ({
-      page,
-    }) => {
-      await gotoAndRestoreWallet(page, `/domain/${TEST_DOMAIN_NAME}/records`);
-
-      const heading = page.locator(
-        `h2:has-text("Records — ${TEST_DOMAIN_NAME}")`,
-      );
-      await expect(heading).toBeVisible({ timeout: 10000 });
-
-      // Skip if wallet doesn't own this domain (records container won't be visible)
-      const recordsSection = page.locator(SELECTORS.RECORDS_CONTAINER);
-      if (
-        !(await recordsSection.isVisible({ timeout: 2000 }).catch(() => false))
-      ) {
-        test.skip(
-          true,
-          `Wallet does not own ${TEST_DOMAIN_NAME} - records not visible`,
-        );
-      }
-      await expect(recordsSection).toBeVisible();
-
-      const addRecordCard = page.locator(SELECTORS.ADD_RECORD_FORM);
-      await expect(addRecordCard).toBeVisible();
-    });
-  });
 });

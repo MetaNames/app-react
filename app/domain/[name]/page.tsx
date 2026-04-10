@@ -1,4 +1,4 @@
-import { notFound } from "next/navigation";
+import { redirect } from "next/navigation";
 import { Suspense } from "react";
 import { getDomainData } from "@/lib/data/domain";
 import { normalizeDomain } from "@/lib/domain-validator";
@@ -22,7 +22,8 @@ async function DomainPageContent({ domainName }: { domainName: string }) {
   const domain = await getDomainData(domainName);
 
   if (!domain) {
-    notFound();
+    const registerDomain = domainName.replace(".mpc", "");
+    redirect(`/register/${registerDomain}`);
   }
 
   return <DomainPageClient initialDomain={domain} />;

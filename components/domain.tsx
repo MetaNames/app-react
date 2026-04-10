@@ -1,5 +1,5 @@
 "use client";
-import { useEffect } from "react";
+import { useCallback, useEffect } from "react";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { JdenticonAvatar } from "@/components/domain-avatar";
 import { DetailsContent } from "@/components/domain-details";
@@ -19,10 +19,10 @@ import { useRouter } from "next/navigation";
 interface DomainProps {
   domain: DomainType;
   isTld?: boolean;
-  onRefresh?: () => void;
+  onUpdate?: () => void;
 }
 
-export function Domain({ domain, isTld = false, onRefresh }: DomainProps) {
+export function Domain({ domain, isTld = false, onUpdate }: DomainProps) {
   const address = useWalletStore((s) => s.address);
   const metaNamesSdk = useSdkStore((s) => s.metaNamesSdk);
   const router = useRouter();
@@ -30,17 +30,34 @@ export function Domain({ domain, isTld = false, onRefresh }: DomainProps) {
     address &&
     domain.owner &&
     address.toLowerCase() === domain.owner.toLowerCase();
-  const repository = metaNamesSdk ? createRecordRepository(metaNamesSdk) : null;
 
+  const repository = useRecordStore((s) => s.repository);
   const setRepository = useRecordStore((s) => s.setRepository);
-  const setOnUpdate = useRecordStore((s) => s.setOnUpdate);
+  const clearRepository = useRecordStore((s) => s.clear);
 
   useEffect(() => {
-    if (repository) {
-      setRepository(repository);
-      setOnUpdate(onRefresh ?? (() => {}));
+    if (!metaNamesSdk) {
+      clearRepository();
+      return;
     }
-  }, [repository, onRefresh, setRepository, setOnUpdate]);
+    clearRepository();
+    let cancelled = false;
+    createRecordRepository(metaNamesSdk, domain.name).then((repo) => {
+      if (cancelled || !repo) return;
+      setRepository(repo);
+    });
+    return () => {
+      cancelled = true;
+    };
+  }, [metaNamesSdk, domain.name, setRepository, clearRepository]);
+
+  const handleRenew = useCallback(() => {
+    router.push(`/domain/${domain.name}/renew`);
+  }, [domain.name, router]);
+
+  const handleTransfer = useCallback(() => {
+    router.push(`/domain/${domain.name}/transfer`);
+  }, [domain.name, router]);
 
   const profileRecords = PROFILE_RECORD_TYPES.filter(
     (t) => domain.records?.[t],
@@ -79,18 +96,17 @@ export function Domain({ domain, isTld = false, onRefresh }: DomainProps) {
             />
           </TabsContent>
           <TabsContent value="settings" className="mt-4 flex flex-col gap-4">
-            {repository && <Records records={domain.records ?? {}} />}
+            {repository && (
+              <Records
+                records={domain.records ?? {}}
+                onUpdate={onUpdate}
+              />
+            )}
             <div className="flex gap-3 pt-4 border-t">
-              <Button
-                variant="outline"
-                onClick={() => router.push(`/domain/${domain.name}/renew`)}
-              >
+              <Button variant="outline" onClick={handleRenew}>
                 Renew
               </Button>
-              <Button
-                variant="outline"
-                onClick={() => router.push(`/domain/${domain.name}/transfer`)}
-              >
+              <Button variant="outline" onClick={handleTransfer}>
                 Transfer
               </Button>
             </div>

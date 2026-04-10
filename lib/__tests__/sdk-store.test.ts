@@ -1,6 +1,6 @@
 import { describe, it, expect, vi, afterEach } from "vitest";
 import { renderHook, act } from "@testing-library/react";
-import { useSdkStore } from "../stores/sdk-store";
+import { useSdkStore, selectSelectedCoin } from "../stores/sdk-store";
 
 describe("sdk-store", () => {
   afterEach(() => {
@@ -9,7 +9,7 @@ describe("sdk-store", () => {
 
   it("should have initial selectedCoin as ETH", () => {
     const { result } = renderHook(() => useSdkStore());
-    expect(result.current.selectedCoin).toBe("ETH");
+    expect(selectSelectedCoin(result.current)).toBe("ETH");
   });
 
   it("should have metaNamesSdk as null initially", () => {
@@ -22,7 +22,7 @@ describe("sdk-store", () => {
     act(() => {
       result.current.setSelectedCoin("ETH_GOERLI");
     });
-    expect(result.current.selectedCoin).toBe("ETH_GOERLI");
+    expect(selectSelectedCoin(result.current)).toBe("ETH_GOERLI");
   });
 
   it("should set selectedCoin to TEST_COIN", () => {
@@ -30,15 +30,7 @@ describe("sdk-store", () => {
     act(() => {
       result.current.setSelectedCoin("TEST_COIN");
     });
-    expect(result.current.selectedCoin).toBe("TEST_COIN");
-  });
-
-  it("should set selectedCoin to ETH_GOERLI", () => {
-    const { result } = renderHook(() => useSdkStore());
-    act(() => {
-      result.current.setSelectedCoin("ETH_GOERLI");
-    });
-    expect(result.current.selectedCoin).toBe("ETH_GOERLI");
+    expect(selectSelectedCoin(result.current)).toBe("TEST_COIN");
   });
 
   it("should set selectedCoin and then change it", () => {
@@ -46,11 +38,11 @@ describe("sdk-store", () => {
     act(() => {
       result.current.setSelectedCoin("ETH_GOERLI");
     });
-    expect(result.current.selectedCoin).toBe("ETH_GOERLI");
+    expect(selectSelectedCoin(result.current)).toBe("ETH_GOERLI");
     act(() => {
       result.current.setSelectedCoin("TEST_COIN");
     });
-    expect(result.current.selectedCoin).toBe("TEST_COIN");
+    expect(selectSelectedCoin(result.current)).toBe("TEST_COIN");
   });
 
   it("should set metaNamesSdk", () => {

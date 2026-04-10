@@ -1,5 +1,5 @@
 "use client";
-import { useState } from "react";
+import { useCallback, useState } from "react";
 import Link from "next/link";
 import { Logo } from "@/components/logo";
 import { WalletConnectButton } from "@/components/wallet-connect-button";
@@ -9,6 +9,14 @@ import { Menu, X } from "lucide-react";
 
 export function Header() {
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
+
+  const toggleMobileMenu = useCallback(() => {
+    setMobileMenuOpen((prev) => !prev);
+  }, []);
+
+  const closeMobileMenu = useCallback(() => {
+    setMobileMenuOpen(false);
+  }, []);
 
   return (
     <header className="border-b border-border sticky top-0 z-50 bg-background/80 backdrop-blur">
@@ -38,7 +46,7 @@ export function Header() {
           </nav>
           <WalletConnectButton />
           <button
-            onClick={() => setMobileMenuOpen(!mobileMenuOpen)}
+            onClick={toggleMobileMenu}
             className="p-2 hover:bg-muted rounded-md transition-colors md:hidden"
             aria-label="Toggle menu"
           >
@@ -56,14 +64,14 @@ export function Header() {
             <Link
               href="/profile"
               className="text-sm text-muted-foreground hover:text-foreground transition-colors py-2"
-              onClick={() => setMobileMenuOpen(false)}
+              onClick={closeMobileMenu}
             >
               Profile
             </Link>
             <Link
               href="/tld"
               className="text-sm text-muted-foreground hover:text-foreground transition-colors py-2"
-              onClick={() => setMobileMenuOpen(false)}
+              onClick={closeMobileMenu}
             >
               TLD
             </Link>

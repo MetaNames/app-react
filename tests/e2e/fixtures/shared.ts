@@ -11,7 +11,7 @@ import {
   DEBOUNCE_MS,
   SPINNER_TIMEOUT_MS,
   VISIBILITY_TIMEOUT_MS,
-  DROPWDOWN_TIMEOUT_MS,
+  DROPDOWN_TIMEOUT_MS,
   PAGINATION_WAIT_MS,
 } from "../constants";
 
@@ -43,7 +43,7 @@ export async function waitForSpinner(page: Page, timeout = SPINNER_TIMEOUT_MS) {
  */
 export async function waitForDropdown(
   page: Page,
-  timeout = DROPWDOWN_TIMEOUT_MS,
+  timeout = DROPDOWN_TIMEOUT_MS,
 ) {
   const dropdown = page.locator('[data-slot="select-content"]');
   await dropdown.waitFor({ state: "visible", timeout });
@@ -61,7 +61,7 @@ export async function selectFirstDropdownOption(
   await trigger.click();
   await waitForDropdown(page);
   const firstOption = page.locator('[data-testid^="select-option-"]').first();
-  await expect(firstOption).toBeVisible({ timeout: DROPWDOWN_TIMEOUT_MS });
+  await expect(firstOption).toBeVisible({ timeout: DROPDOWN_TIMEOUT_MS });
   await firstOption.click();
 }
 
@@ -158,4 +158,52 @@ export function generateTestDomain(prefix = "test"): string {
  */
 export function generateSubdomain(parentDomain: string): string {
   return `sub.${parentDomain}`;
+}
+
+/**
+ * Delete all records of a specific type (e.g., "Uri", "Email", "Bio") if they exist.
+ * Useful for ensuring a specific record type is available for testing.
+ */
+export async function deleteRecordTypeByName(
+  page: Page,
+  recordTypeName: string,
+): Promise<boolean> {
+  const recordSelector = `.record-container:has-text("${recordTypeName}")`;
+  const records = page.locator(recordSelector);
+  const count = await records.count();
+
+  if (count === 0) {
+    return false; // No records of this type to delete
+  }
+
+  for (let i = 0; i < count; i++) {
+    const record = records.first();
+    const deleteBtn = record.locator('[data-testid="delete-record"]');
+    const deleteVisible = await deleteBtn.isVisible().catch(() => false);
+
+    if (!deleteVisible) {
+      // Need to expand the record to see delete button
+      const editBtn = record.locator('[data-testid="edit-record"]');
+      await editBtn.click().catch(() => {});
+      await page.waitForTimeout(200);
+    }
+
+    await deleteBtn.click();
+
+    // Wait for confirmation dialog
+    const dialog = page.locator(
+      '[data-slot="dialog-content"]:has-text("Confirm action")',
+    );
+    const dialogVisible = await dialog
+      .isVisible({ timeout: 2000 })
+      .catch(() => false);
+    if (dialogVisible) {
+      const yesBtn = dialog.locator('button:has-text("Yes")');
+      await yesBtn.click();
+      // Wait for deletion to complete
+      await page.waitForTimeout(1500);
+    }
+  }
+
+  return true;
 }

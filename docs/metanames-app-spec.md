@@ -118,8 +118,8 @@
 
 **Dev Private Key (testnet only):**
 
-1. User enters 64-character hex private key in `.dev-key-input` field
-2. User clicks `.dev-key-connect` button
+1. User enters 64-character hex private key in `[data-testid="dev-key-input"]` field
+2. User clicks `[data-testid="dev-key-connect-button"]` button
 3. System calls `privateKeyToAccountAddress(privateKey)` from `partisia-blockchain-applications-crypto`
 4. SDK `setSigningStrategy('privateKey', privateKey)` called
 5. Address stored in `walletStore.address`

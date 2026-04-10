@@ -4,22 +4,28 @@ import type { BYOCSymbol } from "@metanames/sdk/dist/providers/config";
 
 interface SdkStore {
   metaNamesSdk: MetaNamesSdk | null;
-  availableCoins: BYOCSymbol[];
-  selectedCoin: BYOCSymbol;
   setMetaNamesSdk: (sdk: MetaNamesSdk) => void;
   setSelectedCoin: (coin: BYOCSymbol) => void;
+  _selectedCoin: BYOCSymbol | undefined;
 }
+
 export const useSdkStore = create<SdkStore>((set) => ({
   metaNamesSdk: null,
-  availableCoins: [],
-  selectedCoin: "ETH",
-  setMetaNamesSdk: (metaNamesSdk) =>
-    set({
-      metaNamesSdk,
-      availableCoins:
-        (metaNamesSdk.config?.byoc?.map((b) => b.symbol) as BYOCSymbol[]) ?? [],
-      selectedCoin:
-        (metaNamesSdk.config?.byoc?.[0]?.symbol as BYOCSymbol) ?? "ETH",
-    }),
-  setSelectedCoin: (selectedCoin) => set({ selectedCoin }),
+  _selectedCoin: undefined,
+  setMetaNamesSdk: (metaNamesSdk) => set({ metaNamesSdk }),
+  setSelectedCoin: (selectedCoin) => set({ _selectedCoin: selectedCoin }),
 }));
+
+export const selectAvailableCoins = (state: SdkStore): BYOCSymbol[] =>
+  (state.metaNamesSdk?.config?.byoc?.map((b) => b.symbol) as BYOCSymbol[]) ??
+  [];
+
+export const selectSelectedCoin = (state: SdkStore): BYOCSymbol => {
+  const coins = selectAvailableCoins(state);
+  if (state._selectedCoin) {
+    if (coins.length === 0 || coins.includes(state._selectedCoin)) {
+      return state._selectedCoin;
+    }
+  }
+  return coins[0] ?? "ETH";
+};

@@ -1,5 +1,5 @@
 import { test, expect } from "@playwright/test";
-import { connectWallet, gotoAndRestoreWallet } from "./helpers/wallet-helper";
+import { gotoAndRestoreWallet } from "./helpers/wallet-helper";
 import { TEXT, CSS_CLASSES, TEST_DOMAIN_NAME } from "./constants";
 import {
   navigateToSettingsTab,
@@ -13,8 +13,7 @@ test.describe("Domain Management", () => {
   test.setTimeout(60000);
 
   test.beforeEach(async ({ page }) => {
-    await page.goto("/");
-    await connectWallet(page);
+    await gotoAndRestoreWallet(page, `/domain/${TEST_DOMAIN_NAME}`);
   });
 
   test("non-existent domain redirects to register page", async ({ page }) => {
@@ -27,12 +26,8 @@ test.describe("Domain Management", () => {
     );
   });
 
-  test("view domain details for owned domain (test.mpc)", async ({ page }) => {
+  test("view domain details for owned domain (name.mpc)", async ({ page }) => {
     const domainPage = new DomainPage(page);
-
-    if (!(await gotoAndRestoreWallet(page, `/domain/${TEST_DOMAIN_NAME}`))) {
-      test.skip(true, "Wallet not available");
-    }
 
     await waitForDomainTitle(page, TEST_DOMAIN_NAME);
     await expect(domainPage.avatar).toBeVisible();
@@ -47,10 +42,6 @@ test.describe("Domain Management", () => {
 
   test("owner sees tabs for details and settings", async ({ page }) => {
     const domainPage = new DomainPage(page);
-
-    if (!(await gotoAndRestoreWallet(page, `/domain/${TEST_DOMAIN_NAME}`))) {
-      test.skip(true, "Wallet not available");
-    }
 
     await waitForDomainTitle(page, TEST_DOMAIN_NAME);
     await expect(domainPage.tabsList).toBeVisible();
@@ -67,10 +58,6 @@ test.describe("Domain Management", () => {
   }) => {
     const domainPage = new DomainPage(page);
 
-    if (!(await gotoAndRestoreWallet(page, `/domain/${TEST_DOMAIN_NAME}`))) {
-      test.skip(true, "Wallet not available");
-    }
-
     await waitForDomainTitle(page, TEST_DOMAIN_NAME);
 
     await domainPage.switchToSettingsTab();
@@ -78,10 +65,12 @@ test.describe("Domain Management", () => {
     await expect(domainPage.profileSection).toBeVisible();
   });
 
-  test("non-owner view shows no tabs", async ({ page }) => {
+  // Disconnected visitor viewing the domain — no tabs shown (tabs are owner-only)
+  test("disconnected visitor sees no tabs", async ({ page }) => {
     const domainPage = new DomainPage(page);
 
-    await domainPage.goto(TEST_DOMAIN_NAME);
+    // Navigate without reconnecting wallet to simulate a non-connected visitor
+    await page.goto(`/domain/${TEST_DOMAIN_NAME}`);
     await waitForDomainTitle(page, TEST_DOMAIN_NAME);
 
     await expect(domainPage.tabsList).not.toBeVisible();
@@ -89,14 +78,10 @@ test.describe("Domain Management", () => {
     await expect(domainPage.whoisSection).toBeVisible();
   });
 
-  test("domain page shows profile records (Bio and Price for test.mpc)", async ({
+  test("domain page shows profile records (Bio and Price for name.mpc)", async ({
     page,
   }) => {
     const domainPage = new DomainPage(page);
-
-    if (!(await gotoAndRestoreWallet(page, `/domain/${TEST_DOMAIN_NAME}`))) {
-      test.skip(true, "Wallet not available");
-    }
 
     await waitForDomainTitle(page, TEST_DOMAIN_NAME);
     await expect(domainPage.profileSection).toBeVisible();
@@ -110,10 +95,6 @@ test.describe("Domain Management", () => {
   }) => {
     const domainPage = new DomainPage(page);
 
-    if (!(await gotoAndRestoreWallet(page, `/domain/${TEST_DOMAIN_NAME}`))) {
-      test.skip(true, "Wallet not available");
-    }
-
     await waitForDomainTitle(page, TEST_DOMAIN_NAME);
     await expect(domainPage.whoisSection).toBeVisible();
     await expect(domainPage.ownerChip).toBeVisible();
@@ -123,10 +104,6 @@ test.describe("Domain Management", () => {
   test("domain page shows Social section", async ({ page }) => {
     const domainPage = new DomainPage(page);
 
-    if (!(await gotoAndRestoreWallet(page, `/domain/${TEST_DOMAIN_NAME}`))) {
-      test.skip(true, "Wallet not available");
-    }
-
     await waitForDomainTitle(page, TEST_DOMAIN_NAME);
     await domainPage.expectHasSocialSection();
   });
@@ -134,10 +111,6 @@ test.describe("Domain Management", () => {
   test("settings tab shows Records editor and action buttons", async ({
     page,
   }) => {
-    if (!(await gotoAndRestoreWallet(page, `/domain/${TEST_DOMAIN_NAME}`))) {
-      test.skip(true, "Wallet not available");
-    }
-
     await waitForDomainTitle(page, TEST_DOMAIN_NAME);
 
     await navigateToSettingsTab(page);
@@ -154,10 +127,6 @@ test.describe("Domain Management", () => {
 
   test("token id is displayed on domain page", async ({ page }) => {
     const domainPage = new DomainPage(page);
-
-    if (!(await gotoAndRestoreWallet(page, `/domain/${TEST_DOMAIN_NAME}`))) {
-      test.skip(true, "Wallet not available");
-    }
 
     await waitForDomainTitle(page, TEST_DOMAIN_NAME);
     await expect(domainPage.tokenId).toBeVisible();

@@ -1,5 +1,5 @@
 "use client";
-import { useEffect, useRef } from "react";
+import { useEffect, useRef, memo } from "react";
 import { ThemeProvider } from "next-themes";
 import { Toaster } from "@/components/ui/sonner";
 import { toast } from "sonner";
@@ -7,8 +7,9 @@ import { useSdkStore } from "@/lib/stores/sdk-store";
 import { useWalletStore } from "@/lib/stores/wallet-store";
 import { metaNamesSdkFactory } from "@/lib/sdk";
 
-function SdkInitializer() {
-  const { metaNamesSdk, setMetaNamesSdk } = useSdkStore();
+const SdkInitializer = memo(function SdkInitializer() {
+  const metaNamesSdk = useSdkStore((s) => s.metaNamesSdk);
+  const setMetaNamesSdk = useSdkStore((s) => s.setMetaNamesSdk);
   const initialized = useRef(false);
 
   useEffect(() => {
@@ -18,9 +19,9 @@ function SdkInitializer() {
     }
   }, [metaNamesSdk, setMetaNamesSdk]);
   return null;
-}
+});
 
-function AlertWatcher() {
+const AlertWatcher = memo(function AlertWatcher() {
   const alertMessage = useWalletStore((s) => s.alertMessage);
   const setAlertMessage = useWalletStore((s) => s.setAlertMessage);
 
@@ -43,7 +44,7 @@ function AlertWatcher() {
   }, [alertMessage, setAlertMessage]);
 
   return null;
-}
+});
 
 export function Providers({ children }: { children: React.ReactNode }) {
   return (

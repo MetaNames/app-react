@@ -1,5 +1,5 @@
 "use client";
-import { useState, useMemo } from "react";
+import { useState, useMemo, useEffect } from "react";
 import {
   useReactTable,
   getCoreRowModel,
@@ -44,13 +44,18 @@ export function DomainsTable({ domains }: DomainsTableProps) {
   const table = useReactTable({
     data: filtered,
     columns: domainsTableColumns(),
-    state: { sorting, pagination: { pageIndex: 0, pageSize } },
+    state: { sorting },
     onSortingChange: setSorting,
     getCoreRowModel: getCoreRowModel(),
     getSortedRowModel: getSortedRowModel(),
     getPaginationRowModel: getPaginationRowModel(),
     getFilteredRowModel: getFilteredRowModel(),
   });
+
+  // Sync pageSize changes to table
+  useEffect(() => {
+    table.setPageSize(pageSize);
+  }, [pageSize, table]);
 
   const { pageIndex } = table.getState().pagination;
   const total = filtered.length;

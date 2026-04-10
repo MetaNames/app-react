@@ -1,3 +1,7 @@
+"use client";
+
+import { useCallback } from "react";
+
 import { Input } from "@/components/ui/input";
 import { X } from "lucide-react";
 
@@ -10,6 +14,10 @@ export function DomainsTableSearch({
   value,
   onChange,
 }: DomainsTableSearchProps) {
+  const handleClear = useCallback(() => {
+    onChange("");
+  }, [onChange]);
+
   return (
     <div className="relative max-w-xs">
       <Input
@@ -21,7 +29,7 @@ export function DomainsTableSearch({
       />
       {value && (
         <button
-          onClick={() => onChange("")}
+          onClick={handleClear}
           className="absolute right-2 top-1/2 -translate-y-1/2"
         >
           <X className="h-4 w-4 text-muted-foreground" />

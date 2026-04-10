@@ -10,6 +10,7 @@ import { validateDomainName } from "@/lib/actions/validation";
 import { validateRecordValue } from "@/lib/records";
 import { ValidationError, ActionError } from "@/lib/actions/errors";
 import type { RecordClass } from "@/lib/types";
+import type { RecordClassEnum } from "@metanames/sdk";
 
 export async function createRecord(
   input: CreateRecordInput,
@@ -30,9 +31,15 @@ export async function createRecord(
   const sdk = getServerSdkInstance();
 
   try {
-    // @ts-expect-error - recordRepository not typed in SDK
-    const intent = await sdk.recordRepository.create({
-      class: recordClass,
+    const domain = await sdk.domainRepository.find(normalizedDomain);
+    if (!domain) {
+      throw new ActionError("Domain not found", "DOMAIN_NOT_FOUND");
+    }
+
+    const recordRepo = domain.getRecordRepository(sdk);
+
+    const intent = await recordRepo.create({
+      class: recordClass as unknown as RecordClassEnum,
       data,
     });
 

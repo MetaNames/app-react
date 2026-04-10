@@ -1,4 +1,5 @@
 "use client";
+import { useCallback } from "react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import {
@@ -37,6 +38,12 @@ export function DomainPayment({ domain, mode, onSuccess }: DomainPaymentProps) {
     handleSubmit,
   } = useDomainPayment({ domain, mode, onSuccess });
 
+  const decrementYears = useCallback(
+    () => setYears((y) => Math.max(1, y - 1)),
+    [setYears],
+  );
+  const incrementYears = useCallback(() => setYears((y) => y + 1), [setYears]);
+
   return (
     <Card className="w-full max-w-lg content checkout">
       <CardHeader>
@@ -45,31 +52,33 @@ export function DomainPayment({ domain, mode, onSuccess }: DomainPaymentProps) {
         </CardTitle>
       </CardHeader>
       <CardContent className="flex flex-col gap-6">
-        <div className="flex items-center justify-between">
-          <span className="font-medium">Duration</span>
-          <div className="flex items-center gap-3">
-            <Button
-              variant="outline"
-              size="icon"
-              aria-label="remove-year"
-              disabled={years <= 1}
-              onClick={() => setYears((y) => Math.max(1, y - 1))}
-            >
-              <Minus className="h-4 w-4" />
-            </Button>
-            <span className="w-20 text-center font-medium">
-              {years} {years === 1 ? "year" : "years"}
-            </span>
-            <Button
-              variant="outline"
-              size="icon"
-              aria-label="add-year"
-              onClick={() => setYears((y) => y + 1)}
-            >
-              <Plus className="h-4 w-4" />
-            </Button>
+        <RequireWalletConnection address={address}>
+          <div className="flex items-center justify-between">
+            <span className="font-medium">Duration</span>
+            <div className="flex items-center gap-3">
+              <Button
+                variant="outline"
+                size="icon"
+                aria-label="remove-year"
+                disabled={years <= 1}
+                onClick={decrementYears}
+              >
+                <Minus className="h-4 w-4" />
+              </Button>
+              <span className="w-20 text-center font-medium">
+                {years} {years === 1 ? "year" : "years"}
+              </span>
+              <Button
+                variant="outline"
+                size="icon"
+                aria-label="add-year"
+                onClick={incrementYears}
+              >
+                <Plus className="h-4 w-4" />
+              </Button>
+            </div>
           </div>
-        </div>
+        </RequireWalletConnection>
         {loadingFees && (
           <div className="flex justify-center py-4">
             <Loader2 className="h-6 w-6 animate-spin text-muted-foreground" />

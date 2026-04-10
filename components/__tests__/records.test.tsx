@@ -2,6 +2,23 @@ import { describe, it, expect, vi, beforeEach, afterEach } from "vitest";
 import { render, screen, fireEvent, waitFor } from "@testing-library/react";
 import { Records } from "../records";
 
+const mockRepository = {
+  create: vi.fn(),
+  update: vi.fn(),
+  delete: vi.fn(),
+};
+
+vi.mock("@/lib/stores/record-store", () => ({
+  useRecordStore: vi.fn((selector) => {
+    const state = {
+      repository: mockRepository,
+      setRepository: vi.fn(),
+      clear: vi.fn(),
+    };
+    return selector ? selector(state) : state;
+  }),
+}));
+
 vi.mock("sonner", () => {
   const fn = vi.fn((message: string) => message);
   return {
@@ -136,20 +153,13 @@ vi.mock("@/components/ui/textarea", () => ({
   ),
 }));
 
-const mockRepository = {
-  create: vi.fn(),
-  update: vi.fn(),
-  delete: vi.fn(),
-};
-
 const createMockIntent = () => ({
-  send: vi.fn().mockResolvedValue("mock-tx-hash"),
-  waitForConfirmation: vi.fn().mockResolvedValue(undefined),
+  transactionHash: "mock-tx-hash",
+  fetchResult: Promise.resolve({ transactionHash: "mock-tx-hash", hasError: false }),
 });
 
 const defaultProps = {
   records: {} as Record<string, string>,
-  repository: mockRepository,
   onUpdate: vi.fn(),
 };
 
@@ -178,7 +188,6 @@ describe("Records", () => {
         <Records
           {...defaultProps}
           records={{ Bio: "Test bio" }}
-          repository={mockRepository}
         />,
       );
       expect(screen.getByText("Bio")).toBeInTheDocument();
@@ -195,7 +204,6 @@ describe("Records", () => {
         <Records
           {...defaultProps}
           records={records}
-          repository={mockRepository}
         />,
       );
 
@@ -212,7 +220,6 @@ describe("Records", () => {
         <Records
           {...defaultProps}
           records={{ Bio: "Test bio" }}
-          repository={mockRepository}
         />,
       );
       expect(screen.getAllByText("Add record").length).toBeGreaterThan(0);
@@ -225,7 +232,6 @@ describe("Records", () => {
         <Records
           {...defaultProps}
           records={{ Bio: "Test bio" }}
-          repository={mockRepository}
         />,
       );
       expect(screen.getByText("Select record type")).toBeInTheDocument();
@@ -236,7 +242,6 @@ describe("Records", () => {
         <Records
           {...defaultProps}
           records={{ Bio: "Test bio" }}
-          repository={mockRepository}
         />,
       );
       expect(screen.queryByRole("textbox")).not.toBeInTheDocument();
@@ -247,7 +252,6 @@ describe("Records", () => {
         <Records
           {...defaultProps}
           records={{ Bio: "Test bio" }}
-          repository={mockRepository}
         />,
       );
 
@@ -263,7 +267,6 @@ describe("Records", () => {
         <Records
           {...defaultProps}
           records={{ Bio: "Test bio" }}
-          repository={mockRepository}
         />,
       );
 
@@ -279,7 +282,6 @@ describe("Records", () => {
         <Records
           {...defaultProps}
           records={{ Bio: "Test bio" }}
-          repository={mockRepository}
         />,
       );
 
@@ -297,7 +299,6 @@ describe("Records", () => {
         <Records
           {...defaultProps}
           records={{ Bio: "Test bio" }}
-          repository={mockRepository}
         />,
       );
       expect(screen.getByRole("button", { name: "Add record" })).toBeDisabled();
@@ -308,7 +309,6 @@ describe("Records", () => {
         <Records
           {...defaultProps}
           records={{ Bio: "Test bio" }}
-          repository={mockRepository}
         />,
       );
 
@@ -326,7 +326,6 @@ describe("Records", () => {
         <Records
           {...defaultProps}
           records={{ Bio: "Test bio" }}
-          repository={mockRepository}
         />,
       );
 
@@ -352,7 +351,6 @@ describe("Records", () => {
         <Records
           {...defaultProps}
           records={{ Bio: "Test bio" }}
-          repository={mockRepository}
         />,
       );
 
@@ -379,7 +377,6 @@ describe("Records", () => {
         <Records
           {...defaultProps}
           records={{ Bio: "Test bio" }}
-          repository={mockRepository}
         />,
       );
 
@@ -403,7 +400,6 @@ describe("Records", () => {
         <Records
           {...defaultProps}
           records={{ Bio: "Test bio" }}
-          repository={mockRepository}
         />,
       );
 
@@ -428,7 +424,6 @@ describe("Records", () => {
         <Records
           {...defaultProps}
           records={{ Bio: "Test bio" }}
-          repository={mockRepository}
         />,
       );
 
@@ -457,7 +452,6 @@ describe("Records", () => {
         <Records
           {...defaultProps}
           records={{ Bio: "Test bio" }}
-          repository={mockRepository}
         />,
       );
 
@@ -483,7 +477,6 @@ describe("Records", () => {
         <Records
           {...defaultProps}
           records={{ Bio: "Test bio" }}
-          repository={mockRepository}
         />,
       );
 
@@ -509,7 +502,6 @@ describe("Records", () => {
         <Records
           {...defaultProps}
           records={{ Bio: "Test bio" }}
-          repository={mockRepository}
         />,
       );
 
@@ -542,7 +534,6 @@ describe("Records", () => {
         <Records
           {...defaultProps}
           records={{ Bio: "Test bio" }}
-          repository={mockRepository}
         />,
       );
 
@@ -574,7 +565,6 @@ describe("Records", () => {
         <Records
           {...defaultProps}
           records={{ Bio: "Test bio", Email: "test@example.com" }}
-          repository={mockRepository}
         />,
       );
 
@@ -600,7 +590,6 @@ describe("Records", () => {
         <Records
           {...defaultProps}
           records={allRecords}
-          repository={mockRepository}
         />,
       );
       expect(screen.queryByText("Add record")).toBeNull();
@@ -616,7 +605,6 @@ describe("Records", () => {
         <Records
           {...defaultProps}
           records={{ Bio: "Test bio" }}
-          repository={mockRepository}
         />,
       );
 
@@ -642,7 +630,6 @@ describe("Records", () => {
         <Records
           {...defaultProps}
           records={{ Bio: "Test bio" }}
-          repository={mockRepository}
         />,
       );
 
@@ -668,7 +655,6 @@ describe("Records", () => {
         <Records
           {...defaultProps}
           records={{ Bio: "Test bio" }}
-          repository={mockRepository}
         />,
       );
 
@@ -694,7 +680,6 @@ describe("Records", () => {
         <Records
           {...defaultProps}
           records={{ Bio: "Test bio" }}
-          repository={mockRepository}
         />,
       );
 
@@ -722,7 +707,6 @@ describe("Records", () => {
         <Records
           {...defaultProps}
           records={{ Bio: "Test bio" }}
-          repository={mockRepository}
         />,
       );
 
@@ -749,7 +733,6 @@ describe("Records", () => {
         <Records
           {...defaultProps}
           records={{ Bio: "Test bio" }}
-          repository={mockRepository}
         />,
       );
 
@@ -776,7 +759,6 @@ describe("Records", () => {
         <Records
           {...defaultProps}
           records={{ Bio: "Test bio" }}
-          repository={mockRepository}
         />,
       );
 
@@ -803,7 +785,6 @@ describe("Records", () => {
         <Records
           {...defaultProps}
           records={{ Bio: "Test bio" }}
-          repository={mockRepository}
         />,
       );
 

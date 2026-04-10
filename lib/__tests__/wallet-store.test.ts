@@ -7,7 +7,6 @@ describe("wallet-store", () => {
     const { result } = renderHook(() => useWalletStore());
     expect(result.current.address).toBeUndefined();
     expect(result.current.alertMessage).toBeUndefined();
-    expect(result.current.alertTransaction).toBeUndefined();
     expect(result.current.lastRefreshed).toBeNull();
   });
 
@@ -54,25 +53,6 @@ describe("wallet-store", () => {
       result.current.setAlertMessage(undefined);
     });
     expect(result.current.alertMessage).toBeUndefined();
-  });
-
-  it("should set alertTransaction", () => {
-    const { result } = renderHook(() => useWalletStore());
-    act(() => {
-      result.current.setAlertTransaction("txhash123");
-    });
-    expect(result.current.alertTransaction).toBe("txhash123");
-  });
-
-  it("should clear alertTransaction when set to undefined", () => {
-    const { result } = renderHook(() => useWalletStore());
-    act(() => {
-      result.current.setAlertTransaction("txhash123");
-    });
-    act(() => {
-      result.current.setAlertTransaction(undefined);
-    });
-    expect(result.current.alertTransaction).toBeUndefined();
   });
 
   it("should trigger refresh with timestamp", () => {

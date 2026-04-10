@@ -7,21 +7,12 @@ import {
   TEST_DOMAIN_NAME,
   PLACEHOLDERS,
 } from "./constants";
-import { connectWallet, gotoAndRestoreWallet } from "./helpers/wallet-helper";
+import { gotoAndRestoreWallet } from "./helpers/wallet-helper";
 
 test.describe("Domain Transfer", () => {
   test.describe("with wallet connected", () => {
     test.beforeEach(async ({ page }) => {
-      await page.goto("/");
-      await connectWallet(page);
-      if (
-        !(await gotoAndRestoreWallet(
-          page,
-          `/domain/${TEST_DOMAIN_NAME}/transfer`,
-        ))
-      ) {
-        test.skip(true, "Wallet not available");
-      }
+      await gotoAndRestoreWallet(page, `/domain/${TEST_DOMAIN_NAME}/transfer`);
     });
 
     test("should display transfer page with all elements", async ({ page }) => {
@@ -129,7 +120,7 @@ test.describe("Domain Transfer", () => {
 
       await goBackBtn.click();
 
-      await expect(page).toHaveURL(/\/domain\/test\.mpc/);
+      await expect(page).toHaveURL(/\/domain\/name\.mpc/);
     });
 
     test("should show border-destructive immediately on invalid input", async ({

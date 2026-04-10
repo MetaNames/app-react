@@ -1,5 +1,5 @@
 "use client";
-import { useState, useMemo } from "react";
+import { useState, useMemo, useCallback } from "react";
 import { Button } from "@/components/ui/button";
 import {
   DropdownMenu,
@@ -33,23 +33,39 @@ export function WalletConnectButton() {
   const [mounted] = useState(true);
   const isValidKey = useMemo(() => validatePrivateKey(devKey), [devKey]);
 
-  const handleConnect = async (type: "metamask" | "partisia" | "ledger") => {
-    if (!metaNamesSdk) return;
-    try {
-      let addr = "";
-      if (type === "metamask") addr = await connectMetaMask(metaNamesSdk);
-      else if (type === "partisia")
-        addr = await connectPartisiaWallet(metaNamesSdk);
-      else if (type === "ledger") addr = await connectLedger(metaNamesSdk);
-      setAddress(addr);
-      setOpen(false);
-      toast.success("Wallet connected");
-    } catch (e) {
-      toast.error((e as Error)?.message ?? "Failed to connect wallet");
-    }
-  };
+  const handleConnect = useCallback(
+    async (type: "metamask" | "partisia" | "ledger") => {
+      if (!metaNamesSdk) return;
+      try {
+        let addr = "";
+        if (type === "metamask") addr = await connectMetaMask(metaNamesSdk);
+        else if (type === "partisia")
+          addr = await connectPartisiaWallet(metaNamesSdk);
+        else if (type === "ledger") addr = await connectLedger(metaNamesSdk);
+        setAddress(addr);
+        setOpen(false);
+        toast.success("Wallet connected");
+      } catch (e) {
+        toast.error((e as Error)?.message ?? "Failed to connect wallet");
+      }
+    },
+    [metaNamesSdk, setAddress],
+  );
 
-  const handleDevConnect = async () => {
+  const handleMetaMask = useCallback(
+    () => handleConnect("metamask"),
+    [handleConnect],
+  );
+  const handlePartisia = useCallback(
+    () => handleConnect("partisia"),
+    [handleConnect],
+  );
+  const handleLedger = useCallback(
+    () => handleConnect("ledger"),
+    [handleConnect],
+  );
+
+  const handleDevConnect = useCallback(async () => {
     if (!metaNamesSdk) {
       toast.error("SDK not ready, please wait...");
       return;
@@ -63,14 +79,14 @@ export function WalletConnectButton() {
     } catch (e) {
       toast.error((e as Error)?.message ?? "Failed to connect");
     }
-  };
+  }, [metaNamesSdk, devKey, isValidKey, setAddress]);
 
-  const handleDisconnect = () => {
+  const handleDisconnect = useCallback(() => {
     if (metaNamesSdk) disconnectWallet(metaNamesSdk);
     setAddress(undefined);
     setOpen(false);
     toast.success("Wallet disconnected");
-  };
+  }, [metaNamesSdk, setAddress]);
 
   if (address) {
     return (
@@ -103,24 +119,24 @@ export function WalletConnectButton() {
         <Wallet className="h-4 w-4" /> Connect
       </DropdownMenuTrigger>
       <DropdownMenuContent align="end" className="w-64">
-        <DropdownMenuItem onClick={() => handleConnect("metamask")}>
+        <DropdownMenuItem onClick={handleMetaMask}>
           MetaMask Wallet
         </DropdownMenuItem>
-        <DropdownMenuItem onClick={() => handleConnect("partisia")}>
+        <DropdownMenuItem onClick={handlePartisia}>
           Partisia Wallet
         </DropdownMenuItem>
-        <DropdownMenuItem onClick={() => handleConnect("ledger")}>
-          Ledger
-        </DropdownMenuItem>
+        <DropdownMenuItem onClick={handleLedger}>Ledger</DropdownMenuItem>
         {mounted && config.isTestnet && (
           <>
             <DropdownMenuSeparator />
             <div className="p-2 flex flex-col gap-2">
               <Input
+                data-testid="dev-key-input"
                 className="dev-key-input text-xs"
                 placeholder="64-char hex private key"
                 value={devKey}
                 onChange={(e) => setDevKey(e.target.value)}
+                onKeyDown={(e) => e.stopPropagation()}
               />
               <Button
                 size="sm"

@@ -1,7 +1,7 @@
 "use client";
-import { useState } from "react";
+import { useState, useCallback } from "react";
 import { validateRecordValue } from "@/lib/records";
-import type { RecordClass, RecordRepository } from "@/lib/types";
+import type { RecordClass } from "@/lib/types";
 import { toast } from "sonner";
 import { explorerTransactionUrl } from "@/lib/url";
 import { RECORD_CLASS_MAP } from "@/lib/constants";
@@ -10,21 +10,15 @@ import { useRecordStore } from "@/lib/stores/record-store";
 interface UseRecordManagementProps {
   type: RecordClass;
   value: string;
-  repository?: RecordRepository;
   onUpdate?: () => void;
 }
 
 export function useRecordManagement({
   type,
   value,
-  repository: propRepository,
-  onUpdate: propOnUpdate,
+  onUpdate,
 }: UseRecordManagementProps) {
-  const storeRepository = useRecordStore((s) => s.repository);
-  const storeOnUpdate = useRecordStore((s) => s.onUpdate);
-
-  const repository = propRepository ?? storeRepository;
-  const onUpdate = propOnUpdate ?? storeOnUpdate;
+  const repository = useRecordStore((s) => s.repository);
   const [editing, setEditing] = useState(false);
   const [editValue, setEditValue] = useState(value);
   const [editError, setEditError] = useState<string | null>(null);
@@ -38,7 +32,7 @@ export function useRecordManagement({
     setEditError(null);
   };
 
-  const handleSave = async () => {
+  const handleSave = useCallback(async () => {
     if (saving) return;
     const err = validateRecordValue(type, editValue);
     if (err) {
@@ -46,15 +40,14 @@ export function useRecordManagement({
       return;
     }
     const classInfo = RECORD_CLASS_MAP[type];
-    if (!classInfo) return;
+    if (!classInfo || !repository) return;
     setSaving(true);
     try {
-      // eslint-disable-next-line @typescript-eslint/no-explicit-any
-      const intent = await (repository as any).update({
+      const intent = await repository.update({
         class: classInfo.value,
         data: editValue,
       });
-      const txHash = await intent.send();
+      const txHash = intent.transactionHash;
       toast("New Transaction submitted", {
         action: {
           label: "View",
@@ -62,24 +55,23 @@ export function useRecordManagement({
         },
         duration: 10000,
       });
-      await intent.waitForConfirmation();
+      await intent.fetchResult;
       toast.success("Record updated successfully");
       setEditing(false);
-      onUpdate!();
+      onUpdate?.();
     } finally {
       setSaving(false);
     }
-  };
+  }, [saving, type, editValue, repository, onUpdate]);
 
-  const handleDelete = async () => {
+  const handleDelete = useCallback(async () => {
     if (deleting) return;
     const classInfo = RECORD_CLASS_MAP[type];
-    if (!classInfo) return;
+    if (!classInfo || !repository) return;
     setDeleting(true);
     try {
-      // eslint-disable-next-line @typescript-eslint/no-explicit-any
-      const intent = await (repository as any).delete(classInfo.value);
-      const txHash = await intent.send();
+      const intent = await repository.delete(classInfo.value);
+      const txHash = intent.transactionHash;
       toast("New Transaction submitted", {
         action: {
           label: "View",
@@ -87,14 +79,14 @@ export function useRecordManagement({
         },
         duration: 10000,
       });
-      await intent.waitForConfirmation();
+      await intent.fetchResult;
       toast.success("Record deleted successfully");
       setDeleteOpen(false);
-      onUpdate!();
+      onUpdate?.();
     } finally {
       setDeleting(false);
     }
-  };
+  }, [deleting, type, repository, onUpdate]);
 
   return {
     editing,

@@ -35,10 +35,12 @@ test.describe("Wallet Connection", () => {
     const connectBtn = page.locator(SELECTORS.WALLET_CONNECT_BUTTON).first();
     await connectBtn.click();
 
-    const devKeyInput = page.locator("input.dev-key-input");
+    const devKeyInput = page.locator('[data-testid="dev-key-input"]');
     await expect(devKeyInput).toBeVisible();
 
-    const devConnectBtn = page.locator("button.dev-key-connect");
+    const devConnectBtn = page.locator(
+      '[data-testid="dev-key-connect-button"]',
+    );
     await expect(devConnectBtn).toBeVisible();
   });
 
@@ -50,12 +52,14 @@ test.describe("Wallet Connection", () => {
     const connectBtn = page.locator(SELECTORS.WALLET_CONNECT_BUTTON).first();
     await connectBtn.click();
 
-    const devKeyInput = page.locator("input.dev-key-input");
+    const devKeyInput = page.locator('[data-testid="dev-key-input"]');
     await devKeyInput.fill(
       "df4642ef258f9aef2adb6c148590208b20387fb067f2c0907d6c85697c2792",
     ); // 63 chars
 
-    const devConnectBtn = page.locator("button.dev-key-connect");
+    const devConnectBtn = page.locator(
+      '[data-testid="dev-key-connect-button"]',
+    );
     await expect(devConnectBtn).toBeDisabled();
   });
 
@@ -69,10 +73,12 @@ test.describe("Wallet Connection", () => {
     const connectBtn = page.locator(SELECTORS.WALLET_CONNECT_BUTTON).first();
     await connectBtn.click();
 
-    const devKeyInput = page.locator("input.dev-key-input");
+    const devKeyInput = page.locator('[data-testid="dev-key-input"]');
     await devKeyInput.fill(privateKey);
 
-    const devConnectBtn = page.locator("button.dev-key-connect");
+    const devConnectBtn = page.locator(
+      '[data-testid="dev-key-connect-button"]',
+    );
     await expect(devConnectBtn).toBeEnabled();
   });
 
@@ -84,10 +90,12 @@ test.describe("Wallet Connection", () => {
     const connectBtn = page.locator(SELECTORS.WALLET_CONNECT_BUTTON).first();
     await connectBtn.click();
 
-    const devKeyInput = page.locator("input.dev-key-input");
+    const devKeyInput = page.locator('[data-testid="dev-key-input"]');
     await devKeyInput.fill(privateKey);
 
-    const devConnectBtn = page.locator("button.dev-key-connect");
+    const devConnectBtn = page.locator(
+      '[data-testid="dev-key-connect-button"]',
+    );
     await devConnectBtn.click();
 
     await expect(page.locator(SELECTORS.WALLET_CONNECTED).first()).toBeVisible({
@@ -103,10 +111,12 @@ test.describe("Wallet Connection", () => {
     const connectBtn = page.locator(SELECTORS.WALLET_CONNECT_BUTTON).first();
     await connectBtn.click();
 
-    const devKeyInput = page.locator("input.dev-key-input");
+    const devKeyInput = page.locator('[data-testid="dev-key-input"]');
     await devKeyInput.fill(privateKey);
 
-    const devConnectBtn = page.locator("button.dev-key-connect");
+    const devConnectBtn = page.locator(
+      '[data-testid="dev-key-connect-button"]',
+    );
     await devConnectBtn.click();
 
     const walletBtn = page.locator(SELECTORS.WALLET_CONNECTED).first();
@@ -121,10 +131,12 @@ test.describe("Wallet Connection", () => {
     const connectBtn = page.locator(SELECTORS.WALLET_CONNECT_BUTTON).first();
     await connectBtn.click();
 
-    const devKeyInput = page.locator("input.dev-key-input");
+    const devKeyInput = page.locator('[data-testid="dev-key-input"]');
     await devKeyInput.fill(privateKey);
 
-    const devConnectBtn = page.locator("button.dev-key-connect");
+    const devConnectBtn = page.locator(
+      '[data-testid="dev-key-connect-button"]',
+    );
     await devConnectBtn.click();
 
     const walletBtn = page.locator(SELECTORS.WALLET_CONNECTED).first();
@@ -142,10 +154,12 @@ test.describe("Wallet Connection", () => {
     const connectBtn = page.locator(SELECTORS.WALLET_CONNECT_BUTTON).first();
     await connectBtn.click();
 
-    const devKeyInput = page.locator("input.dev-key-input");
+    const devKeyInput = page.locator('[data-testid="dev-key-input"]');
     await devKeyInput.fill(privateKey);
 
-    const devConnectBtn = page.locator("button.dev-key-connect");
+    const devConnectBtn = page.locator(
+      '[data-testid="dev-key-connect-button"]',
+    );
     await devConnectBtn.click();
 
     const walletBtn = page.locator(SELECTORS.WALLET_CONNECTED).first();

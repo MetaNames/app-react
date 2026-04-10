@@ -1,5 +1,5 @@
 "use client";
-import { useEffect, useState, useTransition, useEffectEvent } from "react";
+import { useEffect, useState, useCallback, useRef } from "react";
 import { DomainsTable } from "@/components/domains-table";
 import { Chip } from "@/components/chip";
 import { useWalletStore } from "@/lib/stores/wallet-store";
@@ -13,33 +13,36 @@ export function ProfilePageClient() {
   const metaNamesSdk = useSdkStore((s) => s.metaNamesSdk);
   const [domains, setDomains] = useState<Domain[]>([]);
   const [loading, setLoading] = useState(false);
-  const [, startTransition] = useTransition();
+  const isFetchingRef = useRef(false);
 
-  const handleLoadDomains = useEffectEvent(() => {
+  const handleLoadDomains = useCallback(() => {
     if (!address || !metaNamesSdk) return;
+
+    // Prevent concurrent fetches
+    if (isFetchingRef.current) return;
+    isFetchingRef.current = true;
     setLoading(true);
+
     (
       metaNamesSdk.domainRepository.findByOwner as (
         addr: string,
       ) => Promise<Domain[]>
     )(address)
       .then((result) => {
-        startTransition(() => {
-          setDomains(result);
-          setLoading(false);
-        });
+        setDomains(result);
+        setLoading(false);
+        isFetchingRef.current = false;
       })
       .catch(() => {
-        startTransition(() => {
-          setDomains([]);
-          setLoading(false);
-        });
+        setDomains([]);
+        setLoading(false);
+        isFetchingRef.current = false;
       });
-  });
+  }, [address, metaNamesSdk]);
 
   useEffect(() => {
     handleLoadDomains();
-  }, [handleLoadDomains]);
+  }, [address, metaNamesSdk, handleLoadDomains]);
 
   if (!address)
     return (

@@ -67,4 +67,3 @@ export const RECORD_CLASS_MAP: Record<
   },
 };
 
-export type RecordClass = keyof typeof RECORD_CLASS_MAP;
