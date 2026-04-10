@@ -113,10 +113,10 @@ export function WalletConnectButton() {
   return (
     <DropdownMenu open={open} onOpenChange={setOpen}>
       <DropdownMenuTrigger
-        className="gap-2 bg-primary text-primary-foreground hover:bg-primary/90 rounded-lg px-3 py-2 text-sm font-medium"
+        className="inline-flex items-center justify-center gap-2 bg-primary text-primary-foreground hover:bg-primary/90 rounded-lg px-3 py-2 text-sm font-medium"
         data-testid="wallet-connect-button"
       >
-        <Wallet className="h-4 w-4" /> Connect
+        <Wallet className="h-4 w-4 shrink-0" /> Connect
       </DropdownMenuTrigger>
       <DropdownMenuContent align="end" className="w-64">
         <DropdownMenuItem onClick={handleMetaMask}>
