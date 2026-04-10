@@ -28,6 +28,14 @@ export async function GET(
     );
   }
 
+  const totalLength = domainName.length;
+  if (totalLength > 64) {
+    return NextResponse.json(
+      { error: "Domain name is too long" },
+      { status: 400 },
+    );
+  }
+
   const availableCoins =
     (sdk.config.byoc?.map((b) => b.symbol) as BYOCSymbol[]) ?? [];
   if (!availableCoins.includes(coin as BYOCSymbol)) {

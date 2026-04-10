@@ -55,10 +55,21 @@ export function useRecordManagement({
         },
         duration: 10000,
       });
-      await intent.fetchResult;
-      toast.success("Record updated successfully");
-      setEditing(false);
-      onUpdate?.();
+      try {
+        await intent.fetchResult;
+        toast.success("Record updated successfully");
+        setEditing(false);
+        onUpdate?.();
+      } catch (e) {
+        const msg = e instanceof Error ? e.message : "Transaction failed";
+        toast.error(msg);
+        setEditError(msg);
+      }
+    } catch (e) {
+      const message =
+        e instanceof Error ? e.message : "Failed to update record";
+      toast.error(message);
+      setEditError(message);
     } finally {
       setSaving(false);
     }
