@@ -2,7 +2,7 @@
  * E2E tests for dev wallet connection.
  *
  * Uses TESTNET_PRIVATE_KEY environment variable for wallet connection.
- * Set TESTNET_PRIVATE_KEY=df4642ef258f9aef2adb6c148590208b20387fb067f2c0907d6c85697c27928c
+ * Set TESTNET_PRIVATE_KEY in .env.local.
  */
 
 import { test, expect } from "@playwright/test";
@@ -54,8 +54,8 @@ test.describe("Wallet Connection", () => {
 
     const devKeyInput = page.locator('[data-testid="dev-key-input"]');
     await devKeyInput.fill(
-      "df4642ef258f9aef2adb6c148590208b20387fb067f2c0907d6c85697c2792",
-    ); // 63 chars
+      "abcdef1234567890abcdef1234567890abcdef1234567890abcdef12345678",
+    ); // 62 chars — invalid length
 
     const devConnectBtn = page.locator(
       '[data-testid="dev-key-connect-button"]',

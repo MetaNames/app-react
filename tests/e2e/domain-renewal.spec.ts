@@ -2,8 +2,7 @@
  * E2E tests for domain renewal.
  *
  * NOTE: These tests may interact with the actual blockchain via testnet.
- * Set TESTNET_PRIVATE_KEY environment variable to enable real blockchain interactions:
- * TESTNET_PRIVATE_KEY=df4642ef258f9aef2adb6c148590208b20387fb067f2c0907d6c85697c27928c
+ * Set TESTNET_PRIVATE_KEY in .env.local to enable real blockchain interactions.
  */
 
 import { test, expect } from "@playwright/test";

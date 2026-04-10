@@ -59,7 +59,7 @@ describe("validatePrivateKey", () => {
   it("accepts valid 64-character hex string", () => {
     expect(
       validatePrivateKey(
-        "df4642ef258f9aef2adb6c148590208b20387fb067f2c0907d6c85697c27928c",
+        "abcdef1234567890abcdef1234567890abcdef1234567890abcdef1234567890",
       ),
     ).toBe(true);
   });
@@ -67,7 +67,7 @@ describe("validatePrivateKey", () => {
   it("accepts uppercase hex characters", () => {
     expect(
       validatePrivateKey(
-        "DF4642EF258F9AEF2ADB6C148590208B20387FB067F2C0907D6C85697C27928C",
+        "ABCDEF1234567890ABCDEF1234567890ABCDEF1234567890ABCDEF1234567890",
       ),
     ).toBe(true);
   });
@@ -75,7 +75,7 @@ describe("validatePrivateKey", () => {
   it("accepts mixed case hex characters", () => {
     expect(
       validatePrivateKey(
-        "df4642eF258f9aEf2adb6C148590208b20387fB067f2c0907d6c85697c27928C",
+        "AbCdEf1234567890AbCdEf1234567890AbCdEf1234567890AbCdEf1234567890",
       ),
     ).toBe(true);
   });
@@ -83,7 +83,7 @@ describe("validatePrivateKey", () => {
   it("rejects private key with less than 64 characters", () => {
     expect(
       validatePrivateKey(
-        "df4642ef258f9aef2adb6c148590208b20387fb067f2c0907d6c85697c2792",
+        "abcdef1234567890abcdef1234567890abcdef1234567890abcdef12345678",
       ),
     ).toBe(false);
   });
@@ -91,7 +91,7 @@ describe("validatePrivateKey", () => {
   it("rejects private key with more than 64 characters", () => {
     expect(
       validatePrivateKey(
-        "df4642ef258f9aef2adb6c148590208b20387fb067f2c0907d6c85697c27928c00",
+        "abcdef1234567890abcdef1234567890abcdef1234567890abcdef1234567890aa",
       ),
     ).toBe(false);
   });
@@ -99,7 +99,7 @@ describe("validatePrivateKey", () => {
   it("rejects private key with exactly 63 characters", () => {
     expect(
       validatePrivateKey(
-        "df4642ef258f9aef2adb6c148590208b20387fb067f2c0907d6c85697c2792",
+        "abcdef1234567890abcdef1234567890abcdef1234567890abcdef12345678",
       ),
     ).toBe(false);
   });
@@ -107,7 +107,7 @@ describe("validatePrivateKey", () => {
   it("rejects private key with non-hex characters", () => {
     expect(
       validatePrivateKey(
-        "df4642ef258f9aef2adb6c148590208b20387fb067f2c0907d6c85697c27928g",
+        "abcdef1234567890abcdef1234567890abcdef1234567890abcdef123456789g",
       ),
     ).toBe(false);
   });
@@ -115,7 +115,7 @@ describe("validatePrivateKey", () => {
   it("rejects private key with spaces", () => {
     expect(
       validatePrivateKey(
-        "df4642ef258f9aef2adb6c148590208b20387fb067f2c0907d6c85697c27928 ",
+        "abcdef1234567890abcdef1234567890abcdef1234567890abcdef12345678 0",
       ),
     ).toBe(false);
   });

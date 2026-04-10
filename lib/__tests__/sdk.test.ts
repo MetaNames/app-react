@@ -63,7 +63,7 @@ describe("lib/sdk", () => {
     it("sets signing strategy when TESTNET_PRIVATE_KEY is provided", async () => {
       process.env.NEXT_PUBLIC_ENV = "test";
       process.env.TESTNET_PRIVATE_KEY =
-        "df4642ef258f9aef2adb6c148590208b20387fb067f2c0907d6c85697c27928c";
+        "abcdef1234567890abcdef1234567890abcdef1234567890abcdef1234567890";
       const { getServerSdk } = await import("../sdk");
       const sdk = getServerSdk();
       expect(sdk).toBeDefined();

@@ -30,18 +30,18 @@ describe("connectDevPrivateKey", () => {
 
   it("imports private key and returns address", async () => {
     const privateKey =
-      "df4642ef258f9aef2adb6c148590208b20387fb067f2c0907d6c85697c27928c";
+      "abcdef1234567890abcdef1234567890abcdef1234567890abcdef1234567890";
     const address = await connectDevPrivateKey(
       mockSdk as MetaNamesSdk,
       privateKey,
     );
 
-    expect(address).toBe("parsed_address_from_df4642ef");
+    expect(address).toBe("parsed_address_from_abcdef12");
   });
 
   it("calls setSigningStrategy with privateKey strategy", async () => {
     const privateKey =
-      "df4642ef258f9aef2adb6c148590208b20387fb067f2c0907d6c85697c27928c";
+      "abcdef1234567890abcdef1234567890abcdef1234567890abcdef1234567890";
     await connectDevPrivateKey(mockSdk as MetaNamesSdk, privateKey);
 
     expect(mockSdk.setSigningStrategy).toHaveBeenCalledWith(

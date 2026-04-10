@@ -746,7 +746,7 @@ export const useSdkStore = create<SdkStore>((set) => ({
 
 ### Test Wallet
 
-- **Private Key:** `df4642ef258f9aef2adb6c148590208b20387fb067f2c0907d6c85697c27928c`
+- **Private Key:** Set `TESTNET_PRIVATE_KEY` in `.env.local` (never commit this value)
 - **Address:** `0x0333...8f2c` (derived from key)
 
 ### Known Domains (Testnet)

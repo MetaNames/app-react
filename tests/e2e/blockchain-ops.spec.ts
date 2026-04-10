@@ -5,8 +5,7 @@
  * Blockchain operations (register, add/edit/delete records) are wrapped in try-catch
  * as they may fail due to network issues, insufficient balance, or state conflicts.
  *
- * Set TESTNET_PRIVATE_KEY environment variable to enable real blockchain interactions:
- * TESTNET_PRIVATE_KEY=df4642ef258f9aef2adb6c148590208b20387fb067f2c0907d6c85697c27928c
+ * Set TESTNET_PRIVATE_KEY in .env.local to enable real blockchain interactions.
  */
 
 import { test, expect } from "@playwright/test";
