@@ -93,7 +93,7 @@ describe("config", () => {
 
     it("has correct websiteUrl default", async () => {
       const { config } = await import("../config");
-      expect(config.websiteUrl).toBe("https://app.metanames.app");
+      expect(config.websiteUrl).toBe("https://app.metanames.app/");
     });
   });
 

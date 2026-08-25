@@ -2,7 +2,7 @@ export const config = {
   environment: (process.env.NEXT_PUBLIC_ENV || "test") as "test" | "prod",
   landingUrl: process.env.NEXT_PUBLIC_LANDING_URL || "https://metanames.app",
   websiteUrl:
-    process.env.NEXT_PUBLIC_WEBSITE_URL || "https://app.metanames.app",
+    process.env.NEXT_PUBLIC_WEBSITE_URL || "https://app.metanames.app/",
   contractDisabled: process.env.NEXT_PUBLIC_CONTRACT_DISABLED === "true",
   get isTestnet() {
     return this.environment === "test";
