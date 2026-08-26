@@ -45,20 +45,46 @@ export function DomainPayment({ domain, mode, onSuccess }: DomainPaymentProps) {
   const incrementYears = useCallback(() => setYears((y) => y + 1), [setYears]);
 
   return (
-    <Card className="w-full max-w-lg content checkout">
+    <Card className="w-full max-w-lg content checkout glass-panel border-primary/20 shadow-[0_0_60px_rgba(100,75,247,0.15)]">
       <CardHeader>
         <CardTitle>
-          {mode === "register" ? "Register" : "Renew"} {domain}
+          {mode === "register" ? "Register" : "Renew"}{" "}
+          <span className="text-primary">{domain}</span>
         </CardTitle>
       </CardHeader>
       <CardContent className="flex flex-col gap-6">
+        <div className="flex items-center justify-between">
+          <span className="font-medium">Years</span>
+          <div className="flex items-center gap-3">
+            <Button
+              variant="outline"
+              size="icon"
+              aria-label="remove-year"
+              disabled={years <= 1}
+              onClick={decrementYears}
+            >
+              <Minus className="h-4 w-4" />
+            </Button>
+            <span className="w-20 text-center font-medium">
+              {years} {years === 1 ? "year" : "years"}
+            </span>
+            <Button
+              variant="outline"
+              size="icon"
+              aria-label="add-year"
+              onClick={incrementYears}
+            >
+              <Plus className="h-4 w-4" />
+            </Button>
+          </div>
+        </div>
         {loadingFees && (
           <div className="flex justify-center py-4">
             <Loader2 className="h-6 w-6 animate-spin text-muted-foreground" />
           </div>
         )}
         {fees && (
-          <div className="flex flex-col gap-2 py-3 border-t border-b">
+          <div className="flex flex-col gap-2 py-3 border-t border-b border-border/60 rounded-none">
             <div className="flex justify-between text-sm">
               <span className="text-muted-foreground">
                 1 year registration for {domainCharCount} chars
@@ -67,7 +93,7 @@ export function DomainPayment({ domain, mode, onSuccess }: DomainPaymentProps) {
                 {fees.feesLabel} {fees.symbol}
               </span>
             </div>
-            <div className="flex justify-between font-medium">
+            <div className="flex justify-between text-base font-bold">
               <span>Total (excluding network fees)</span>
               <span>
                 {total} {fees.symbol}
@@ -115,7 +141,7 @@ export function DomainPayment({ domain, mode, onSuccess }: DomainPaymentProps) {
               loadingText={
                 mode === "register" ? "Registering..." : "Renewing..."
               }
-              className="w-full"
+              className="w-full shadow-[0_0_24px_var(--glow)]"
             >
               {mode === "register" ? "Register domain" : "Renew domain"}
             </LoadingButton>

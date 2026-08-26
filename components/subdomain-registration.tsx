@@ -50,7 +50,7 @@ export function SubdomainRegistration({
   };
 
   return (
-    <Card className="w-full max-w-lg">
+    <Card className="w-full max-w-lg glass-panel border-primary/20">
       <CardHeader>
         <CardTitle>{domain}</CardTitle>
       </CardHeader>
@@ -63,7 +63,7 @@ export function SubdomainRegistration({
             href={`/domain/${parentDomain}`}
           />
         </div>
-        <div className="flex items-center justify-between py-2 border-t">
+        <div className="flex items-center justify-between py-2 border-t border-border/60">
           <span className="text-muted-foreground">Price</span>
           <span className="font-bold text-[hsl(var(--chip-available-fg))]">
             FREE

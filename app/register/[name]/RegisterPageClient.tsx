@@ -50,14 +50,20 @@ export function RegisterPageClient({ name }: { name: string }) {
 
   if (status === "loading")
     return (
-      <div className="flex justify-center py-24">
+      <div
+        className="flex justify-center py-24"
+        role="status"
+        aria-label="Loading the registration form"
+      >
         <Loader2 className="h-8 w-8 animate-spin text-primary" />
       </div>
     );
 
   return (
-    <div className="flex flex-col items-center gap-6 content checkout max-w-2xl mx-auto px-4">
-      <h2 className="text-2xl font-bold">Register {domainName}</h2>
+    <div className="spotlight-beam flex flex-col items-center gap-6 content checkout max-w-2xl mx-auto px-4 w-full relative z-10 animate-fade-up">
+      <h2 className="text-3xl font-extrabold tracking-tight">
+        Register {domainName}
+      </h2>
       {status === "subdomain" && parent ? (
         <SubdomainRegistration domain={domainName} parentDomain={parent} />
       ) : (
