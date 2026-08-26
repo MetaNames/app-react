@@ -16,14 +16,7 @@ export async function GET() {
       if (domains) {
         domainCount = domains.length;
         ownerCount = new Set(domains.map((d: Domain) => d.owner)).size;
-      }
-    } catch (e) {
-      console.error("Error fetching domains:", e);
-    }
-    try {
-      const all = await sdk.domainRepository.getAll();
-      if (all) {
-        recentDomains = [...all]
+        recentDomains = [...domains]
           .sort(
             (a: Domain, b: Domain) =>
               new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime(),
@@ -31,7 +24,7 @@ export async function GET() {
           .slice(0, 5);
       }
     } catch (e) {
-      console.error("Error fetching recent domains:", e);
+      console.error("Error fetching domains:", e);
     }
     return NextResponse.json(
       { domainCount, ownerCount, recentDomains, error: null },
