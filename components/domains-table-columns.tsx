@@ -5,11 +5,19 @@ import { Button } from "@/components/ui/button";
 import { ArrowUpDown } from "lucide-react";
 import type { Domain } from "@/lib/types";
 import type { ColumnDef } from "@tanstack/react-table";
+import { compareByKey } from "@/lib/sort";
 
 export function domainsTableColumns(): ColumnDef<Domain>[] {
   return [
     {
       accessorKey: "tokenId",
+      // Ported from legacy's compareByKey (lib/sort.ts): numeric compare.
+      // TanStack negates this for descending, so we only need "ascending".
+      sortingFn: (rowA, rowB) =>
+        compareByKey<Domain>("tokenId", "ascending")(
+          rowA.original,
+          rowB.original,
+        ),
       header: ({ column }) => (
         <Button
           variant="ghost"
@@ -23,6 +31,12 @@ export function domainsTableColumns(): ColumnDef<Domain>[] {
     },
     {
       accessorKey: "name",
+      // Ported from legacy's compareByKey (lib/sort.ts): locale compare.
+      sortingFn: (rowA, rowB) =>
+        compareByKey<Domain>("name", "ascending")(
+          rowA.original,
+          rowB.original,
+        ),
       header: ({ column }) => (
         <Button
           variant="ghost"
