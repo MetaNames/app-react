@@ -99,7 +99,7 @@ export function DomainsTable({ domains }: DomainsTableProps) {
             ) : (
               <TableRow>
                 <TableCell
-                  colSpan={3}
+                  colSpan={table.getAllColumns().length}
                   className="text-center py-8 text-muted-foreground"
                 >
                   No domains found
