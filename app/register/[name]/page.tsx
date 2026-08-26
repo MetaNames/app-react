@@ -8,7 +8,7 @@ export async function generateMetadata({
   const { name } = await params;
   const domainName = decodeURIComponent(name);
   return {
-    title: `Register ${domainName} - MetaNames`,
+    title: `Register ${domainName}`,
     description: `Register ${domainName} domain on MetaNames`,
   };
 }

@@ -15,7 +15,7 @@ export async function generateMetadata({ params }: PageProps) {
   const { name } = await params;
   const domainName = decodeURIComponent(name);
   return {
-    title: `${domainName} - MetaNames`,
+    title: domainName,
     description: `View domain information for ${domainName}`,
   };
 }

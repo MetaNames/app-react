@@ -10,7 +10,7 @@ export async function generateMetadata({
     ? `${address.slice(0, 6)}...${address.slice(-4)}`
     : "Profile";
   return {
-    title: `${displayAddress} - MetaNames`,
+    title: displayAddress,
     description: address
       ? `View domain portfolio for ${displayAddress}`
       : "View your domain portfolio",

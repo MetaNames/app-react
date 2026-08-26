@@ -6,7 +6,7 @@ import type { Domain } from "@/lib/types";
 import type { Domain as SdkDomain } from "@metanames/sdk/dist/models/domain";
 
 export const metadata = {
-  title: "TLD Information - MetaNames",
+  title: "TLD Information",
   description: "View Top-Level Domain information",
 };
 

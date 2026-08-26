@@ -25,6 +25,9 @@ export const metadata: Metadata = {
   metadataBase: new URL(websiteUrl),
   title: {
     default: "MetaNames – .mpc Domain Name Service",
+    // Every page-level `title` is the bare subject ("alice.mpc", "Profile") —
+    // this template is what appends the brand. A page that spells the brand
+    // out itself ends up with it twice.
     template: "%s | MetaNames",
   },
   description: "Register and manage .mpc domains on Partisia Blockchain",
@@ -34,6 +37,11 @@ export const metadata: Metadata = {
     url: websiteUrl,
     siteName: "MetaNames",
     type: "website",
+  },
+  // Domain and register routes generate a per-name Open Graph card
+  // (see lib/og.tsx); without this, X renders it as a small thumbnail.
+  twitter: {
+    card: "summary_large_image",
   },
 };
 
