@@ -1,42 +1,67 @@
 "use client";
 import { useRouter } from "next/navigation";
-import { useCallback, useEffect, useState } from "react";
+import { useCallback, useEffect, useRef, useState } from "react";
+import { toast } from "sonner";
 import { DomainPayment } from "@/components/domain-payment";
 import { SubdomainRegistration } from "@/components/subdomain-registration";
 import { checkDomain } from "@/lib/api";
+import { resultOrReport } from "@/lib/load-error";
 import { normalizeDomain, parseSubdomain } from "@/lib/domain-validator";
+import { trackLatest } from "@/lib/race";
 import { Loader2 } from "lucide-react";
 
-function useDomainStatus(domainName: string, isSubdomain: boolean) {
+function useDomainStatus(
+  domainName: string,
+  isSubdomain: boolean,
+  parent: string | null,
+) {
   const router = useRouter();
   const [status, setStatus] = useState<
     "loading" | "available" | "subdomain" | "taken"
   >("loading");
+  // A generation counter, not an AbortController: fetch cancellation only
+  // stops the network request, it does nothing to stop a stale `await`
+  // continuation that was already scheduled before a newer check started
+  // (e.g. the route's `name` param changing while a check is in flight).
+  // `trackLatest` lets the async function itself detect it's been
+  // superseded and bail out before touching state or navigating.
+  const latestRef = useRef(trackLatest());
 
   const checkAndSetStatus = useCallback(async () => {
-    const result = await checkDomain(domainName);
-    if (result.error) {
-      setStatus("available");
+    const currentId = latestRef.current.next();
+    const response = await checkDomain(domainName);
+    if (!latestRef.current.check(currentId)) return; // superseded by a newer check
+
+    const result = resultOrReport(
+      response,
+      "Failed to check domain availability.",
+    );
+    if (!result.ok) {
+      toast.error(result.message);
+      router.replace("/");
       return;
     }
-    const { domainPresent, parentPresent } = result.data || {
-      domainPresent: false,
-      parentPresent: false,
-    };
+
+    const { domainPresent, parentPresent } = result.value;
     if (domainPresent) {
       router.replace(`/domain/${domainName}`);
       return;
     }
+    // Subdomains require their parent domain to already exist; legacy
+    // enforces this by bouncing to the parent's own registration page
+    // instead of letting the user register an orphaned subdomain.
+    if (isSubdomain && !parentPresent && parent) {
+      router.replace(`/register/${parent}`);
+      return;
+    }
     if (isSubdomain && parentPresent) setStatus("subdomain");
     else setStatus("available");
-  }, [domainName, isSubdomain, router]);
+  }, [domainName, isSubdomain, parent, router]);
 
   useEffect(() => {
-    const controller = new AbortController();
     const timeoutId = setTimeout(() => checkAndSetStatus(), 0);
     return () => {
       clearTimeout(timeoutId);
-      controller.abort();
     };
   }, [checkAndSetStatus]);
 
@@ -46,7 +71,7 @@ function useDomainStatus(domainName: string, isSubdomain: boolean) {
 export function RegisterPageClient({ name }: { name: string }) {
   const domainName = normalizeDomain(decodeURIComponent(name));
   const { isSubdomain, parent } = parseSubdomain(domainName);
-  const status = useDomainStatus(domainName, isSubdomain);
+  const status = useDomainStatus(domainName, isSubdomain, parent);
 
   if (status === "loading")
     return (
