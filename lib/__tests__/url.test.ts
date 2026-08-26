@@ -29,24 +29,44 @@ describe("explorerTransactionUrl", () => {
 });
 
 describe("explorerAddressUrl", () => {
-  it("returns account URL when isContract is false", () => {
-    const address = "0x1234567890abcdef";
-    expect(explorerAddressUrl(address, false)).toBe(
-      `https://browser.testnet.partisiablockchain.com/accounts/${address}/assets`,
-    );
-  });
-
-  it("returns account URL when isContract defaults to false", () => {
-    const address = "0x1234567890abcdef";
+  it("returns account URL for addresses starting with 00", () => {
+    const address = "00" + "b".repeat(62);
     expect(explorerAddressUrl(address)).toBe(
       `https://browser.testnet.partisiablockchain.com/accounts/${address}/assets`,
     );
   });
 
-  it("returns contract URL when isContract is true", () => {
-    const address = "0x1234567890abcdef";
-    expect(explorerAddressUrl(address, true)).toBe(
+  it("returns contract URL for addresses not starting with 00", () => {
+    const address = "01" + "c".repeat(62);
+    expect(explorerAddressUrl(address)).toBe(
       `https://browser.testnet.partisiablockchain.com/contracts/${address}`,
+    );
+  });
+
+  it("treats 01-prefixed addresses as contracts", () => {
+    expect(explorerAddressUrl("01abc123")).toBe(
+      "https://browser.testnet.partisiablockchain.com/contracts/01abc123",
+    );
+  });
+
+  it("treats 02-prefixed addresses as contracts", () => {
+    expect(explorerAddressUrl("02xyz789")).toBe(
+      "https://browser.testnet.partisiablockchain.com/contracts/02xyz789",
+    );
+  });
+
+  it("ignores a stale second argument and still derives from the address prefix", () => {
+    // A contract-owned non-TLD domain used to be misrouted to /accounts/ because
+    // callers passed `isTld` as an `isContract` flag. The address prefix is now
+    // the only source of truth, so a truthy/falsy second arg must not matter.
+    const contractOwnedSubdomain = "01" + "d".repeat(62);
+    expect(explorerAddressUrl(contractOwnedSubdomain, false)).toBe(
+      `https://browser.testnet.partisiablockchain.com/contracts/${contractOwnedSubdomain}`,
+    );
+
+    const accountAddress = "00" + "e".repeat(62);
+    expect(explorerAddressUrl(accountAddress, true)).toBe(
+      `https://browser.testnet.partisiablockchain.com/accounts/${accountAddress}/assets`,
     );
   });
 });

@@ -1,9 +1,42 @@
+import { optionalEnv } from "./env";
+
+type Environment = "test" | "prod";
+
+// Anything that is not explicitly "test" selects mainnet, so a blank or literally
+// "undefined" NEXT_PUBLIC_ENV must not fall through to it: `||` only guards against
+// falsy values that happen to include "", but a platform that stringifies a missing
+// var to "undefined" would still select prod. `optionalEnv` guards both.
+const environment: Environment =
+  optionalEnv(process.env.NEXT_PUBLIC_ENV, "test") === "test" ? "test" : "prod";
+
+// One row per environment so Sentry's trace sample rate is picked in a single lookup.
+const SENTRY_TRACES_SAMPLE_RATE: Record<Environment, number> = {
+  test: 1.0,
+  prod: 0.1,
+};
+
 export const config = {
-  environment: (process.env.NEXT_PUBLIC_ENV || "test") as "test" | "prod",
-  landingUrl: process.env.NEXT_PUBLIC_LANDING_URL || "https://metanames.app",
-  websiteUrl:
-    process.env.NEXT_PUBLIC_WEBSITE_URL || "https://app.metanames.app/",
-  contractDisabled: process.env.NEXT_PUBLIC_CONTRACT_DISABLED === "true",
+  environment,
+  landingUrl: optionalEnv(
+    process.env.NEXT_PUBLIC_LANDING_URL,
+    "https://metanames.app",
+  ),
+  websiteUrl: optionalEnv(
+    process.env.NEXT_PUBLIC_WEBSITE_URL,
+    "https://app.metanames.app/",
+  ),
+  contractDisabled:
+    optionalEnv(process.env.NEXT_PUBLIC_CONTRACT_DISABLED, "false") === "true",
+  // Centralized here (mirroring legacy's config.ts) so callers never read
+  // NEXT_PUBLIC_SENTRY_DSN/SENTRY_DSN directly. No DSN is hardcoded: an unset
+  // value falls back to an empty string, which callers treat as "Sentry disabled".
+  sentryDsn: optionalEnv(
+    process.env.NEXT_PUBLIC_SENTRY_DSN ?? process.env.SENTRY_DSN,
+    "",
+  ),
+  get sentryTracesSampleRate() {
+    return SENTRY_TRACES_SAMPLE_RATE[this.environment];
+  },
   get isTestnet() {
     return this.environment === "test";
   },

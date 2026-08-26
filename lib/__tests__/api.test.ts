@@ -1,6 +1,10 @@
 import { describe, it, expect, vi, beforeEach, afterEach } from "vitest";
 import type { BYOCSymbol } from "../types";
 
+vi.mock("@sentry/nextjs", () => ({
+  captureException: vi.fn(),
+}));
+
 const mockFetch = vi.fn();
 global.fetch = mockFetch;
 
@@ -11,6 +15,7 @@ describe("lib/api", () => {
 
   afterEach(() => {
     mockFetch.mockRestore();
+    vi.clearAllMocks();
   });
 
   describe("fetchDomain", () => {
@@ -51,14 +56,32 @@ describe("lib/api", () => {
       expect(result.data).toBeNull();
     });
 
-    it("returns null when response is not ok", async () => {
-      mockFetch.mockResolvedValueOnce({ ok: false });
+    it("surfaces the server's error message on a non-ok response", async () => {
+      mockFetch.mockResolvedValueOnce({
+        ok: false,
+        status: 404,
+        json: () => Promise.resolve({ error: "Domain not found" }),
+      });
 
       const { fetchDomain } = await import("../api");
       const result = await fetchDomain("test.mpc");
 
       expect(result.data).toBeNull();
-      expect(result.error).toBe("HTTP error undefined");
+      expect(result.error).toBe("Domain not found");
+    });
+
+    it("falls back to a generic error when the server sends none", async () => {
+      mockFetch.mockResolvedValueOnce({
+        ok: false,
+        status: 500,
+        json: () => Promise.resolve({}),
+      });
+
+      const { fetchDomain } = await import("../api");
+      const result = await fetchDomain("test.mpc");
+
+      expect(result.data).toBeNull();
+      expect(result.error).toBe("Something went wrong");
     });
 
     it("encodes domain name in URL", async () => {
@@ -71,6 +94,21 @@ describe("lib/api", () => {
       await fetchDomain("test domain");
 
       expect(mockFetch).toHaveBeenCalledWith("/api/domains/test%20domain");
+    });
+
+    it("returns a generic error and reports to Sentry on network failure", async () => {
+      const Sentry = await import("@sentry/nextjs");
+      const error = new Error("Network error");
+      mockFetch.mockRejectedValueOnce(error);
+
+      const { fetchDomain } = await import("../api");
+      const result = await fetchDomain("test.mpc");
+
+      expect(result).toEqual({ data: null, error: "Something went wrong" });
+      expect(Sentry.captureException).toHaveBeenCalledWith(
+        error,
+        expect.any(Object),
+      );
     });
   });
 
@@ -101,14 +139,18 @@ describe("lib/api", () => {
       expect(result.data).toEqual({ domainPresent: true, parentPresent: true });
     });
 
-    it("returns false values when response is not ok", async () => {
-      mockFetch.mockResolvedValueOnce({ ok: false });
+    it("surfaces the server's error message on a non-ok response", async () => {
+      mockFetch.mockResolvedValueOnce({
+        ok: false,
+        status: 400,
+        json: () => Promise.resolve({ error: "Invalid domain" }),
+      });
 
       const { checkDomain } = await import("../api");
       const result = await checkDomain("test.mpc");
 
       expect(result.data).toBeNull();
-      expect(result.error).toBe("HTTP error undefined");
+      expect(result.error).toBe("Invalid domain");
     });
   });
 
@@ -176,14 +218,18 @@ describe("lib/api", () => {
       });
     });
 
-    it("returns null when response is not ok", async () => {
-      mockFetch.mockResolvedValueOnce({ ok: false });
+    it("falls back to a generic error when the server sends none", async () => {
+      mockFetch.mockResolvedValueOnce({
+        ok: false,
+        status: 500,
+        json: () => Promise.resolve({}),
+      });
 
       const { fetchRegistrationFees } = await import("../api");
       const result = await fetchRegistrationFees("test.mpc", "ETH");
 
       expect(result.data).toBeNull();
-      expect(result.error).toBe("HTTP error undefined");
+      expect(result.error).toBe("Something went wrong");
     });
 
     it("handles all supported BYOC symbols", async () => {

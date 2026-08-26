@@ -21,6 +21,24 @@ describe("config", () => {
       expect(config.isTestnet).toBe(true);
     });
 
+    it.each(["", "undefined"])(
+      "falls back to test rather than prod when NEXT_PUBLIC_ENV is %o",
+      async (value) => {
+        // Regression: `process.env.NEXT_PUBLIC_ENV || "test"` only caught a truly
+        // unset var. A blank string, or the literal string "undefined" (which some
+        // platforms substitute for a missing var), silently selected prod/mainnet.
+        process.env.NEXT_PUBLIC_ENV = value;
+        const { config } = await import("../config");
+
+        expect(config.environment).toBe("test");
+        expect(config.isTestnet).toBe(true);
+        expect(config.sdkEnvironment).toBe("testnet");
+        expect(config.browserUrl).toBe(
+          "https://browser.testnet.partisiablockchain.com",
+        );
+      },
+    );
+
     it("returns testnet browser URL", async () => {
       delete process.env.NEXT_PUBLIC_ENV;
       const { config } = await import("../config");
@@ -94,6 +112,49 @@ describe("config", () => {
     it("has correct websiteUrl default", async () => {
       const { config } = await import("../config");
       expect(config.websiteUrl).toBe("https://app.metanames.app/");
+    });
+  });
+
+  describe("sentryTracesSampleRate", () => {
+    it("samples every trace outside prod", async () => {
+      process.env.NEXT_PUBLIC_ENV = "test";
+      const { config } = await import("../config");
+      expect(config.sentryTracesSampleRate).toBe(1.0);
+    });
+
+    it("samples a tenth of prod traces", async () => {
+      process.env.NEXT_PUBLIC_ENV = "prod";
+      const { config } = await import("../config");
+      expect(config.sentryTracesSampleRate).toBe(0.1);
+    });
+  });
+
+  describe("sentryDsn", () => {
+    it("defaults to an empty string when unset", async () => {
+      delete process.env.NEXT_PUBLIC_SENTRY_DSN;
+      delete process.env.SENTRY_DSN;
+      const { config } = await import("../config");
+      expect(config.sentryDsn).toBe("");
+    });
+
+    it("falls back when set to the literal string 'undefined'", async () => {
+      process.env.NEXT_PUBLIC_SENTRY_DSN = "undefined";
+      delete process.env.SENTRY_DSN;
+      const { config } = await import("../config");
+      expect(config.sentryDsn).toBe("");
+    });
+
+    it("reads NEXT_PUBLIC_SENTRY_DSN when set", async () => {
+      process.env.NEXT_PUBLIC_SENTRY_DSN = "https://example.ingest.sentry.io/1";
+      const { config } = await import("../config");
+      expect(config.sentryDsn).toBe("https://example.ingest.sentry.io/1");
+    });
+
+    it("falls back to SENTRY_DSN when NEXT_PUBLIC_SENTRY_DSN is unset", async () => {
+      delete process.env.NEXT_PUBLIC_SENTRY_DSN;
+      process.env.SENTRY_DSN = "https://server-only.ingest.sentry.io/1";
+      const { config } = await import("../config");
+      expect(config.sentryDsn).toBe("https://server-only.ingest.sentry.io/1");
     });
   });
 
