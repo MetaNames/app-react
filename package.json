@@ -48,6 +48,7 @@
     "@types/testing-library__jest-dom": "^5.14.9",
     "@vitejs/plugin-react": "^6.0.1",
     "@vitest/coverage-v8": "^4.1.2",
+    "axe-core": "^4.13.0",
     "eslint": "^9",
     "eslint-config-next": "16.2.2",
     "jsdom": "^29.0.1",

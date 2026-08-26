@@ -1,0 +1,44 @@
+import { expect, type Page } from "@playwright/test";
+
+/**
+ * The seven routes the accessibility gate walks, and the anchor that proves each one arrived on
+ * its loaded branch rather than a spinner or an error redirect. `networkidle` fires on the shell;
+ * without a reliable anchor + path check a scan could silently judge a loading state instead of
+ * the page it names.
+ */
+
+const unregisteredName = `zzunregistered${Date.now()}`;
+
+export const ROUTES = [
+  {
+    path: "/",
+    name: "home",
+    anchor: "input[placeholder='Search for a .mpc domain...']",
+  },
+  {
+    path: "/domain/test.mpc",
+    name: "domain",
+    anchor: "[data-testid='domain-title']",
+  },
+  { path: `/register/${unregisteredName}`, name: "register", anchor: "h2" },
+  { path: "/profile", name: "profile", anchor: "text=Connect your wallet" },
+  { path: "/tld", name: "tld", anchor: "[data-testid='domain-title']" },
+  { path: "/domain/test.mpc/renew", name: "renew", anchor: "h2" },
+  { path: "/domain/test.mpc/transfer", name: "transfer", anchor: "h2" },
+] as const;
+
+export type Route = (typeof ROUTES)[number];
+
+/**
+ * Navigate to `route` and return only once the page is provably the one that was asked for: its
+ * loaded-branch anchor is visible, and the URL is still the path that was requested (several of
+ * these routes redirect away while loading — e.g. /domain/[name] to /register/[name] on a
+ * confirmed absence, or /register/[name] to /domain/[name] if it is already taken).
+ */
+export async function gotoLoaded(page: Page, route: Route) {
+  await page.goto(route.path, { waitUntil: "networkidle" });
+  await expect(page.locator(route.anchor).first()).toBeVisible({
+    timeout: 15000,
+  });
+  expect(new URL(page.url()).pathname).toBe(route.path);
+}
