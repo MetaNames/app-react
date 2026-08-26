@@ -81,18 +81,16 @@ describe("validateRecordValue", () => {
   });
 
   describe("Wallet type", () => {
-    it("accepts valid wallet text", () => {
-      expect(validateRecordValue("Wallet", "0x1234567890abcdef")).toBeNull();
-    });
-
-    it("accepts any text (current behavior - no blockchain address format validation)", () => {
-      // Note: Per spec section 6, Wallet should validate "Blockchain address" format.
-      // Currently, the implementation accepts any text. This is a future improvement opportunity.
-      expect(validateRecordValue("Wallet", "any text value")).toBeNull();
+    // The old hand-rolled check accepted any non-empty text (see the removed
+    // "future improvement opportunity" note this test used to carry). Now
+    // that value validation is delegated to the SDK's getRecordValidator
+    // (matching app-legacy), a wallet value must actually look like a
+    // Partisia blockchain address (42 hex characters).
+    it("accepts a valid-looking wallet address", () => {
       expect(
         validateRecordValue(
           "Wallet",
-          "bc1qxy2kgdygjrsqtzq2n0yrf2493p83kkfjhx0wlh",
+          "00d1f3d2b0e0c3a4b5c6d7e8f900112233445566aa",
         ),
       ).toBeNull();
     });
@@ -128,26 +126,6 @@ describe("validateRecordValue", () => {
     });
   });
 
-  describe("Avatar type", () => {
-    it("accepts valid URL", () => {
-      expect(
-        validateRecordValue("Avatar", "https://example.com/avatar.png"),
-      ).toBeNull();
-    });
-
-    it("returns error for invalid URL", () => {
-      expect(validateRecordValue("Avatar", "not-a-url")).toBe(
-        "Must be a valid URL",
-      );
-    });
-  });
-
-  describe("Main type", () => {
-    it("accepts valid text", () => {
-      expect(validateRecordValue("Main", "Main page content")).toBeNull();
-    });
-  });
-
   describe("Twitter type", () => {
     it("accepts valid twitter handle", () => {
       expect(validateRecordValue("Twitter", "@username")).toBeNull();
@@ -155,12 +133,17 @@ describe("validateRecordValue", () => {
   });
 
   describe("Discord type", () => {
-    it("accepts valid discord username", () => {
-      expect(validateRecordValue("Discord", "user#1234")).toBeNull();
+    // Discord dropped username#discriminator years ago; the SDK's validator
+    // (adopted here, replacing the old hand-rolled no-op check) enforces the
+    // modern lowercase-alphanumeric-with-dots-and-underscores format.
+    it("accepts a modern discord username", () => {
+      expect(validateRecordValue("Discord", "username")).toBeNull();
     });
 
-    it("accepts discord username without discriminator", () => {
-      expect(validateRecordValue("Discord", "username")).toBeNull();
+    it("rejects a legacy username#discriminator value", () => {
+      expect(validateRecordValue("Discord", "user#1234")).toBe(
+        "Invalid Discord username format",
+      );
     });
   });
 
@@ -256,8 +239,8 @@ describe("validateRecordValue", () => {
       expect(validateRecordValue("Price", "0")).toBeNull();
     });
 
-    it("accepts negative number", () => {
-      expect(validateRecordValue("Price", "-10")).toBeNull();
+    it("rejects negative number (SDK's PriceRecordValidator enforces minPrice 0)", () => {
+      expect(validateRecordValue("Price", "-10")).toBe("Must be a number");
     });
 
     it("accepts decimal starting with dot", () => {
@@ -283,10 +266,6 @@ describe("isUrlRecord", () => {
     expect(isUrlRecord("Uri")).toBe(true);
   });
 
-  it("returns true for Avatar", () => {
-    expect(isUrlRecord("Avatar")).toBe(true);
-  });
-
   it("returns false for Bio", () => {
     expect(isUrlRecord("Bio")).toBe(false);
   });
@@ -301,10 +280,6 @@ describe("isUrlRecord", () => {
 
   it("returns false for Price", () => {
     expect(isUrlRecord("Price")).toBe(false);
-  });
-
-  it("returns false for Main", () => {
-    expect(isUrlRecord("Main")).toBe(false);
   });
 
   it("returns false for Twitter", () => {

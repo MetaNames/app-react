@@ -37,8 +37,6 @@ describe("types", () => {
         "Uri",
         "Wallet",
         "Price",
-        "Avatar",
-        "Main",
         "Twitter",
         "Discord",
       ];
@@ -47,15 +45,18 @@ describe("types", () => {
   });
 
   describe("PROFILE_RECORD_TYPES constant", () => {
-    it("contains 7 profile record types", () => {
-      expect(PROFILE_RECORD_TYPES).toHaveLength(7);
+    it("contains 5 profile record types", () => {
+      expect(PROFILE_RECORD_TYPES).toHaveLength(5);
       expect(PROFILE_RECORD_TYPES).toContain("Bio");
       expect(PROFILE_RECORD_TYPES).toContain("Email");
       expect(PROFILE_RECORD_TYPES).toContain("Uri");
       expect(PROFILE_RECORD_TYPES).toContain("Wallet");
       expect(PROFILE_RECORD_TYPES).toContain("Price");
-      expect(PROFILE_RECORD_TYPES).toContain("Avatar");
-      expect(PROFILE_RECORD_TYPES).toContain("Main");
+    });
+
+    it("does not contain Avatar or Main (on-chain but not offered, matching app-legacy)", () => {
+      expect(PROFILE_RECORD_TYPES).not.toContain("Avatar");
+      expect(PROFILE_RECORD_TYPES).not.toContain("Main");
     });
 
     it("does not contain social record types", () => {
@@ -77,14 +78,12 @@ describe("types", () => {
       expect(SOCIAL_RECORD_TYPES).not.toContain("Uri");
       expect(SOCIAL_RECORD_TYPES).not.toContain("Wallet");
       expect(SOCIAL_RECORD_TYPES).not.toContain("Price");
-      expect(SOCIAL_RECORD_TYPES).not.toContain("Avatar");
-      expect(SOCIAL_RECORD_TYPES).not.toContain("Main");
     });
   });
 
   describe("ALL_RECORD_TYPES constant", () => {
-    it("contains all 9 record types", () => {
-      expect(ALL_RECORD_TYPES).toHaveLength(9);
+    it("contains all 7 record types", () => {
+      expect(ALL_RECORD_TYPES).toHaveLength(7);
     });
 
     it("is profile types followed by social types", () => {

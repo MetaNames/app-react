@@ -491,8 +491,6 @@ describe("Records", () => {
         Wallet: "0x123",
         Price: "100",
         Uri: "https://example.com",
-        Avatar: "https://avatar.example.com",
-        Main: "main value",
       };
       render(<Records {...defaultProps} records={allRecords} />);
       expect(screen.queryByText("Add record")).toBeNull();

@@ -41,14 +41,15 @@ export interface DomainCheckResponse {
   domainPresent: boolean;
   parentPresent: boolean;
 }
+// Aligned with app-legacy's socialRecords + profileRecords, which is in turn
+// the full set of record classes the SDK's RecordClassEnum supports minus
+// Avatar and Main (on-chain but not offered here, matching legacy).
 export type RecordClass =
   | "Bio"
   | "Email"
   | "Uri"
   | "Wallet"
   | "Price"
-  | "Avatar"
-  | "Main"
   | "Twitter"
   | "Discord";
 export const PROFILE_RECORD_TYPES: RecordClass[] = [
@@ -57,8 +58,6 @@ export const PROFILE_RECORD_TYPES: RecordClass[] = [
   "Uri",
   "Wallet",
   "Price",
-  "Avatar",
-  "Main",
 ];
 export const SOCIAL_RECORD_TYPES: RecordClass[] = ["Twitter", "Discord"];
 export const ALL_RECORD_TYPES: RecordClass[] = [

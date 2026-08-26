@@ -1,30 +1,43 @@
 import type { RecordClass, RecordRepository } from "./types";
-import type { MetaNamesSdk } from "@metanames/sdk";
+import { RECORD_CLASS_MAP } from "./constants";
+import { getRecordValidator, type MetaNamesSdk } from "@metanames/sdk";
+
+/**
+ * Friendly, short error messages shown in the UI. The SDK's own validator
+ * messages (e.g. "Invalid email format") are still used as the source of
+ * truth for pass/fail, but we keep the app's existing copy for the cases
+ * that already had a dedicated message.
+ */
+function friendlyMessage(type: RecordClass, sdkErrors: string[]): string {
+  if (type === "Uri") return "Must be a valid URL";
+  if (type === "Email") return "Must be a valid email";
+  if (type === "Price") return "Must be a number";
+  return sdkErrors[0] ?? "Invalid value";
+}
 
 export function validateRecordValue(
   type: RecordClass,
   value: string,
 ): string | null {
   if (!value?.trim()) return "Value is required";
+
+  const classInfo = RECORD_CLASS_MAP[type];
+  if (!classInfo) return `Unsupported record type: ${type}`;
+
   if (value.length > 64) return "Max 64 characters";
-  if (["Uri", "Avatar"].includes(type)) {
-    try {
-      new URL(value);
-    } catch {
-      return "Must be a valid URL";
-    }
+
+  const validator = getRecordValidator(classInfo.value);
+  const valid = validator.validate(
+    { class: classInfo.value, data: value },
+    { raiseError: false },
+  );
+  if (!valid) {
+    return friendlyMessage(type, validator.getErrors());
   }
-  if (
-    type === "Email" &&
-    !/^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$/.test(value)
-  )
-    return "Must be a valid email";
-  if (type === "Price" && (value === "" || isNaN(Number(value))))
-    return "Must be a number";
   return null;
 }
-export const isUrlRecord = (type: RecordClass) =>
-  ["Uri", "Avatar"].includes(type);
+
+export const isUrlRecord = (type: RecordClass) => type === "Uri";
 
 /**
  * Fetch the SDK Domain object and derive its RecordRepository.
