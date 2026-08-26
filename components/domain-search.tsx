@@ -84,10 +84,10 @@ export function DomainSearch() {
 
   return (
     <div className="w-full max-w-xl mx-auto flex flex-col gap-3">
-      <div className="relative">
-        <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+      <div className="glass-panel rounded-2xl p-1.5 flex items-center gap-2 shadow-[0_0_50px_var(--glow)] border-primary/30 focus-within:border-primary/60 transition-colors">
+        <Search className="ml-3 h-4 w-4 text-muted-foreground shrink-0" />
         <Input
-          className={`pl-10 text-lg h-12 ${error ? "border-destructive" : ""}`}
+          className={`pl-2 text-lg h-12 border-0 bg-transparent focus-visible:ring-0 focus-visible:ring-offset-0 ${error ? "text-destructive" : ""}`}
           placeholder="Search for a .mpc domain..."
           value={query}
           onChange={(e) => setQuery(e.target.value.toLowerCase())}
@@ -105,42 +105,51 @@ export function DomainSearch() {
             }
           }}
         />
+        <button
+          type="button"
+          onClick={triggerSearch}
+          className="bg-primary text-primary-foreground rounded-xl px-5 h-10 text-sm font-bold hover:bg-primary/90 transition-colors shrink-0"
+        >
+          Search
+        </button>
       </div>
       {error && <p className="text-destructive text-sm">{error}</p>}
-      {loading || result ? (
-        <Link
-          href={
-            result?.available
-              ? `/register/${result.name.replace(/\.mpc$/, "")}`
-              : `/domain/${result?.name}`
-          }
-          className="block"
-        >
-          <Card className="transition-opacity hover:opacity-80 cursor-pointer">
-            <CardContent className="p-4">
-              {loading ? (
-                <div className="flex items-center gap-2 text-muted-foreground">
-                  <Loader2 className="h-4 w-4 animate-spin" /> Checking
-                  availability...
-                </div>
-              ) : result ? (
-                <div className="flex items-center justify-between">
-                  <span className="font-medium">{result.name}</span>
-                  <Badge
-                    className={
-                      result.available
-                        ? "bg-[hsl(var(--chip-available-bg))] text-[hsl(var(--chip-available-fg))]"
-                        : "bg-[hsl(var(--chip-registered-bg))] text-[hsl(var(--chip-registered-fg))]"
-                    }
-                  >
-                    {result.available ? "Available" : "Registered"}
-                  </Badge>
-                </div>
-              ) : null}
-            </CardContent>
-          </Card>
-        </Link>
-      ) : null}
+      <div role="status" aria-live="polite">
+        {loading || result ? (
+          <Link
+            href={
+              result?.available
+                ? `/register/${result.name.replace(/\.mpc$/, "")}`
+                : `/domain/${result?.name}`
+            }
+            className="block"
+          >
+            <Card className="glass-panel border-primary/20 hover:border-primary/50 transition-colors cursor-pointer">
+              <CardContent className="p-4">
+                {loading ? (
+                  <div className="flex items-center gap-2 text-muted-foreground">
+                    <Loader2 className="h-4 w-4 animate-spin" /> Checking
+                    availability...
+                  </div>
+                ) : result ? (
+                  <div className="flex items-center justify-between">
+                    <span className="font-medium">{result.name}</span>
+                    <Badge
+                      className={
+                        result.available
+                          ? "bg-[hsl(var(--chip-available-bg))] text-[hsl(var(--chip-available-fg))]"
+                          : "bg-[hsl(var(--chip-registered-bg))] text-[hsl(var(--chip-registered-fg))]"
+                      }
+                    >
+                      {result.available ? "Available" : "Registered"}
+                    </Badge>
+                  </div>
+                ) : null}
+              </CardContent>
+            </Card>
+          </Link>
+        ) : null}
+      </div>
     </div>
   );
 }
