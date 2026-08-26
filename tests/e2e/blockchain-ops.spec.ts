@@ -132,6 +132,19 @@ test.describe("Blockchain Operations", () => {
       }, "Registration check failed");
 
       if (result.success) {
+        // The availability check redirects client-side once it resolves, so
+        // wait for the page to settle into one of its two end states instead
+        // of sampling the URL after a fixed delay — otherwise this samples
+        // /register/ while the redirect to /domain/ is still in flight and
+        // then asserts register-page content against the domain page.
+        await Promise.race([
+          page.waitForURL(/\/domain\//, { timeout: 15000 }).catch(() => {}),
+          page
+            .locator(".content.checkout")
+            .waitFor({ state: "visible", timeout: 15000 })
+            .catch(() => {}),
+        ]);
+
         const currentUrl = page.url();
         if (currentUrl.includes("/domain/")) {
           await expect(page).toHaveURL(new RegExp(`/domain/${TEST_DOMAIN}`), {
