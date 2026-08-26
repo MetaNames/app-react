@@ -9,9 +9,9 @@ export default function NotFound() {
       <p className="text-muted-foreground">
         The page you are looking for does not exist.
       </p>
-      <Link href="/">
-        <Button>Go home</Button>
-      </Link>
+      {/* `render` rather than nesting: a <button> inside an <a> is invalid
+          HTML and leaves the link un-activatable by keyboard in some browsers. */}
+      <Button render={<Link href="/" />}>Go home</Button>
     </div>
   );
 }

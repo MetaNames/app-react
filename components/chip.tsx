@@ -1,5 +1,5 @@
 "use client";
-import { useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { Copy, Check, ExternalLink } from "lucide-react";
 import { cn } from "@/lib/utils";
 interface ChipProps {
@@ -19,12 +19,23 @@ export function Chip({
   className,
 }: ChipProps) {
   const [copied, setCopied] = useState(false);
+  // Held so an unmount mid-timeout does not leave a pending setState on a
+  // component that is gone — chips are rendered from lists that re-render on
+  // every record edit.
+  const resetTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
+  useEffect(
+    () => () => {
+      if (resetTimer.current) clearTimeout(resetTimer.current);
+    },
+    [],
+  );
   const handleCopy = async (e: React.MouseEvent) => {
     e.preventDefault();
     if (value) {
       await navigator.clipboard.writeText(value);
       setCopied(true);
-      setTimeout(() => setCopied(false), 1500);
+      if (resetTimer.current) clearTimeout(resetTimer.current);
+      resetTimer.current = setTimeout(() => setCopied(false), 1500);
     }
   };
   const variantClass = {
