@@ -1,14 +1,31 @@
 "use client";
 import { useCallback, useState } from "react";
 import Link from "next/link";
+import { usePathname } from "next/navigation";
 import { Logo } from "@/components/logo";
 import { WalletConnectButton } from "@/components/wallet-connect-button";
 import { Badge } from "@/components/ui/badge";
 import { config } from "@/lib/config";
 import { Menu, X } from "lucide-react";
 
+const NAV_LINKS = [
+  { href: "/profile", label: "Profile" },
+  { href: "/tld", label: "TLD" },
+];
+
 export function Header() {
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
+  const pathname = usePathname();
+
+  // Navigating from inside the mobile menu would otherwise replace the page
+  // under a still-open overlay. Adjusting during render (rather than in an
+  // effect) closes it before the stale menu is ever painted, and also covers
+  // back/forward navigation, which the links' own onClick cannot.
+  const [menuPathname, setMenuPathname] = useState(pathname);
+  if (pathname !== menuPathname) {
+    setMenuPathname(pathname);
+    setMobileMenuOpen(false);
+  }
 
   const toggleMobileMenu = useCallback(() => {
     setMobileMenuOpen((prev) => !prev);
@@ -34,24 +51,31 @@ export function Header() {
         </div>
         <div className="flex items-center gap-4">
           <nav className="hidden md:flex items-center gap-4">
-            <Link
-              href="/profile"
-              className="text-sm text-muted-foreground hover:text-primary transition-colors"
-            >
-              Profile
-            </Link>
-            <Link
-              href="/tld"
-              className="text-sm text-muted-foreground hover:text-primary transition-colors"
-            >
-              TLD
-            </Link>
+            {NAV_LINKS.map(({ href, label }) => {
+              const active =
+                pathname === href || pathname.startsWith(`${href}/`);
+              return (
+                <Link
+                  key={href}
+                  href={href}
+                  aria-current={active ? "page" : undefined}
+                  className={`text-sm transition-colors ${
+                    active
+                      ? "text-foreground font-medium"
+                      : "text-muted-foreground hover:text-primary"
+                  }`}
+                >
+                  {label}
+                </Link>
+              );
+            })}
           </nav>
           <WalletConnectButton />
           <button
             onClick={toggleMobileMenu}
-            className="p-2 hover:bg-muted rounded-md transition-colors md:hidden"
+            className="focus-ring p-2 hover:bg-muted rounded-md transition-colors md:hidden"
             aria-label="Toggle menu"
+            aria-expanded={mobileMenuOpen}
           >
             {mobileMenuOpen ? (
               <X className="h-5 w-5" />
@@ -64,20 +88,25 @@ export function Header() {
       {mobileMenuOpen && (
         <div className="md:hidden border-t border-border">
           <nav className="container mx-auto px-4 py-4 flex flex-col gap-3">
-            <Link
-              href="/profile"
-              className="text-sm text-muted-foreground hover:text-primary transition-colors py-2"
-              onClick={closeMobileMenu}
-            >
-              Profile
-            </Link>
-            <Link
-              href="/tld"
-              className="text-sm text-muted-foreground hover:text-primary transition-colors py-2"
-              onClick={closeMobileMenu}
-            >
-              TLD
-            </Link>
+            {NAV_LINKS.map(({ href, label }) => {
+              const active =
+                pathname === href || pathname.startsWith(`${href}/`);
+              return (
+                <Link
+                  key={href}
+                  href={href}
+                  aria-current={active ? "page" : undefined}
+                  className={`text-sm transition-colors py-2 ${
+                    active
+                      ? "text-foreground font-medium"
+                      : "text-muted-foreground hover:text-primary"
+                  }`}
+                  onClick={closeMobileMenu}
+                >
+                  {label}
+                </Link>
+              );
+            })}
           </nav>
         </div>
       )}
