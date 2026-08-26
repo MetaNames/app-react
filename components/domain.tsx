@@ -1,5 +1,5 @@
 "use client";
-import { useCallback, useEffect } from "react";
+import { useCallback, useEffect, useMemo, useState } from "react";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { JdenticonAvatar } from "@/components/domain-avatar";
 import { DetailsContent } from "@/components/domain-details";
@@ -15,11 +15,25 @@ import {
 } from "@/lib/types";
 import { createRecordRepository } from "@/lib/records";
 import { useRouter } from "next/navigation";
+import { formatDate } from "@/lib/utils";
+import { AlertTriangle, Check, Copy } from "lucide-react";
 
 interface DomainProps {
   domain: DomainType;
   isTld?: boolean;
   onUpdate?: () => void;
+}
+
+// Legacy surfaces expiry only as a plain date. Flagging the last month before
+// expiry gives the owner a chance to act while renewal is still possible,
+// which is the whole point of showing the date at all.
+const EXPIRY_WARNING_DAYS = 30;
+
+function daysUntil(date: Date | null): number | null {
+  if (!date) return null;
+  const ms = new Date(date).getTime() - Date.now();
+  if (Number.isNaN(ms)) return null;
+  return Math.ceil(ms / 86_400_000);
 }
 
 export function Domain({ domain, isTld = false, onUpdate }: DomainProps) {
@@ -34,6 +48,8 @@ export function Domain({ domain, isTld = false, onUpdate }: DomainProps) {
   const repository = useRecordStore((s) => s.repository);
   const setRepository = useRecordStore((s) => s.setRepository);
   const clearRepository = useRecordStore((s) => s.clear);
+
+  const [copied, setCopied] = useState(false);
 
   useEffect(() => {
     if (!metaNamesSdk) {
@@ -59,36 +75,98 @@ export function Domain({ domain, isTld = false, onUpdate }: DomainProps) {
     router.push(`/domain/${domain.name}/transfer`);
   }, [domain.name, router]);
 
+  const handleCopyName = useCallback(async () => {
+    await navigator.clipboard.writeText(domain.name);
+    setCopied(true);
+    setTimeout(() => setCopied(false), 1500);
+  }, [domain.name]);
+
   const profileRecords = PROFILE_RECORD_TYPES.filter(
     (t) => domain.records?.[t],
   );
   const socialRecords = SOCIAL_RECORD_TYPES.filter((t) => domain.records?.[t]);
 
+  const expiryDays = useMemo(
+    () => (isTld ? null : daysUntil(domain.expiresAt)),
+    [domain.expiresAt, isTld],
+  );
+  const expiringSoon = expiryDays !== null && expiryDays <= EXPIRY_WARNING_DAYS;
+
+  const TitleTag = isTld ? "h2" : "h1";
+
   return (
     <div className="spotlight-beam flex flex-col gap-6 w-full max-w-2xl relative z-10 animate-fade-up">
-      <div className="flex items-center gap-4">
-        <div className="avatar p-1 rounded-2xl ring-2 ring-primary/40 shadow-[0_0_24px_var(--glow)]">
+      <div className="flex flex-col sm:flex-row sm:items-center gap-4">
+        <div className="avatar p-1 rounded-2xl ring-2 ring-primary/40 shadow-[0_0_24px_var(--glow)] shrink-0 self-start">
           <JdenticonAvatar value={domain.name} size={64} />
         </div>
-        <div>
-          {isTld ? (
-            <h2
-              className="domain text-3xl font-extrabold tracking-tight"
+        <div className="min-w-0 flex-1">
+          <div className="flex items-center gap-2 flex-wrap">
+            <TitleTag
+              className="domain text-3xl font-extrabold tracking-tight break-all"
               data-testid="domain-title"
             >
               {domain.name}
-            </h2>
-          ) : (
-            <h1
-              className="domain text-3xl font-extrabold tracking-tight"
-              data-testid="domain-title"
+            </TitleTag>
+            <button
+              type="button"
+              onClick={handleCopyName}
+              aria-label={`Copy ${domain.name}`}
+              className="focus-ring rounded-md p-1.5 text-muted-foreground hover:text-foreground transition-colors"
             >
-              {domain.name}
-            </h1>
-          )}
-          <p className="text-muted-foreground text-sm">#{domain.tokenId}</p>
+              {copied ? (
+                <Check className="h-4 w-4" />
+              ) : (
+                <Copy className="h-4 w-4" />
+              )}
+            </button>
+            {copied && (
+              <span role="status" className="sr-only">
+                Copied to the clipboard
+              </span>
+            )}
+            {isOwner && (
+              <span className="rounded-full px-2.5 py-0.5 text-[11px] font-semibold bg-[var(--chip-registered-bg)] text-[var(--chip-registered-fg)]">
+                Yours
+              </span>
+            )}
+          </div>
+          <p className="text-muted-foreground text-sm font-mono">
+            #{domain.tokenId}
+          </p>
         </div>
+        {isOwner && !isTld && (
+          <div className="flex gap-2 shrink-0">
+            <Button
+              variant="outline"
+              className="border-primary/40 hover:border-primary hover:bg-primary/10"
+              onClick={handleRenew}
+            >
+              Renew
+            </Button>
+            <Button
+              variant="outline"
+              className="border-primary/40 hover:border-primary hover:bg-primary/10"
+              onClick={handleTransfer}
+            >
+              Transfer
+            </Button>
+          </div>
+        )}
       </div>
+      {expiringSoon && (
+        <div className="glass-panel border-destructive/40 bg-destructive/10 rounded-xl px-4 py-3 flex items-center gap-3 text-sm">
+          <AlertTriangle
+            className="h-4 w-4 shrink-0 text-destructive"
+            aria-hidden="true"
+          />
+          <span className="flex-1">
+            {expiryDays !== null && expiryDays <= 0
+              ? `Expired on ${formatDate(domain.expiresAt)}.`
+              : `Expires in ${expiryDays} ${expiryDays === 1 ? "day" : "days"} (${formatDate(domain.expiresAt)}).`}
+          </span>
+        </div>
+      )}
       {isOwner && !isTld ? (
         <Tabs defaultValue="details">
           <TabsList className="glass-panel rounded-xl p-1 bg-transparent">
@@ -111,22 +189,6 @@ export function Domain({ domain, isTld = false, onUpdate }: DomainProps) {
             {repository && (
               <Records records={domain.records ?? {}} onUpdate={onUpdate} />
             )}
-            <div className="flex gap-3 pt-4 border-t">
-              <Button
-                variant="outline"
-                className="border-primary/40 hover:border-primary hover:bg-primary/10"
-                onClick={handleRenew}
-              >
-                Renew
-              </Button>
-              <Button
-                variant="outline"
-                className="border-primary/40 hover:border-primary hover:bg-primary/10"
-                onClick={handleTransfer}
-              >
-                Transfer
-              </Button>
-            </div>
           </TabsContent>
         </Tabs>
       ) : (

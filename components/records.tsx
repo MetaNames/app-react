@@ -3,6 +3,7 @@ import { Record } from "@/components/record";
 import { RecordsAddForm } from "@/components/records-add-form";
 import { useRecordStore } from "@/lib/stores/record-store";
 import type { RecordClass } from "@/lib/types";
+import { FileText } from "lucide-react";
 
 interface RecordsProps {
   records: Record<string, string>;
@@ -20,7 +21,16 @@ export function Records({ records, onUpdate }: RecordsProps) {
       data-testid="records-container"
     >
       {usedTypes.length === 0 && (
-        <p className="text-muted-foreground text-sm">No records found</p>
+        <div className="flex flex-col items-center gap-1 py-6 text-center">
+          <FileText
+            className="h-5 w-5 text-muted-foreground/60"
+            aria-hidden="true"
+          />
+          <p className="text-muted-foreground text-sm">No records found</p>
+          <p className="text-muted-foreground/70 text-xs">
+            Attach a bio, links and socials to this name below.
+          </p>
+        </div>
       )}
       {usedTypes.map((type) => (
         <Record
