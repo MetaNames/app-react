@@ -87,7 +87,7 @@ export function DomainSearch() {
       <div className="glass-panel rounded-2xl p-1.5 flex items-center gap-2 shadow-[0_0_50px_var(--glow)] border-primary/30 focus-within:border-primary/60 transition-colors">
         <Search className="ml-3 h-4 w-4 text-muted-foreground shrink-0" />
         <Input
-          className={`pl-2 text-lg h-12 border-0 bg-transparent focus-visible:ring-0 focus-visible:ring-offset-0 ${error ? "text-destructive" : ""}`}
+          className={`pl-2 text-lg h-12 border-0 bg-transparent ${error ? "text-destructive" : ""}`}
           placeholder="Search for a .mpc domain..."
           value={query}
           onChange={(e) => setQuery(e.target.value.toLowerCase())}
@@ -108,7 +108,7 @@ export function DomainSearch() {
         <button
           type="button"
           onClick={triggerSearch}
-          className="bg-primary text-primary-foreground rounded-xl px-5 h-10 text-sm font-bold hover:bg-primary/90 transition-colors shrink-0"
+          className="focus-ring bg-primary text-primary-foreground rounded-xl px-5 h-10 text-sm font-bold hover:bg-primary/90 transition-colors shrink-0"
         >
           Search
         </button>

@@ -49,7 +49,7 @@ export function DomainPayment({ domain, mode, onSuccess }: DomainPaymentProps) {
       <CardHeader>
         <CardTitle>
           {mode === "register" ? "Register" : "Renew"}{" "}
-          <span className="text-primary">{domain}</span>
+          <span className="text-primary-glow">{domain}</span>
         </CardTitle>
       </CardHeader>
       <CardContent className="flex flex-col gap-6">

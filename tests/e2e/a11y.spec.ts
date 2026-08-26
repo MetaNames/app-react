@@ -47,11 +47,15 @@ test.describe("WCAG 2.2 A + AA", () => {
       const violations = await scan(page);
       expect(
         violations,
-        violations.map((v) => `${v.impact} ${v.id} x${v.nodes.length}`).join("\n"),
+        violations
+          .map((v) => `${v.impact} ${v.id} x${v.nodes.length}`)
+          .join("\n"),
       ).toEqual([]);
     });
 
-    test(`${route.name} has exactly one level-one heading`, async ({ page }) => {
+    test(`${route.name} has exactly one level-one heading`, async ({
+      page,
+    }) => {
       await gotoLoaded(page, route);
       await expect(page.locator("h1")).toHaveCount(1);
     });
@@ -148,9 +152,10 @@ async function ringOn(locator: Locator) {
     }
 
     const style = getComputedStyle(el);
-    const [lighter, darker] = [luminance(style.outlineColor), luminance(backdrop)].sort(
-      (a, b) => b - a,
-    );
+    const [lighter, darker] = [
+      luminance(style.outlineColor),
+      luminance(backdrop),
+    ].sort((a, b) => b - a);
     return {
       focusVisible: el.matches(":focus-visible"),
       style: style.outlineStyle,

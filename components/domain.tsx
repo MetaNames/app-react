@@ -71,12 +71,21 @@ export function Domain({ domain, isTld = false, onUpdate }: DomainProps) {
           <JdenticonAvatar value={domain.name} size={64} />
         </div>
         <div>
-          <h5
-            className="domain text-3xl font-extrabold tracking-tight"
-            data-testid="domain-title"
-          >
-            {domain.name}
-          </h5>
+          {isTld ? (
+            <h2
+              className="domain text-3xl font-extrabold tracking-tight"
+              data-testid="domain-title"
+            >
+              {domain.name}
+            </h2>
+          ) : (
+            <h1
+              className="domain text-3xl font-extrabold tracking-tight"
+              data-testid="domain-title"
+            >
+              {domain.name}
+            </h1>
+          )}
           <p className="text-muted-foreground text-sm">#{domain.tokenId}</p>
         </div>
       </div>

@@ -50,6 +50,7 @@ export function ProfilePageClient() {
         role="status"
         className="flex flex-col items-center justify-center py-24 gap-4 text-center"
       >
+        <h1 className="sr-only">Profile</h1>
         <p className="text-xl text-muted-foreground">
           Connect your wallet to see your domains
         </p>

@@ -62,10 +62,24 @@ export function Chip({
   );
   if (href)
     return (
-      <a href={href} target="_blank" rel="noopener noreferrer">
+      <a
+        href={href}
+        target="_blank"
+        rel="noopener noreferrer"
+        className="focus-ring rounded-full"
+      >
         {content}
       </a>
     );
-  if (onClick) return <button onClick={onClick}>{content}</button>;
-  return <button onClick={handleCopy}>{content}</button>;
+  if (onClick)
+    return (
+      <button onClick={onClick} className="focus-ring rounded-full">
+        {content}
+      </button>
+    );
+  return (
+    <button onClick={handleCopy} className="focus-ring rounded-full">
+      {content}
+    </button>
+  );
 }

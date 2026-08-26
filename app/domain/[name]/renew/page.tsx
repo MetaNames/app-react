@@ -11,7 +11,7 @@ export default function RenewPage() {
     <div className="flex flex-col gap-6 max-w-lg w-full mx-auto animate-fade-up">
       <div className="flex items-center gap-4">
         <GoBackButton href={`/domain/${domainName}`} />
-        <h2 className="text-3xl font-extrabold tracking-tight">Renew domain</h2>
+        <h1 className="text-3xl font-extrabold tracking-tight">Renew domain</h1>
       </div>
       <DomainPayment domain={domainName} mode="renew" />
     </div>

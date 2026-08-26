@@ -46,10 +46,10 @@ export default function TransferPage() {
   return (
     <div className="spotlight-beam relative z-10 animate-fade-up flex flex-col gap-6 max-w-lg w-full">
       <GoBackButton href={`/domain/${domainName}`} />
-      <h2 className="text-3xl font-extrabold tracking-tight">
+      <h1 className="text-3xl font-extrabold tracking-tight">
         Transfer domain
-      </h2>
-      <h4 className="text-xl">{domainName}</h4>
+      </h1>
+      <h2 className="text-xl">{domainName}</h2>
       <div className="glass-panel rounded-2xl border-destructive/30 bg-destructive/5 p-4 flex flex-col gap-2">
         <p>
           <strong>Please note that all transfers are irreversible.</strong>

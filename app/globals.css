@@ -35,6 +35,7 @@
   --color-secondary: var(--secondary);
   --color-primary-foreground: var(--primary-foreground);
   --color-primary: var(--primary);
+  --color-primary-glow: var(--primary-glow);
   --color-popover-foreground: var(--popover-foreground);
   --color-popover: var(--popover);
   --color-card-foreground: var(--card-foreground);
@@ -56,6 +57,7 @@
   --popover: hsl(240 20% 6%);
   --popover-foreground: hsl(240 20% 94%);
   --primary: hsl(249 91% 63%);
+  --primary-glow: hsl(249 100% 74%);
   --primary-foreground: hsl(0 0% 100%);
   --secondary: hsl(240 14% 12%);
   --secondary-foreground: hsl(240 20% 94%);
@@ -138,6 +140,26 @@
   }
   .text-glow {
     text-shadow: 0 0 24px var(--glow);
+  }
+  /*
+   * Shared focus-visible ring: a real `outline` (not a box-shadow "ring-*" utility) so it is
+   * measurable by axe/Playwright contrast checks against whatever sits behind the element.
+   * `--primary-glow` is used instead of `--primary` because it clears 3:1 against every surface
+   * token in this theme (background/card/popover/border), while `--primary` alone is too close to
+   * 3:1 against darker surfaces like `--border`.
+   * `header a` is included directly (not just the `.focus-ring` class) so header links compose
+   * this without every anchor in the header needing a className change.
+   */
+  .focus-ring,
+  header a {
+    outline-style: solid;
+    outline-width: 2px;
+    outline-offset: 2px;
+    outline-color: transparent;
+  }
+  .focus-ring:focus-visible,
+  header a:focus-visible {
+    outline-color: var(--primary-glow);
   }
   .animate-fade-up {
     animation: fade-up 0.5s ease-out both;

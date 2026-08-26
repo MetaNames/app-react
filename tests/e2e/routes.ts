@@ -20,11 +20,11 @@ export const ROUTES = [
     name: "domain",
     anchor: "[data-testid='domain-title']",
   },
-  { path: `/register/${unregisteredName}`, name: "register", anchor: "h2" },
+  { path: `/register/${unregisteredName}`, name: "register", anchor: "h1" },
   { path: "/profile", name: "profile", anchor: "text=Connect your wallet" },
   { path: "/tld", name: "tld", anchor: "[data-testid='domain-title']" },
-  { path: "/domain/test.mpc/renew", name: "renew", anchor: "h2" },
-  { path: "/domain/test.mpc/transfer", name: "transfer", anchor: "h2" },
+  { path: "/domain/test.mpc/renew", name: "renew", anchor: "h1" },
+  { path: "/domain/test.mpc/transfer", name: "transfer", anchor: "h1" },
 ] as const;
 
 export type Route = (typeof ROUTES)[number];

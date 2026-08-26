@@ -61,9 +61,9 @@ export function RegisterPageClient({ name }: { name: string }) {
 
   return (
     <div className="spotlight-beam flex flex-col items-center gap-6 content checkout max-w-2xl mx-auto px-4 w-full relative z-10 animate-fade-up">
-      <h2 className="text-3xl font-extrabold tracking-tight">
+      <h1 className="text-3xl font-extrabold tracking-tight">
         Register {domainName}
-      </h2>
+      </h1>
       {status === "subdomain" && parent ? (
         <SubdomainRegistration domain={domainName} parentDomain={parent} />
       ) : (
