@@ -23,16 +23,23 @@ describe("validateDomainName", () => {
     });
   });
 
-  describe("maximum 32 characters", () => {
-    it("accepts 32 characters", () => {
-      const result = validateDomainName("abcdefghijklmnopqrstuvwxyz123456");
+  // The SDK caps the full name — ".mpc" included — at 32 characters, so the
+  // longest label a user can actually register is 28.
+  describe("maximum 28 characters (32 including the .mpc suffix)", () => {
+    it("accepts 28 characters", () => {
+      const result = validateDomainName("abcdefghijklmnopqrstuvwxyz12");
       expect(result.valid).toBe(true);
     });
 
-    it("rejects 33 characters", () => {
-      const result = validateDomainName("abcdefghijklmnopqrstuvwxyz1234567");
+    it("accepts 28 characters written with an explicit .mpc suffix", () => {
+      const result = validateDomainName("abcdefghijklmnopqrstuvwxyz12.mpc");
+      expect(result.valid).toBe(true);
+    });
+
+    it("rejects 29 characters", () => {
+      const result = validateDomainName("abcdefghijklmnopqrstuvwxyz123");
       expect(result.valid).toBe(false);
-      expect(result.error).toBe("Domain name must be at most 32 characters");
+      expect(result.error).toBe("Domain name must be at most 28 characters");
     });
   });
 
@@ -131,6 +138,59 @@ describe("validateDomainName", () => {
       const result = validateDomainName("sub.test");
       expect(result.valid).toBe(true);
     });
+  });
+});
+
+// Legacy's SDK-backed DomainValidator normalizes through tr46's
+// `toUnicode({ useSTD3ASCIIRules: true })`, so internationalized labels
+// validate instead of being rejected outright by an ASCII-only regex.
+describe("IDNA / Unicode domain labels", () => {
+  it("accepts a label with accented Latin characters", () => {
+    expect(validateDomainName("café").valid).toBe(true);
+  });
+
+  it("accepts a label written in a non-Latin script", () => {
+    expect(validateDomainName("日本語").valid).toBe(true);
+  });
+
+  it("accepts a punycode-encoded label (decodes to Unicode)", () => {
+    expect(validateDomainName("xn--caf-dma").valid).toBe(true);
+  });
+
+  it("accepts a Unicode subdomain label alongside an ASCII parent", () => {
+    const result = validateDomainName("café.test");
+    expect(result.valid).toBe(true);
+  });
+
+  it("still rejects a Unicode label containing a disallowed character", () => {
+    // Underscore is disallowed under IDNA's STD3 rules even for otherwise
+    // Unicode-eligible labels.
+    const result = validateDomainName("café_x");
+    expect(result.valid).toBe(false);
+    expect(result.error).toBe(
+      "Only lowercase letters, numbers, and hyphens allowed",
+    );
+  });
+
+  it("still rejects a Unicode label with a leading hyphen", () => {
+    const result = validateDomainName("-café");
+    expect(result.valid).toBe(false);
+    expect(result.error).toBe("Cannot start or end with a hyphen");
+  });
+
+  it("still enforces the max length on a Unicode label", () => {
+    const longUnicode = "日".repeat(29);
+    const result = validateDomainName(longUnicode);
+    expect(result.valid).toBe(false);
+    expect(result.error).toBe("Domain name must be at most 28 characters");
+  });
+
+  it("still rejects plain ASCII uppercase (unaffected by IDNA support)", () => {
+    const result = validateDomainName("Test");
+    expect(result.valid).toBe(false);
+    expect(result.error).toBe(
+      "Only lowercase letters, numbers, and hyphens allowed",
+    );
   });
 });
 

@@ -73,7 +73,7 @@ test.describe("Blockchain Operations", () => {
       page,
     }) => {
       const registerPage = new RegisterPage(page);
-      const testDomain = `registerdisabled${Date.now()}.mpc`;
+      const testDomain = `regdisabled${Date.now()}.mpc`;
       await gotoAndRestoreWallet(page, `/register/${testDomain}`);
 
       await expect(registerPage.approveFeesButton).toBeVisible({
