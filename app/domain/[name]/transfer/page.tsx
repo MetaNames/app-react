@@ -11,6 +11,7 @@ import { validateAddress } from "@/lib/wallet";
 import { explorerTransactionUrl } from "@/lib/url";
 import { normalizeDomain } from "@/lib/domain-validator";
 import { toast } from "sonner";
+import { track } from "@vercel/analytics";
 
 export default function TransferPage() {
   const { name } = useParams<{ name: string }>();
@@ -38,6 +39,7 @@ export default function TransferPage() {
     });
     await intent.fetchResult;
     toast.success("Domain transferred successfully");
+    track("domain_transferred");
     router.push(`/domain/${domainName}`);
   };
 

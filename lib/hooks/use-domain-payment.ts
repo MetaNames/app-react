@@ -13,6 +13,7 @@ import { bridgeUrl, explorerTransactionUrl } from "@/lib/url";
 import type { FeesResponse } from "@/lib/types";
 import type { BYOCSymbol } from "@metanames/sdk/dist/providers/config";
 import { toast } from "sonner";
+import { track } from "@vercel/analytics";
 
 interface UseDomainPaymentProps {
   domain: string;
@@ -161,6 +162,7 @@ export function useDomainPayment({
         onClick: () => router.push("/profile"),
       },
     });
+    track(mode === "register" ? "domain_registered" : "domain_renewed");
     if (onSuccess) onSuccess();
     else router.push(`/domain/${domain}`);
   }, [
