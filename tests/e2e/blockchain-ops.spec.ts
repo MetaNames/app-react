@@ -116,7 +116,7 @@ test.describe("Blockchain Operations", () => {
 
       // Whether tx succeeded or not, verify the page is still functional
       const pageStillLoaded = await page
-        .locator("h2")
+        .locator("h1")
         .isVisible({ timeout: 5000 })
         .catch(() => false);
       expect(pageStillLoaded).toBe(true);
