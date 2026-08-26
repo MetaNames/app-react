@@ -16,14 +16,19 @@ export function Records({ records, onUpdate }: RecordsProps) {
 
   return (
     <div
-      className="records flex flex-col gap-4"
+      className="records glass-panel rounded-2xl p-4 flex flex-col gap-4"
       data-testid="records-container"
     >
       {usedTypes.length === 0 && (
         <p className="text-muted-foreground text-sm">No records found</p>
       )}
       {usedTypes.map((type) => (
-        <Record key={type} type={type} value={records[type]} onUpdate={onUpdate} />
+        <Record
+          key={type}
+          type={type}
+          value={records[type]}
+          onUpdate={onUpdate}
+        />
       ))}
       {repository && onUpdate && (
         <RecordsAddForm

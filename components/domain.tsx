@@ -65,13 +65,16 @@ export function Domain({ domain, isTld = false, onUpdate }: DomainProps) {
   const socialRecords = SOCIAL_RECORD_TYPES.filter((t) => domain.records?.[t]);
 
   return (
-    <div className="flex flex-col gap-6 w-full max-w-2xl">
+    <div className="spotlight-beam flex flex-col gap-6 w-full max-w-2xl relative z-10 animate-fade-up">
       <div className="flex items-center gap-4">
-        <div className="avatar">
+        <div className="avatar p-1 rounded-2xl ring-2 ring-primary/40 shadow-[0_0_24px_var(--glow)]">
           <JdenticonAvatar value={domain.name} size={64} />
         </div>
         <div>
-          <h5 className="domain text-2xl font-bold" data-testid="domain-title">
+          <h5
+            className="domain text-3xl font-extrabold tracking-tight"
+            data-testid="domain-title"
+          >
             {domain.name}
           </h5>
           <p className="text-muted-foreground text-sm">#{domain.tokenId}</p>
@@ -79,7 +82,7 @@ export function Domain({ domain, isTld = false, onUpdate }: DomainProps) {
       </div>
       {isOwner && !isTld ? (
         <Tabs defaultValue="details">
-          <TabsList>
+          <TabsList className="glass-panel rounded-xl p-1 bg-transparent">
             <TabsTrigger value="details" data-testid="tab-details">
               details
             </TabsTrigger>
@@ -97,16 +100,21 @@ export function Domain({ domain, isTld = false, onUpdate }: DomainProps) {
           </TabsContent>
           <TabsContent value="settings" className="mt-4 flex flex-col gap-4">
             {repository && (
-              <Records
-                records={domain.records ?? {}}
-                onUpdate={onUpdate}
-              />
+              <Records records={domain.records ?? {}} onUpdate={onUpdate} />
             )}
             <div className="flex gap-3 pt-4 border-t">
-              <Button variant="outline" onClick={handleRenew}>
+              <Button
+                variant="outline"
+                className="border-primary/40 hover:border-primary hover:bg-primary/10"
+                onClick={handleRenew}
+              >
                 Renew
               </Button>
-              <Button variant="outline" onClick={handleTransfer}>
+              <Button
+                variant="outline"
+                className="border-primary/40 hover:border-primary hover:bg-primary/10"
+                onClick={handleTransfer}
+              >
                 Transfer
               </Button>
             </div>

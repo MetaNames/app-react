@@ -79,7 +79,10 @@ export function RecordsAddForm({
   if (availableTypes.length === 0) return null;
 
   return (
-    <Card className="add-record" data-testid="add-record-form">
+    <Card
+      className="add-record glass-panel border-border/60"
+      data-testid="add-record-form"
+    >
       <CardHeader>
         <CardTitle className="text-sm">Add record</CardTitle>
       </CardHeader>

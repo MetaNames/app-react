@@ -37,7 +37,7 @@ export function Record({ type, value, onUpdate }: RecordProps) {
   } = useRecordManagement({ type, value, onUpdate: onUpdate! });
 
   return (
-    <div className="record-container flex items-start gap-3 py-3 border-b last:border-0">
+    <div className="record-container flex items-start gap-3 py-3 border-b border-border/60 last:border-0">
       <div className="flex-1 min-w-0">
         <span className="text-xs text-muted-foreground uppercase tracking-wide">
           {type}

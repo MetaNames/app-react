@@ -14,5 +14,5 @@ export function JdenticonAvatar({
       if (ref.current) update(ref.current, value);
     });
   }, [value]);
-  return <svg ref={ref} width={size} height={size} className="rounded-lg" />;
+  return <svg ref={ref} width={size} height={size} className="rounded-xl" />;
 }
