@@ -10,7 +10,11 @@ export interface Domain {
 }
 export interface ITransactionIntent {
   transactionHash: string;
-  fetchResult: Promise<{ transactionHash: string; hasError: boolean; errorMessage?: string }>;
+  fetchResult: Promise<{
+    transactionHash: string;
+    hasError: boolean;
+    errorMessage?: string;
+  }>;
 }
 
 export interface RecordRepository {

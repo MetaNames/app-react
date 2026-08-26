@@ -19,12 +19,15 @@ export function Header() {
   }, []);
 
   return (
-    <header className="border-b border-border sticky top-0 z-50 bg-background/80 backdrop-blur">
+    <header className="border-b border-border/60 sticky top-0 z-50 bg-background/70 backdrop-blur-xl">
       <div className="container mx-auto px-4 h-16 flex items-center justify-between">
         <div className="flex items-center gap-3">
           <Logo />
           {config.isTestnet && (
-            <Badge variant="secondary" className="text-xs">
+            <Badge
+              variant="outline"
+              className="text-[10px] tracking-[0.15em] text-muted-foreground border-border"
+            >
               TESTNET
             </Badge>
           )}
@@ -33,13 +36,13 @@ export function Header() {
           <nav className="hidden md:flex items-center gap-4">
             <Link
               href="/profile"
-              className="text-sm text-muted-foreground hover:text-foreground transition-colors"
+              className="text-sm text-muted-foreground hover:text-primary transition-colors"
             >
               Profile
             </Link>
             <Link
               href="/tld"
-              className="text-sm text-muted-foreground hover:text-foreground transition-colors"
+              className="text-sm text-muted-foreground hover:text-primary transition-colors"
             >
               TLD
             </Link>
@@ -63,14 +66,14 @@ export function Header() {
           <nav className="container mx-auto px-4 py-4 flex flex-col gap-3">
             <Link
               href="/profile"
-              className="text-sm text-muted-foreground hover:text-foreground transition-colors py-2"
+              className="text-sm text-muted-foreground hover:text-primary transition-colors py-2"
               onClick={closeMobileMenu}
             >
               Profile
             </Link>
             <Link
               href="/tld"
-              className="text-sm text-muted-foreground hover:text-foreground transition-colors py-2"
+              className="text-sm text-muted-foreground hover:text-primary transition-colors py-2"
               onClick={closeMobileMenu}
             >
               TLD

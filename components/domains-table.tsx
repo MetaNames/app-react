@@ -63,7 +63,7 @@ export function DomainsTable({ domains }: DomainsTableProps) {
   return (
     <div className="flex flex-col gap-4">
       <DomainsTableSearch value={search} onChange={setSearch} />
-      <div className="overflow-x-auto rounded-md border">
+      <div className="overflow-x-auto rounded-2xl border border-border/60 glass-panel">
         <Table>
           <TableHeader>
             {table.getHeaderGroups().map((hg) => (

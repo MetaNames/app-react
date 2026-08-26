@@ -41,7 +41,6 @@ test.describe("Disconnected state", () => {
     const connectPrompt = page.locator(SELECTORS.WALLET_CONNECT_BUTTON);
     await expect(connectPrompt).toBeVisible({ timeout: 10000 });
   });
-
 });
 
 test.describe("Blockchain Operations", () => {
@@ -373,5 +372,4 @@ test.describe("Blockchain Operations", () => {
       });
     });
   });
-
 });

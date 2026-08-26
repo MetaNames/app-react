@@ -155,7 +155,10 @@ vi.mock("@/components/ui/textarea", () => ({
 
 const createMockIntent = () => ({
   transactionHash: "mock-tx-hash",
-  fetchResult: Promise.resolve({ transactionHash: "mock-tx-hash", hasError: false }),
+  fetchResult: Promise.resolve({
+    transactionHash: "mock-tx-hash",
+    hasError: false,
+  }),
 });
 
 const defaultProps = {
@@ -184,12 +187,7 @@ describe("Records", () => {
     });
 
     it("renders record when records exist", () => {
-      render(
-        <Records
-          {...defaultProps}
-          records={{ Bio: "Test bio" }}
-        />,
-      );
+      render(<Records {...defaultProps} records={{ Bio: "Test bio" }} />);
       expect(screen.getByText("Bio")).toBeInTheDocument();
       expect(screen.getByText("Test bio")).toBeInTheDocument();
     });
@@ -200,12 +198,7 @@ describe("Records", () => {
         Email: "test@example.com",
         Twitter: "@user",
       };
-      render(
-        <Records
-          {...defaultProps}
-          records={records}
-        />,
-      );
+      render(<Records {...defaultProps} records={records} />);
 
       expect(screen.getByText("Bio")).toBeInTheDocument();
       expect(screen.getByText("Test bio")).toBeInTheDocument();
@@ -216,44 +209,24 @@ describe("Records", () => {
     });
 
     it("renders add record form when available types exist", () => {
-      render(
-        <Records
-          {...defaultProps}
-          records={{ Bio: "Test bio" }}
-        />,
-      );
+      render(<Records {...defaultProps} records={{ Bio: "Test bio" }} />);
       expect(screen.getAllByText("Add record").length).toBeGreaterThan(0);
     });
   });
 
   describe("add record form", () => {
     it("renders record type dropdown", () => {
-      render(
-        <Records
-          {...defaultProps}
-          records={{ Bio: "Test bio" }}
-        />,
-      );
+      render(<Records {...defaultProps} records={{ Bio: "Test bio" }} />);
       expect(screen.getByText("Select record type")).toBeInTheDocument();
     });
 
     it("does not show textarea when no type selected", () => {
-      render(
-        <Records
-          {...defaultProps}
-          records={{ Bio: "Test bio" }}
-        />,
-      );
+      render(<Records {...defaultProps} records={{ Bio: "Test bio" }} />);
       expect(screen.queryByRole("textbox")).not.toBeInTheDocument();
     });
 
     it("shows textarea when type is selected", async () => {
-      render(
-        <Records
-          {...defaultProps}
-          records={{ Bio: "Test bio" }}
-        />,
-      );
+      render(<Records {...defaultProps} records={{ Bio: "Test bio" }} />);
 
       fireEvent.click(screen.getByTestId("select-option-Email"));
 
@@ -263,12 +236,7 @@ describe("Records", () => {
     });
 
     it("shows character count when type selected", async () => {
-      render(
-        <Records
-          {...defaultProps}
-          records={{ Bio: "Test bio" }}
-        />,
-      );
+      render(<Records {...defaultProps} records={{ Bio: "Test bio" }} />);
 
       fireEvent.click(screen.getByTestId("select-option-Email"));
 
@@ -278,12 +246,7 @@ describe("Records", () => {
     });
 
     it("shows correct placeholder for selected type", async () => {
-      render(
-        <Records
-          {...defaultProps}
-          records={{ Bio: "Test bio" }}
-        />,
-      );
+      render(<Records {...defaultProps} records={{ Bio: "Test bio" }} />);
 
       fireEvent.click(screen.getByTestId("select-option-Twitter"));
 
@@ -295,22 +258,12 @@ describe("Records", () => {
     });
 
     it("disables add button when no type selected", () => {
-      render(
-        <Records
-          {...defaultProps}
-          records={{ Bio: "Test bio" }}
-        />,
-      );
+      render(<Records {...defaultProps} records={{ Bio: "Test bio" }} />);
       expect(screen.getByRole("button", { name: "Add record" })).toBeDisabled();
     });
 
     it("disables add button when type selected but no value", async () => {
-      render(
-        <Records
-          {...defaultProps}
-          records={{ Bio: "Test bio" }}
-        />,
-      );
+      render(<Records {...defaultProps} records={{ Bio: "Test bio" }} />);
 
       fireEvent.click(screen.getByTestId("select-option-Email"));
 
@@ -322,12 +275,7 @@ describe("Records", () => {
     });
 
     it("enables add button when type and value are filled", async () => {
-      render(
-        <Records
-          {...defaultProps}
-          records={{ Bio: "Test bio" }}
-        />,
-      );
+      render(<Records {...defaultProps} records={{ Bio: "Test bio" }} />);
 
       fireEvent.click(screen.getByTestId("select-option-Email"));
 
@@ -347,12 +295,7 @@ describe("Records", () => {
       const mockIntent = createMockIntent();
       mockRepository.create.mockResolvedValue(mockIntent);
 
-      render(
-        <Records
-          {...defaultProps}
-          records={{ Bio: "Test bio" }}
-        />,
-      );
+      render(<Records {...defaultProps} records={{ Bio: "Test bio" }} />);
 
       fireEvent.click(screen.getByTestId("select-option-Email"));
 
@@ -373,12 +316,7 @@ describe("Records", () => {
       const mockIntent = createMockIntent();
       mockRepository.create.mockResolvedValue(mockIntent);
 
-      render(
-        <Records
-          {...defaultProps}
-          records={{ Bio: "Test bio" }}
-        />,
-      );
+      render(<Records {...defaultProps} records={{ Bio: "Test bio" }} />);
 
       fireEvent.click(screen.getByTestId("select-option-Email"));
 
@@ -396,12 +334,7 @@ describe("Records", () => {
       const mockIntent = createMockIntent();
       mockRepository.create.mockResolvedValue(mockIntent);
 
-      render(
-        <Records
-          {...defaultProps}
-          records={{ Bio: "Test bio" }}
-        />,
-      );
+      render(<Records {...defaultProps} records={{ Bio: "Test bio" }} />);
 
       fireEvent.click(screen.getByTestId("select-option-Email"));
 
@@ -420,12 +353,7 @@ describe("Records", () => {
       const mockIntent = createMockIntent();
       mockRepository.create.mockResolvedValue(mockIntent);
 
-      render(
-        <Records
-          {...defaultProps}
-          records={{ Bio: "Test bio" }}
-        />,
-      );
+      render(<Records {...defaultProps} records={{ Bio: "Test bio" }} />);
 
       fireEvent.click(screen.getByTestId("select-option-Email"));
 
@@ -448,12 +376,7 @@ describe("Records", () => {
       const { validateRecordValue } = await import("@/lib/records");
       vi.mocked(validateRecordValue).mockReturnValue("Must be a valid email");
 
-      render(
-        <Records
-          {...defaultProps}
-          records={{ Bio: "Test bio" }}
-        />,
-      );
+      render(<Records {...defaultProps} records={{ Bio: "Test bio" }} />);
 
       fireEvent.click(screen.getByTestId("select-option-Email"));
 
@@ -473,12 +396,7 @@ describe("Records", () => {
       const { validateRecordValue } = await import("@/lib/records");
       vi.mocked(validateRecordValue).mockReturnValue("Must be a valid email");
 
-      render(
-        <Records
-          {...defaultProps}
-          records={{ Bio: "Test bio" }}
-        />,
-      );
+      render(<Records {...defaultProps} records={{ Bio: "Test bio" }} />);
 
       fireEvent.click(screen.getByTestId("select-option-Email"));
 
@@ -498,12 +416,7 @@ describe("Records", () => {
       const { validateRecordValue } = await import("@/lib/records");
       vi.mocked(validateRecordValue).mockReturnValue("Must be a valid email");
 
-      render(
-        <Records
-          {...defaultProps}
-          records={{ Bio: "Test bio" }}
-        />,
-      );
+      render(<Records {...defaultProps} records={{ Bio: "Test bio" }} />);
 
       fireEvent.click(screen.getByTestId("select-option-Email"));
 
@@ -530,12 +443,7 @@ describe("Records", () => {
       const { validateRecordValue } = await import("@/lib/records");
       vi.mocked(validateRecordValue).mockReturnValue("Must be a valid email");
 
-      render(
-        <Records
-          {...defaultProps}
-          records={{ Bio: "Test bio" }}
-        />,
-      );
+      render(<Records {...defaultProps} records={{ Bio: "Test bio" }} />);
 
       fireEvent.click(screen.getByTestId("select-option-Email"));
 
@@ -586,12 +494,7 @@ describe("Records", () => {
         Avatar: "https://avatar.example.com",
         Main: "main value",
       };
-      render(
-        <Records
-          {...defaultProps}
-          records={allRecords}
-        />,
-      );
+      render(<Records {...defaultProps} records={allRecords} />);
       expect(screen.queryByText("Add record")).toBeNull();
     });
   });
@@ -601,12 +504,7 @@ describe("Records", () => {
       const { validateRecordValue } = await import("@/lib/records");
       vi.mocked(validateRecordValue).mockReturnValue("Value is required");
 
-      render(
-        <Records
-          {...defaultProps}
-          records={{ Bio: "Test bio" }}
-        />,
-      );
+      render(<Records {...defaultProps} records={{ Bio: "Test bio" }} />);
 
       fireEvent.click(screen.getByTestId("select-option-Email"));
 
@@ -626,12 +524,7 @@ describe("Records", () => {
       const { validateRecordValue } = await import("@/lib/records");
       vi.mocked(validateRecordValue).mockReturnValue("Max 64 characters");
 
-      render(
-        <Records
-          {...defaultProps}
-          records={{ Bio: "Test bio" }}
-        />,
-      );
+      render(<Records {...defaultProps} records={{ Bio: "Test bio" }} />);
 
       fireEvent.click(screen.getByTestId("select-option-Email"));
 
@@ -651,12 +544,7 @@ describe("Records", () => {
       const { validateRecordValue } = await import("@/lib/records");
       vi.mocked(validateRecordValue).mockReturnValue("Must be a valid URL");
 
-      render(
-        <Records
-          {...defaultProps}
-          records={{ Bio: "Test bio" }}
-        />,
-      );
+      render(<Records {...defaultProps} records={{ Bio: "Test bio" }} />);
 
       fireEvent.click(screen.getByTestId("select-option-Uri"));
 
@@ -676,12 +564,7 @@ describe("Records", () => {
       const { validateRecordValue } = await import("@/lib/records");
       vi.mocked(validateRecordValue).mockReturnValue("Must be a number");
 
-      render(
-        <Records
-          {...defaultProps}
-          records={{ Bio: "Test bio" }}
-        />,
-      );
+      render(<Records {...defaultProps} records={{ Bio: "Test bio" }} />);
 
       fireEvent.click(screen.getByTestId("select-option-Price"));
 
@@ -703,12 +586,7 @@ describe("Records", () => {
       const mockIntent = createMockIntent();
       mockRepository.create.mockResolvedValue(mockIntent);
 
-      render(
-        <Records
-          {...defaultProps}
-          records={{ Bio: "Test bio" }}
-        />,
-      );
+      render(<Records {...defaultProps} records={{ Bio: "Test bio" }} />);
 
       fireEvent.click(screen.getByTestId("select-option-Twitter"));
 
@@ -729,12 +607,7 @@ describe("Records", () => {
       const mockIntent = createMockIntent();
       mockRepository.create.mockResolvedValue(mockIntent);
 
-      render(
-        <Records
-          {...defaultProps}
-          records={{ Bio: "Test bio" }}
-        />,
-      );
+      render(<Records {...defaultProps} records={{ Bio: "Test bio" }} />);
 
       fireEvent.click(screen.getByTestId("select-option-Discord"));
 
@@ -755,12 +628,7 @@ describe("Records", () => {
       const mockIntent = createMockIntent();
       mockRepository.create.mockResolvedValue(mockIntent);
 
-      render(
-        <Records
-          {...defaultProps}
-          records={{ Bio: "Test bio" }}
-        />,
-      );
+      render(<Records {...defaultProps} records={{ Bio: "Test bio" }} />);
 
       fireEvent.click(screen.getByTestId("select-option-Uri"));
 
@@ -781,12 +649,7 @@ describe("Records", () => {
       const mockIntent = createMockIntent();
       mockRepository.create.mockResolvedValue(mockIntent);
 
-      render(
-        <Records
-          {...defaultProps}
-          records={{ Bio: "Test bio" }}
-        />,
-      );
+      render(<Records {...defaultProps} records={{ Bio: "Test bio" }} />);
 
       fireEvent.click(screen.getByTestId("select-option-Wallet"));
 

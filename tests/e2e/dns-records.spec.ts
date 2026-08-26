@@ -18,16 +18,8 @@ import {
   executeBlockchainOp,
   gotoAndRestoreWallet,
 } from "./helpers/wallet-helper";
-import {
-  SELECTORS,
-  TEXT,
-  CSS_CLASSES,
-  TEST_DOMAIN_NAME,
-} from "./constants";
-import {
-  navigateToSettingsTab,
-  waitForDomainTitle,
-} from "./fixtures/shared";
+import { SELECTORS, TEXT, CSS_CLASSES, TEST_DOMAIN_NAME } from "./constants";
+import { navigateToSettingsTab, waitForDomainTitle } from "./fixtures/shared";
 
 test.describe("DNS Records Management", () => {
   test.describe.configure({ mode: "serial" });
@@ -109,8 +101,12 @@ test.describe("DNS Records Management", () => {
       const cancelButton = firstRecord.locator(SELECTORS.CANCEL_EDIT);
       await cancelButton.click();
 
-      await expect(firstRecord.locator(SELECTORS.SAVE_RECORD)).not.toBeVisible();
-      await expect(firstRecord.locator(SELECTORS.CANCEL_EDIT)).not.toBeVisible();
+      await expect(
+        firstRecord.locator(SELECTORS.SAVE_RECORD),
+      ).not.toBeVisible();
+      await expect(
+        firstRecord.locator(SELECTORS.CANCEL_EDIT),
+      ).not.toBeVisible();
     });
 
     test("delete record after confirmation", async ({ page }) => {
@@ -170,7 +166,9 @@ test.describe("DNS Records Management", () => {
       const renewButton = page.locator(`button:has-text("${TEXT.RENEW}")`);
       await expect(renewButton).toBeVisible();
 
-      const transferButton = page.locator(`button:has-text("${TEXT.TRANSFER}")`);
+      const transferButton = page.locator(
+        `button:has-text("${TEXT.TRANSFER}")`,
+      );
       await expect(transferButton).toBeVisible();
     });
 

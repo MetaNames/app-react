@@ -37,7 +37,7 @@ export function Chip({
   const content = (
     <span
       className={cn(
-        "inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-sm font-medium cursor-pointer hover:opacity-80 transition-opacity",
+        "inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-sm font-medium cursor-pointer hover:opacity-90 transition-all border border-transparent",
         variantClass,
         className,
       )}
@@ -53,6 +53,11 @@ export function Chip({
           <Copy className="h-3 w-3 opacity-60" />
         )
       ) : null}
+      {copied && (
+        <span role="status" className="sr-only">
+          Copied to the clipboard
+        </span>
+      )}
     </span>
   );
   if (href)

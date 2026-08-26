@@ -74,7 +74,9 @@ test.describe("Record CRUD lifecycle on freshly registered subdomain", () => {
   });
 
   // ── Step 2: Add record ──────────────────────────────────────────────────────
-  test("step 2 — add a record via the domain settings tab", async ({ page }) => {
+  test("step 2 — add a record via the domain settings tab", async ({
+    page,
+  }) => {
     test.skip(!subdomain, "Step 1 (registration) did not complete");
 
     await gotoAndRestoreWallet(page, `/domain/${subdomain}`);
@@ -94,9 +96,7 @@ test.describe("Record CRUD lifecycle on freshly registered subdomain", () => {
 
     // Prefer Bio; fall back to the first available type
     const bioOption = page.locator('[data-testid="select-option-Bio"]');
-    const firstOption = page
-      .locator('[data-testid^="select-option-"]')
-      .first();
+    const firstOption = page.locator('[data-testid^="select-option-"]').first();
     const bioVisible = await bioOption
       .isVisible({ timeout: 2000 })
       .catch(() => false);
@@ -142,9 +142,7 @@ test.describe("Record CRUD lifecycle on freshly registered subdomain", () => {
     await waitForDomainTitle(page, subdomain);
     await navigateToSettingsTab(page);
 
-    const recordContainer = page
-      .locator(CSS_CLASSES.RECORD_CONTAINER)
-      .first();
+    const recordContainer = page.locator(CSS_CLASSES.RECORD_CONTAINER).first();
     await expect(recordContainer).toBeVisible({ timeout: 10000 });
 
     // Enter edit mode
@@ -175,16 +173,16 @@ test.describe("Record CRUD lifecycle on freshly registered subdomain", () => {
   });
 
   // ── Step 4: Delete record ───────────────────────────────────────────────────
-  test("step 4 — delete the record via domain settings tab", async ({ page }) => {
+  test("step 4 — delete the record via domain settings tab", async ({
+    page,
+  }) => {
     test.skip(!subdomain, "Step 1 (registration) did not complete");
 
     await gotoAndRestoreWallet(page, `/domain/${subdomain}`);
     await waitForDomainTitle(page, subdomain);
     await navigateToSettingsTab(page);
 
-    const recordContainer = page
-      .locator(CSS_CLASSES.RECORD_CONTAINER)
-      .first();
+    const recordContainer = page.locator(CSS_CLASSES.RECORD_CONTAINER).first();
     await expect(recordContainer).toBeVisible({ timeout: 10000 });
 
     // Open delete confirmation dialog

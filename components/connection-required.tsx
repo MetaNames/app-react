@@ -15,7 +15,7 @@ export function ConnectionRequired({
     return fallback ? (
       <>{fallback}</>
     ) : (
-      <div className="flex flex-col items-center justify-center py-12 text-center gap-4">
+      <div className="flex flex-col items-center justify-center py-12 text-center gap-4 animate-fade-up">
         <p className="text-muted-foreground text-lg">
           Connect your wallet to continue
         </p>

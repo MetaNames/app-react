@@ -92,13 +92,16 @@ export function WalletConnectButton() {
     return (
       <DropdownMenu open={open} onOpenChange={setOpen}>
         <DropdownMenuTrigger
-          className="gap-2 border border-input bg-background hover:bg-accent hover:text-accent-foreground rounded-lg px-3 py-2 text-sm font-medium"
+          className="gap-2 border border-primary/40 bg-primary/10 hover:bg-primary/20 text-foreground rounded-xl px-3 py-2 text-sm font-medium transition-colors"
           data-testid="wallet-connected"
         >
           <Wallet className="h-4 w-4" />
           {shortenAddress(address)}
         </DropdownMenuTrigger>
-        <DropdownMenuContent align="end">
+        <DropdownMenuContent
+          align="end"
+          className="glass-panel border-border/60"
+        >
           <DropdownMenuItem
             onClick={handleDisconnect}
             className="gap-2 text-destructive"
@@ -113,12 +116,15 @@ export function WalletConnectButton() {
   return (
     <DropdownMenu open={open} onOpenChange={setOpen}>
       <DropdownMenuTrigger
-        className="inline-flex items-center justify-center gap-2 bg-primary text-primary-foreground hover:bg-primary/90 rounded-lg px-3 py-2 text-sm font-medium"
+        className="inline-flex items-center justify-center gap-2 bg-primary text-primary-foreground hover:bg-primary/90 rounded-xl px-4 py-2 text-sm font-semibold shadow-[0_0_20px_var(--glow)] hover:shadow-[0_0_32px_var(--glow)] transition-shadow"
         data-testid="wallet-connect-button"
       >
         <Wallet className="h-4 w-4 shrink-0" /> Connect
       </DropdownMenuTrigger>
-      <DropdownMenuContent align="end" className="w-64">
+      <DropdownMenuContent
+        align="end"
+        className="w-64 glass-panel border-border/60"
+      >
         <DropdownMenuItem onClick={handleMetaMask}>
           MetaMask Wallet
         </DropdownMenuItem>

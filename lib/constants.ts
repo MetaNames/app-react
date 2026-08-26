@@ -66,4 +66,3 @@ export const RECORD_CLASS_MAP: Record<
     value: 8,
   },
 };
-

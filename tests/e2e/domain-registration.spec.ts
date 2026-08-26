@@ -17,7 +17,11 @@ import {
   PLACEHOLDERS,
   VISIBILITY_TIMEOUT_MS,
 } from "./constants";
-import { generateTestDomain, waitForDomainTitle, waitForDropdown } from "./fixtures/shared";
+import {
+  generateTestDomain,
+  waitForDomainTitle,
+  waitForDropdown,
+} from "./fixtures/shared";
 
 test.describe("Domain Registration", () => {
   // Disconnected-state tests: navigate directly without connecting wallet
@@ -29,8 +33,12 @@ test.describe("Domain Registration", () => {
       await page.goto(`/register/${testDomain}`);
 
       const connectPrompt = page.getByText(TEXT.CONNECT_WALLET_PROMPT);
-      const connectButton = page.locator('[data-testid="wallet-connect-button"]');
-      const isPromptVisible = await connectPrompt.isVisible().catch(() => false);
+      const connectButton = page.locator(
+        '[data-testid="wallet-connect-button"]',
+      );
+      const isPromptVisible = await connectPrompt
+        .isVisible()
+        .catch(() => false);
       const isButtonVisible = await connectButton
         .isVisible()
         .catch(() => false);
@@ -80,7 +88,9 @@ test.describe("Domain Registration", () => {
       const heading = page.locator(`h2:has-text("Register ${testDomain}")`);
       await expect(heading).toBeVisible({ timeout: 10000 });
 
-      const checkoutContent = page.locator(CSS_CLASSES.CONTENT_CHECKOUT).first();
+      const checkoutContent = page
+        .locator(CSS_CLASSES.CONTENT_CHECKOUT)
+        .first();
       await expect(checkoutContent).toBeVisible();
     });
 
@@ -300,7 +310,9 @@ test.describe("Domain Registration", () => {
       await page.getByRole("option", { name: "TEST_COIN" }).click();
 
       // Wait for fees to load with the selected coin before proceeding
-      await expect(page.getByText(/1 year registration/)).toBeVisible({ timeout: 15000 });
+      await expect(page.getByText(/1 year registration/)).toBeVisible({
+        timeout: 15000,
+      });
 
       // ── Step 1: Approve fees ──────────────────────────────────────────────
       const approveBtn = page.locator(SELECTORS.APPROVE_FEES);
@@ -314,7 +326,7 @@ test.describe("Domain Registration", () => {
         await page
           .locator('[data-testid="approve-fees"]:has-text("Approving...")')
           .waitFor({ state: "visible", timeout: 10000 })
-          .catch(() => { });
+          .catch(() => {});
 
         // Wait until fees are confirmed (button text changes to "Fees approved ✓")
         await expect(approveBtn).toHaveText("Fees approved ✓", {
@@ -339,13 +351,12 @@ test.describe("Domain Registration", () => {
         await page
           .locator(`button:has-text("Registering...")`)
           .waitFor({ state: "visible", timeout: 10000 })
-          .catch(() => { });
+          .catch(() => {});
 
         // Wait for redirect to the newly created domain page
-        await expect(page).toHaveURL(
-          new RegExp(`/domain/${label}\\.mpc`),
-          { timeout: 120000 },
-        );
+        await expect(page).toHaveURL(new RegExp(`/domain/${label}\\.mpc`), {
+          timeout: 120000,
+        });
       }, "Domain registration failed");
 
       if (!registerResult.success) {

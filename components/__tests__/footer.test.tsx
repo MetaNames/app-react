@@ -26,7 +26,7 @@ describe("Footer", () => {
       const footer = document.querySelector("footer");
       expect(footer).toHaveClass(
         "border-t",
-        "border-border",
+        "border-border/60",
         "mt-auto",
         "py-6",
       );
@@ -129,11 +129,11 @@ describe("Footer", () => {
   });
 
   describe("styling", () => {
-    it("links have text-sm class", () => {
+    it("links have text-xs class", () => {
       render(<Footer />);
       const links = screen.getAllByRole("link");
       links.forEach((link) => {
-        expect(link).toHaveClass("text-sm");
+        expect(link).toHaveClass("text-xs");
       });
     });
 
@@ -149,7 +149,7 @@ describe("Footer", () => {
       render(<Footer />);
       const links = screen.getAllByRole("link");
       links.forEach((link) => {
-        expect(link).toHaveClass("hover:text-foreground", "transition-colors");
+        expect(link).toHaveClass("hover:text-primary", "transition-colors");
       });
     });
   });

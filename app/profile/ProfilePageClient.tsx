@@ -57,9 +57,9 @@ export function ProfilePageClient() {
     );
 
   return (
-    <div className="flex flex-col gap-8">
+    <div className="spotlight-beam flex flex-col gap-8 w-full relative z-10 animate-fade-up">
       <div className="flex items-center gap-4">
-        <h1 className="text-3xl font-bold">Profile</h1>
+        <h1 className="text-4xl font-extrabold tracking-tight">Profile</h1>
         <Chip
           label="address"
           value={address}

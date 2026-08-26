@@ -94,7 +94,10 @@ vi.mock("@/lib/stores/record-store", () => ({
 
 const createMockIntent = () => ({
   transactionHash: "mock-tx-hash",
-  fetchResult: Promise.resolve({ transactionHash: "mock-tx-hash", hasError: false }),
+  fetchResult: Promise.resolve({
+    transactionHash: "mock-tx-hash",
+    hasError: false,
+  }),
 });
 
 const defaultProps = {
