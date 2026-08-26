@@ -1,26 +1,17 @@
 import { NextResponse } from "next/server";
-import { MetaNamesSdk, Enviroment } from "@metanames/sdk";
-import type { Domain } from "@metanames/sdk/dist/models/domain";
+import { getServerSdk } from "@/lib/sdk";
+import { handleError } from "@/lib/server-error";
+import { getRecentDomains } from "../_lib";
+
+// Mirrors legacy's /api/domains/recent (app-legacy/src/routes/api/domains/recent/+server.ts):
+// {name, createdAt} projection, count of 12 (not 10), and a private
+// `max-age=600` cache header (not a shared `s-maxage`).
 export async function GET() {
-  try {
-    const sdk = new MetaNamesSdk(
-      process.env.NEXT_PUBLIC_ENV !== "prod"
-        ? Enviroment.testnet
-        : Enviroment.mainnet,
-    );
-    const all = await sdk.domainRepository.getAll();
-    const recent = all
-      ? [...all]
-          .sort(
-            (a: Domain, b: Domain) =>
-              new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime(),
-          )
-          .slice(0, 10)
-      : [];
-    return NextResponse.json(recent, {
-      headers: { "Cache-Control": "public, s-maxage=600" },
+  return handleError(async () => {
+    const recentDomains = await getRecentDomains(getServerSdk());
+
+    return NextResponse.json(recentDomains, {
+      headers: { "Cache-Control": "max-age=600, public" },
     });
-  } catch {
-    return NextResponse.json([]);
-  }
+  });
 }

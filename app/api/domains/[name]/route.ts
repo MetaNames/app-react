@@ -1,29 +1,23 @@
 import { NextRequest, NextResponse } from "next/server";
-import { MetaNamesSdk, Enviroment } from "@metanames/sdk";
-function getSdk() {
-  const isTestnet = process.env.NEXT_PUBLIC_ENV !== "prod";
-  const sdk = new MetaNamesSdk(
-    isTestnet ? Enviroment.testnet : Enviroment.mainnet,
-  );
-  return sdk;
-}
+import { getServerSdk } from "@/lib/sdk";
+import { handleError } from "@/lib/server-error";
+
+// Mirrors legacy's /api/domains/[name] (app-legacy/src/routes/api/domains/[name]/+server.ts):
+// the name is passed straight to domainRepository.find with no ".mpc"
+// auto-append. Every caller (lib/domain-validator.ts's normalizeDomain)
+// already appends ".mpc" before hitting this route, so removing the
+// route-level append changes nothing for real requests.
 export async function GET(
   _req: NextRequest,
   { params }: { params: Promise<{ name: string }> },
 ) {
   const { name } = await params;
-  try {
-    const sdk = getSdk();
-    const domainName = name.endsWith(".mpc") ? name : `${name}.mpc`;
-    const domain = await sdk.domainRepository.find(domainName);
+
+  return handleError(async () => {
+    const domain = await getServerSdk().domainRepository.find(name);
+
     return NextResponse.json({
       domain: domain ? JSON.parse(JSON.stringify(domain)) : null,
     });
-  } catch (e) {
-    console.error("Error fetching domain:", e);
-    return NextResponse.json(
-      { domain: null, error: "Failed to fetch domain" },
-      { status: 500 },
-    );
-  }
+  });
 }

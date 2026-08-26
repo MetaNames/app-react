@@ -1,45 +1,27 @@
 import { NextResponse } from "next/server";
-import { MetaNamesSdk, Enviroment } from "@metanames/sdk";
-import type { Domain } from "@metanames/sdk/dist/models/domain";
+import { getServerSdk } from "@/lib/sdk";
+import { handleError } from "@/lib/server-error";
+import { getRecentDomains } from "../_lib";
+
+// Mirrors legacy's getStats() (app-legacy/src/lib/server/index.ts): dedicated
+// count()/getOwners() SDK reads run concurrently with the recent-domains
+// projection, rather than deriving both from a full getAll() scan. Unlike
+// getRecentDomains (which swallows its own getAll() failure), count()/
+// getOwners() failures are left to propagate to handleError so a genuine
+// backend outage surfaces as a 500 instead of a 200 with zeroed-out stats.
 export async function GET() {
-  try {
-    const sdk = new MetaNamesSdk(
-      process.env.NEXT_PUBLIC_ENV !== "prod"
-        ? Enviroment.testnet
-        : Enviroment.mainnet,
-    );
-    let domainCount = 0,
-      ownerCount = 0,
-      recentDomains: Domain[] = [];
-    try {
-      const domains = await sdk.domainRepository.getAll();
-      if (domains) {
-        domainCount = domains.length;
-        ownerCount = new Set(domains.map((d: Domain) => d.owner)).size;
-        recentDomains = [...domains]
-          .sort(
-            (a: Domain, b: Domain) =>
-              new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime(),
-          )
-          .slice(0, 5);
-      }
-    } catch (e) {
-      console.error("Error fetching domains:", e);
-    }
+  return handleError(async () => {
+    const sdk = getServerSdk();
+
+    const [domainCount, ownerCount, recentDomains] = await Promise.all([
+      sdk.domainRepository.count(),
+      sdk.domainRepository.getOwners().then((owners) => owners.length),
+      getRecentDomains(sdk),
+    ]);
+
     return NextResponse.json(
-      { domainCount, ownerCount, recentDomains, error: null },
-      { headers: { "Cache-Control": "public, s-maxage=600" } },
+      { domainCount, ownerCount, recentDomains },
+      { headers: { "Cache-Control": "max-age=600" } },
     );
-  } catch (e) {
-    console.error("Error in stats route:", e);
-    return NextResponse.json(
-      {
-        domainCount: 0,
-        ownerCount: 0,
-        recentDomains: [],
-        error: "Failed to fetch stats",
-      },
-      { status: 500 },
-    );
-  }
+  });
 }

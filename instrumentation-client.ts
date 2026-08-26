@@ -1,11 +1,11 @@
 import * as Sentry from "@sentry/nextjs";
+import { config } from "@/lib/config";
 
-const dsn = process.env.NEXT_PUBLIC_SENTRY_DSN;
-if (dsn) {
+if (config.sentryDsn) {
   Sentry.init({
-    dsn,
-    environment: process.env.NEXT_PUBLIC_ENV === "prod" ? "prod" : "test",
-    tracesSampleRate: process.env.NEXT_PUBLIC_ENV === "prod" ? 0.1 : 1.0,
+    dsn: config.sentryDsn,
+    environment: config.environment,
+    tracesSampleRate: config.sentryTracesSampleRate,
   });
 }
 
