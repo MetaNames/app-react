@@ -66,26 +66,31 @@ export function DomainStats() {
     return null;
 
   return (
-    <div
-      className="flex justify-center gap-12 animate-fade-up"
+    <dl
+      className="glass-panel flex items-stretch rounded-2xl px-2 animate-fade-up"
       aria-label="Network statistics"
     >
-      <div className="text-center">
-        <div className="text-2xl font-extrabold text-primary">
-          {formatCount(domains)}
-        </div>
-        <div className="text-[10px] tracking-[0.2em] text-muted-foreground">
+      {/*
+        `dt` precedes `dd` in the DOM to stay valid description-list markup;
+        `flex-col-reverse` puts the figure above its label visually.
+      */}
+      <div className="flex flex-col-reverse items-center px-8 py-4">
+        <dt className="text-[10px] tracking-[0.2em] text-muted-foreground">
           DOMAINS
-        </div>
+        </dt>
+        <dd className="text-2xl font-extrabold text-primary-glow tabular-nums">
+          {formatCount(domains)}
+        </dd>
       </div>
-      <div className="text-center">
-        <div className="text-2xl font-extrabold text-primary">
-          {formatCount(owners)}
-        </div>
-        <div className="text-[10px] tracking-[0.2em] text-muted-foreground">
+      <div className="w-px my-4 bg-border/60" aria-hidden="true" />
+      <div className="flex flex-col-reverse items-center px-8 py-4">
+        <dt className="text-[10px] tracking-[0.2em] text-muted-foreground">
           OWNERS
-        </div>
+        </dt>
+        <dd className="text-2xl font-extrabold text-primary-glow tabular-nums">
+          {formatCount(owners)}
+        </dd>
       </div>
-    </div>
+    </dl>
   );
 }
