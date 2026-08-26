@@ -16,10 +16,10 @@ test.describe("Domain Transfer", () => {
     });
 
     test("should display transfer page with all elements", async ({ page }) => {
-      const heading = page.locator(`h2:has-text("${TEXT.TRANSFER_HEADING}")`);
+      const heading = page.locator(`h1:has-text("${TEXT.TRANSFER_HEADING}")`);
       await expect(heading).toBeVisible();
 
-      const domainName = page.locator(`h4:has-text("${TEST_DOMAIN_NAME}")`);
+      const domainName = page.locator(`h2:has-text("${TEST_DOMAIN_NAME}")`);
       await expect(domainName).toBeVisible();
 
       const warningDiv = page.locator(CSS_CLASSES.WARNING_DIV);

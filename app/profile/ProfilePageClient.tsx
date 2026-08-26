@@ -41,7 +41,7 @@ export function ProfilePageClient() {
   }, [address, metaNamesSdk]);
 
   useEffect(() => {
-    handleLoadDomains();
+    queueMicrotask(handleLoadDomains);
   }, [address, metaNamesSdk, handleLoadDomains]);
 
   if (!address)

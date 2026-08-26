@@ -11,7 +11,6 @@
  */
 
 import { Page, expect } from "@playwright/test";
-import { log } from "console";
 
 // Get the testnet private key from environment
 export const getTestPrivateKey = (): string => {

@@ -27,7 +27,9 @@ test.describe("User Profile", () => {
       const profileHeading = page.locator(
         `h1:has-text("${TEXT.PROFILE_HEADING}")`,
       );
-      await expect(profileHeading).not.toBeVisible();
+      // Design intentionally renders an sr-only <h1> landmark for screen readers
+      // even in the disconnected state; it must stay visually hidden.
+      await expect(profileHeading).toHaveClass(/sr-only/);
     });
 
     test("should not show Domains heading when disconnected", async ({

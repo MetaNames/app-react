@@ -134,7 +134,7 @@ export const CSS_CLASSES = {
   AVATAR: ".avatar svg",
   ANIMATE_SPIN: ".animate-spin",
   CONTENT_CHECKOUT: ".content.checkout",
-  WARNING_DIV: ".bg-muted.rounded-lg",
+  WARNING_DIV: ".border-destructive\\/30",
   RECORD_CONTAINER: ".record-container",
   PROFILE_CHIPS: ".flex.flex-wrap.gap-2",
   RECORDS_SECTION: ".records",

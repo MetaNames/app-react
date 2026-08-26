@@ -85,7 +85,7 @@ test.describe("Domain Registration", () => {
       const testDomain = generateTestDomain("checkout");
       await page.goto(`/register/${testDomain}`);
 
-      const heading = page.locator(`h2:has-text("Register ${testDomain}")`);
+      const heading = page.locator(`h1:has-text("Register ${testDomain}")`);
       await expect(heading).toBeVisible({ timeout: 10000 });
 
       const checkoutContent = page

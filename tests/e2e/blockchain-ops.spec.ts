@@ -15,19 +15,8 @@ import {
   TEST_DOMAIN,
   gotoAndRestoreWallet,
 } from "./helpers/wallet-helper";
-import {
-  SELECTORS,
-  TEXT,
-  CSS_CLASSES,
-  TEST_DOMAIN_NAME,
-  VISIBILITY_TIMEOUT_MS,
-  DROPDOWN_TIMEOUT_MS,
-} from "./constants";
-import {
-  navigateToSettingsTab,
-  waitForDropdown,
-  waitForDomainTitle,
-} from "./fixtures/shared";
+import { SELECTORS, CSS_CLASSES, TEST_DOMAIN_NAME } from "./constants";
+import { navigateToSettingsTab, waitForDomainTitle } from "./fixtures/shared";
 import { RegisterPage } from "./pages/RegisterPage";
 
 // Disconnected-state tests: must run BEFORE any wallet connection (no beforeEach here)
