@@ -56,7 +56,7 @@ export function RegisterPageClient({ name }: { name: string }) {
     );
 
   return (
-    <div className="flex flex-col items-start gap-6 content checkout">
+    <div className="flex flex-col items-center gap-6 content checkout max-w-2xl mx-auto px-4">
       <h2 className="text-2xl font-bold">Register {domainName}</h2>
       {status === "subdomain" && parent ? (
         <SubdomainRegistration domain={domainName} parentDomain={parent} />
