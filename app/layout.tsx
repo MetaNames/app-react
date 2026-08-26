@@ -6,6 +6,8 @@ import { Header } from "@/components/header";
 import { Footer } from "@/components/footer";
 import { Alert, AlertDescription } from "@/components/ui/alert";
 import { config } from "@/lib/config";
+import { Analytics } from "@vercel/analytics/next";
+import { SpeedInsights } from "@vercel/speed-insights/next";
 
 const geistSans = Geist({
   subsets: ["latin"],
@@ -17,9 +19,22 @@ const geistMono = Geist_Mono({
   variable: "--font-mono",
 });
 
+const websiteUrl = config.websiteUrl ?? "https://app.metanames.app/";
+
 export const metadata: Metadata = {
-  title: "MetaNames – .mpc Domain Name Service",
+  metadataBase: new URL(websiteUrl),
+  title: {
+    default: "MetaNames – .mpc Domain Name Service",
+    template: "%s | MetaNames",
+  },
   description: "Register and manage .mpc domains on Partisia Blockchain",
+  openGraph: {
+    title: "MetaNames – .mpc Domain Name Service",
+    description: "Register and manage .mpc domains on Partisia Blockchain",
+    url: websiteUrl,
+    siteName: "MetaNames",
+    type: "website",
+  },
 };
 
 export default function RootLayout({
@@ -30,8 +45,8 @@ export default function RootLayout({
   return (
     <html
       lang="en"
-      suppressHydrationWarning
-      className={`${geistSans.variable} ${geistMono.variable}`}
+      className={`dark ${geistSans.variable} ${geistMono.variable}`}
+      style={{ colorScheme: "dark" }}
     >
       <body>
         <a
@@ -42,7 +57,7 @@ export default function RootLayout({
         </a>
         <Providers>
           {config.contractDisabled && (
-            <Alert className="rounded-none border-x-0 border-t-0 bg-yellow-50 dark:bg-yellow-900/20">
+            <Alert className="rounded-none border-x-0 border-t-0 bg-destructive/15 text-foreground border-destructive/40">
               <AlertDescription className="flex items-center justify-between max-w-5xl mx-auto w-full">
                 <span>Contract is temporarily disabled for updates</span>
                 <a
@@ -65,6 +80,8 @@ export default function RootLayout({
           </main>
           <Footer />
         </Providers>
+        <Analytics />
+        <SpeedInsights />
       </body>
     </html>
   );

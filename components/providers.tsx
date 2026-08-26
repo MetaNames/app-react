@@ -1,6 +1,5 @@
 "use client";
 import { useEffect, useRef, memo } from "react";
-import { ThemeProvider } from "next-themes";
 import { Toaster } from "@/components/ui/sonner";
 import { toast } from "sonner";
 import { useSdkStore } from "@/lib/stores/sdk-store";
@@ -48,13 +47,11 @@ const AlertWatcher = memo(function AlertWatcher() {
 
 export function Providers({ children }: { children: React.ReactNode }) {
   return (
-    <ThemeProvider attribute="class" defaultTheme="system" enableSystem>
-      <div className="flex flex-col min-h-screen">
-        <SdkInitializer />
-        <AlertWatcher />
-        {children}
-        <Toaster />
-      </div>
-    </ThemeProvider>
+    <div className="flex flex-col min-h-screen">
+      <SdkInitializer />
+      <AlertWatcher />
+      {children}
+      <Toaster />
+    </div>
   );
 }
