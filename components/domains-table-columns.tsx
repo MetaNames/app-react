@@ -33,10 +33,7 @@ export function domainsTableColumns(): ColumnDef<Domain>[] {
       accessorKey: "name",
       // Ported from legacy's compareByKey (lib/sort.ts): locale compare.
       sortingFn: (rowA, rowB) =>
-        compareByKey<Domain>("name", "ascending")(
-          rowA.original,
-          rowB.original,
-        ),
+        compareByKey<Domain>("name", "ascending")(rowA.original, rowB.original),
       header: ({ column }) => (
         <Button
           variant="ghost"

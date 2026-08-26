@@ -22,7 +22,9 @@ describe("lib/server-error handleError", () => {
 
   it("answers an unexpected Error with a generic 500, hides the message, and reports to Sentry", async () => {
     const Sentry = await import("@sentry/nextjs");
-    const consoleError = vi.spyOn(console, "error").mockImplementation(() => {});
+    const consoleError = vi
+      .spyOn(console, "error")
+      .mockImplementation(() => {});
     const { handleError } = await import("../server-error");
     const fn = vi.fn().mockRejectedValue(new Error("secret internal detail"));
 
@@ -39,7 +41,9 @@ describe("lib/server-error handleError", () => {
   });
 
   it("answers a non-Error rejection with the same generic 500", async () => {
-    const consoleError = vi.spyOn(console, "error").mockImplementation(() => {});
+    const consoleError = vi
+      .spyOn(console, "error")
+      .mockImplementation(() => {});
     const { handleError } = await import("../server-error");
     const fn = vi.fn().mockRejectedValue("String error");
 
@@ -52,7 +56,9 @@ describe("lib/server-error handleError", () => {
   });
 
   it("passes through the status and client-safe message of an HttpError-shaped rejection", async () => {
-    const consoleError = vi.spyOn(console, "error").mockImplementation(() => {});
+    const consoleError = vi
+      .spyOn(console, "error")
+      .mockImplementation(() => {});
     const { handleError } = await import("../server-error");
     const fn = vi.fn().mockRejectedValue(
       Object.assign(new Error("Domain not found"), {

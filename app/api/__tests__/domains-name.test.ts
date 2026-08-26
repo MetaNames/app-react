@@ -29,7 +29,10 @@ describe("GET /api/domains/[name]", () => {
   });
 
   it("returns the found domain", async () => {
-    domainRepository.find.mockResolvedValue({ name: "alice.mpc", owner: "0x1" });
+    domainRepository.find.mockResolvedValue({
+      name: "alice.mpc",
+      owner: "0x1",
+    });
 
     const { GET } = await import("../domains/[name]/route");
     const req = new NextRequest("http://localhost:3000/api/domains/alice.mpc");
@@ -42,12 +45,16 @@ describe("GET /api/domains/[name]", () => {
   });
 
   it("returns a generic 500 (no leaked error message) when find() throws", async () => {
-    const consoleError = vi.spyOn(console, "error").mockImplementation(() => {});
+    const consoleError = vi
+      .spyOn(console, "error")
+      .mockImplementation(() => {});
     domainRepository.find.mockRejectedValue(new Error("secret rpc detail"));
 
     const { GET } = await import("../domains/[name]/route");
     const req = new NextRequest("http://localhost:3000/api/domains/alice");
-    const response = await GET(req, { params: Promise.resolve({ name: "alice" }) });
+    const response = await GET(req, {
+      params: Promise.resolve({ name: "alice" }),
+    });
     const json = await response.json();
 
     expect(response.status).toBe(500);

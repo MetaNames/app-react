@@ -16,7 +16,9 @@ vi.mock("@/lib/sdk", () => ({
 
 async function callCheck(name: string) {
   const { GET } = await import("../domains/[name]/check/route");
-  const req = new NextRequest(`http://localhost:3000/api/domains/${name}/check`);
+  const req = new NextRequest(
+    `http://localhost:3000/api/domains/${name}/check`,
+  );
   const response = await GET(req, { params: Promise.resolve({ name }) });
   return { response, json: await response.json() };
 }
@@ -27,7 +29,10 @@ describe("GET /api/domains/[name]/check", () => {
   });
 
   it("passes the name straight through, without appending .mpc", async () => {
-    domainRepository.analyze.mockReturnValue({ parentId: undefined, tld: "mpc" });
+    domainRepository.analyze.mockReturnValue({
+      parentId: undefined,
+      tld: "mpc",
+    });
     domainRepository.find.mockResolvedValue(null);
 
     await callCheck("alice");
@@ -36,7 +41,10 @@ describe("GET /api/domains/[name]/check", () => {
   });
 
   it("uses analyze() for parent resolution instead of hand-splitting on '.'", async () => {
-    domainRepository.analyze.mockReturnValue({ parentId: "bob.mpc", tld: "mpc" });
+    domainRepository.analyze.mockReturnValue({
+      parentId: "bob.mpc",
+      tld: "mpc",
+    });
     domainRepository.find
       .mockResolvedValueOnce(null) // sub.bob.mpc not found
       .mockResolvedValueOnce({ name: "bob.mpc" }); // parent found
@@ -49,7 +57,10 @@ describe("GET /api/domains/[name]/check", () => {
   });
 
   it("skips the parent lookup once the domain itself is found", async () => {
-    domainRepository.analyze.mockReturnValue({ parentId: "bob.mpc", tld: "mpc" });
+    domainRepository.analyze.mockReturnValue({
+      parentId: "bob.mpc",
+      tld: "mpc",
+    });
     domainRepository.find.mockResolvedValueOnce({ name: "sub.bob.mpc" });
 
     const { json } = await callCheck("sub.bob.mpc");
@@ -69,8 +80,13 @@ describe("GET /api/domains/[name]/check", () => {
   });
 
   it("returns a generic 500 when the lookup throws", async () => {
-    const consoleError = vi.spyOn(console, "error").mockImplementation(() => {});
-    domainRepository.analyze.mockReturnValue({ parentId: undefined, tld: "mpc" });
+    const consoleError = vi
+      .spyOn(console, "error")
+      .mockImplementation(() => {});
+    domainRepository.analyze.mockReturnValue({
+      parentId: undefined,
+      tld: "mpc",
+    });
     domainRepository.find.mockRejectedValue(new Error("secret rpc detail"));
 
     const { response, json } = await callCheck("alice");
