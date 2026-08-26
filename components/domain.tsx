@@ -1,5 +1,5 @@
 "use client";
-import { useCallback, useEffect, useMemo, useState } from "react";
+import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { JdenticonAvatar } from "@/components/domain-avatar";
 import { DetailsContent } from "@/components/domain-details";
@@ -16,24 +16,17 @@ import {
 import { createRecordRepository } from "@/lib/records";
 import { useRouter } from "next/navigation";
 import { formatDate } from "@/lib/utils";
+// Legacy surfaces expiry only as a plain date. Flagging the last month before
+// expiry gives the owner a chance to act while renewal is still possible,
+// which is the whole point of showing the date at all. The threshold is shared
+// with the profile table so the two views cannot disagree.
+import { expiryStatus, needsAttention } from "@/lib/expiry";
 import { AlertTriangle, Check, Copy } from "lucide-react";
 
 interface DomainProps {
   domain: DomainType;
   isTld?: boolean;
   onUpdate?: () => void;
-}
-
-// Legacy surfaces expiry only as a plain date. Flagging the last month before
-// expiry gives the owner a chance to act while renewal is still possible,
-// which is the whole point of showing the date at all.
-const EXPIRY_WARNING_DAYS = 30;
-
-function daysUntil(date: Date | null): number | null {
-  if (!date) return null;
-  const ms = new Date(date).getTime() - Date.now();
-  if (Number.isNaN(ms)) return null;
-  return Math.ceil(ms / 86_400_000);
 }
 
 export function Domain({ domain, isTld = false, onUpdate }: DomainProps) {
@@ -75,10 +68,21 @@ export function Domain({ domain, isTld = false, onUpdate }: DomainProps) {
     router.push(`/domain/${domain.name}/transfer`);
   }, [domain.name, router]);
 
+  // The reset timer is held so navigating away mid-countdown does not leave a
+  // pending setState on an unmounted component.
+  const copyResetTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
+  useEffect(
+    () => () => {
+      if (copyResetTimer.current) clearTimeout(copyResetTimer.current);
+    },
+    [],
+  );
+
   const handleCopyName = useCallback(async () => {
     await navigator.clipboard.writeText(domain.name);
     setCopied(true);
-    setTimeout(() => setCopied(false), 1500);
+    if (copyResetTimer.current) clearTimeout(copyResetTimer.current);
+    copyResetTimer.current = setTimeout(() => setCopied(false), 1500);
   }, [domain.name]);
 
   const profileRecords = PROFILE_RECORD_TYPES.filter(
@@ -86,11 +90,12 @@ export function Domain({ domain, isTld = false, onUpdate }: DomainProps) {
   );
   const socialRecords = SOCIAL_RECORD_TYPES.filter((t) => domain.records?.[t]);
 
-  const expiryDays = useMemo(
-    () => (isTld ? null : daysUntil(domain.expiresAt)),
+  const expiry = useMemo(
+    () => expiryStatus(isTld ? null : domain.expiresAt),
     [domain.expiresAt, isTld],
   );
-  const expiringSoon = expiryDays !== null && expiryDays <= EXPIRY_WARNING_DAYS;
+  const expiryDays = expiry.days;
+  const expiringSoon = needsAttention(expiry);
 
   const TitleTag = isTld ? "h2" : "h1";
 
