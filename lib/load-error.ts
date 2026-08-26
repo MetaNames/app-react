@@ -37,7 +37,7 @@ export async function loadOrReport<T>(
 
 /**
  * Shape shared by this app's `{ data, error }`-returning API helpers
- * (see `lib/api.ts`'s `checkDomain`, `fetchDomain`, ...).
+ * (see `lib/api.ts`'s `checkDomain`).
  */
 export interface DataOrError<T> {
   data: T | null;
@@ -49,6 +49,13 @@ export interface DataOrError<T> {
  * present `error` (or a missing `data`) as a failed load rather than a
  * usable negative result. This is what closes the "API error silently
  * treated as an available domain" gap.
+ *
+ * Only use this with helpers whose `data` is absent *only* on failure. A
+ * helper that returns `data: null` to mean a legitimate negative result
+ * (`lib/api.ts`'s `fetchDomain` returns null for a domain that simply does
+ * not exist) would be misreported here as a failed load — which is the exact
+ * confusion this module exists to prevent. Use `loadOrReport` and an explicit
+ * null check for those.
  */
 export function resultOrReport<T>(
   response: DataOrError<T>,

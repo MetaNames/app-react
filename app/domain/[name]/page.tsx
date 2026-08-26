@@ -37,7 +37,9 @@ async function DomainPageContent({ domainName }: { domainName: string }) {
   }
 
   if (!result.value) {
-    const registerDomain = domainName.replace(".mpc", "");
+    // Anchored: an unanchored replace would strip the first ".mpc" it
+    // finds rather than the suffix.
+    const registerDomain = domainName.replace(/\.mpc$/, "");
     redirect(`/register/${registerDomain}`);
   }
 
