@@ -196,6 +196,38 @@ describe("LoadingButton", () => {
       expect(onClick).toHaveBeenCalledTimes(1);
     });
 
+    it("does not show the success state when onClick rejects", async () => {
+      const onClick = vi.fn().mockRejectedValue(new Error("tx reverted"));
+      render(<LoadingButton onClick={onClick}>Submit</LoadingButton>);
+
+      const button = screen.getByRole("button");
+      fireEvent.click(button);
+
+      await waitFor(() => expect(button).not.toBeDisabled());
+      // A success render would put the Check icon (an svg) inside the button.
+      expect(button.querySelector("svg")).toBeNull();
+      expect(button).toHaveTextContent("Submit");
+    });
+
+    it("handles a rejecting onClick without an unhandled rejection", async () => {
+      const unhandled = vi.fn();
+      process.on("unhandledRejection", unhandled);
+      try {
+        const onClick = vi.fn().mockRejectedValue(new Error("tx reverted"));
+        render(<LoadingButton onClick={onClick}>Submit</LoadingButton>);
+
+        const button = screen.getByRole("button");
+        fireEvent.click(button);
+        await waitFor(() => expect(button).not.toBeDisabled());
+        // Give the microtask queue a chance to surface an unhandled rejection.
+        await new Promise((resolve) => setTimeout(resolve, 10));
+
+        expect(unhandled).not.toHaveBeenCalled();
+      } finally {
+        process.off("unhandledRejection", unhandled);
+      }
+    });
+
     it("does not call onClick when no onClick provided", () => {
       render(<LoadingButton>Submit</LoadingButton>);
       const button = screen.getByRole("button");

@@ -23,6 +23,7 @@ import {
 } from "@/lib/wallet";
 import { config } from "@/lib/config";
 import { toast } from "sonner";
+import * as Sentry from "@sentry/nextjs";
 
 export function WalletConnectButton() {
   const address = useWalletStore((s) => s.address);
@@ -46,6 +47,10 @@ export function WalletConnectButton() {
         setOpen(false);
         toast.success("Wallet connected");
       } catch (e) {
+        // Reported to Sentry — unlike the dev private-key path below, these
+        // connectors never see a secret, so the failure context is safe to send.
+        console.error(e);
+        Sentry.captureException(e, { extra: { wallet: type } });
         toast.error((e as Error)?.message ?? "Failed to connect wallet");
       }
     },
@@ -77,6 +82,9 @@ export function WalletConnectButton() {
       setOpen(false);
       toast.success("Dev wallet connected");
     } catch (e) {
+      // Deliberately not sent to Sentry: the failure context would carry the
+      // dev private key, which must never leave the device.
+      console.error(e);
       toast.error((e as Error)?.message ?? "Failed to connect");
     }
   }, [metaNamesSdk, devKey, isValidKey, setAddress]);

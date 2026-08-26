@@ -1,8 +1,25 @@
-import { describe, it, expect, vi, afterEach } from "vitest";
+import { describe, it, expect, vi, beforeEach, afterEach } from "vitest";
 import { renderHook, act } from "@testing-library/react";
-import { useSdkStore, selectSelectedCoin } from "../stores/sdk-store";
+import type { MetaNamesSdk } from "@metanames/sdk";
+import {
+  useSdkStore,
+  selectSelectedCoin,
+  selectAvailableCoins,
+} from "../stores/sdk-store";
+
+function sdkWithByoc(symbols: string[]): MetaNamesSdk {
+  return {
+    config: { byoc: symbols.map((symbol) => ({ symbol })) },
+  } as unknown as MetaNamesSdk;
+}
 
 describe("sdk-store", () => {
+  // The store is a module-level singleton — without a reset, state set by one
+  // test (e.g. metaNamesSdk/coin selection) leaks into the next.
+  beforeEach(() => {
+    useSdkStore.setState({ metaNamesSdk: null, _selectedCoin: undefined });
+  });
+
   afterEach(() => {
     vi.restoreAllMocks();
   });
@@ -10,6 +27,38 @@ describe("sdk-store", () => {
   it("should have initial selectedCoin as ETH", () => {
     const { result } = renderHook(() => useSdkStore());
     expect(selectSelectedCoin(result.current)).toBe("ETH");
+  });
+
+  // Matches legacy's `stores/sdk.ts`: `byocs.find((byoc) => byoc.symbol ===
+  // 'ETH') ?? byocs[0]` — ETH wins even when it is not first in the list.
+  it("defaults to ETH when it is available but not first in the coin list", () => {
+    const { result } = renderHook(() => useSdkStore());
+    act(() => {
+      result.current.setMetaNamesSdk(sdkWithByoc(["MATIC", "ETH", "SOL"]));
+    });
+    expect(selectAvailableCoins(result.current)).toEqual([
+      "MATIC",
+      "ETH",
+      "SOL",
+    ]);
+    expect(selectSelectedCoin(result.current)).toBe("ETH");
+  });
+
+  it("falls back to the first available coin when ETH is not in the list", () => {
+    const { result } = renderHook(() => useSdkStore());
+    act(() => {
+      result.current.setMetaNamesSdk(sdkWithByoc(["MATIC", "SOL"]));
+    });
+    expect(selectSelectedCoin(result.current)).toBe("MATIC");
+  });
+
+  it("keeps an explicitly selected coin even when ETH is available", () => {
+    const { result } = renderHook(() => useSdkStore());
+    act(() => {
+      result.current.setMetaNamesSdk(sdkWithByoc(["ETH", "MATIC"]));
+      result.current.setSelectedCoin("MATIC");
+    });
+    expect(selectSelectedCoin(result.current)).toBe("MATIC");
   });
 
   it("should have metaNamesSdk as null initially", () => {

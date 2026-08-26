@@ -23,6 +23,9 @@ export function LoadingButton({
       await onClick();
       setSuccess(true);
       setTimeout(() => setSuccess(false), 2000);
+    } catch {
+      // The handler has already reported and alerted the failure; swallow it
+      // here so the success state is never shown for a failed operation.
     } finally {
       setLoading(false);
     }

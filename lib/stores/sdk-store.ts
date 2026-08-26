@@ -20,6 +20,11 @@ export const selectAvailableCoins = (state: SdkStore): BYOCSymbol[] =>
   (state.metaNamesSdk?.config?.byoc?.map((b) => b.symbol) as BYOCSymbol[]) ??
   [];
 
+/**
+ * Prefer ETH as the default coin when nothing has been explicitly selected —
+ * matching legacy's `stores/sdk.ts`, which searches `byocs` for `symbol ===
+ * 'ETH'` and only falls back to `byocs[0]` when ETH is absent.
+ */
 export const selectSelectedCoin = (state: SdkStore): BYOCSymbol => {
   const coins = selectAvailableCoins(state);
   if (state._selectedCoin) {
@@ -27,5 +32,5 @@ export const selectSelectedCoin = (state: SdkStore): BYOCSymbol => {
       return state._selectedCoin;
     }
   }
-  return coins[0] ?? "ETH";
+  return coins.find((c) => c === "ETH") ?? coins[0] ?? "ETH";
 };
