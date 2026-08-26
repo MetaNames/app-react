@@ -26,9 +26,31 @@ describe("DomainStats", () => {
     expect(screen.getByText("OWNERS")).toBeInTheDocument();
   });
 
-  it("renders nothing on error", async () => {
-    mockFetch.mockImplementation(() => Promise.reject(new Error("network")));
+  it("renders nothing on error and does not leak an unhandled rejection", async () => {
+    const onUnhandledRejection = vi.fn();
+    process.on("unhandledRejection", onUnhandledRejection);
+    try {
+      mockFetch.mockImplementation(() => Promise.reject(new Error("network")));
+      const { container } = render(<DomainStats />);
+      await waitFor(() => expect(mockFetch).toHaveBeenCalled());
+      // Flush the microtask queue so the rejection has a chance to propagate
+      // if it were not actually caught by the component.
+      await new Promise((resolve) => setTimeout(resolve, 0));
+      expect(container).toBeEmptyDOMElement();
+      expect(onUnhandledRejection).not.toHaveBeenCalled();
+    } finally {
+      process.off("unhandledRejection", onUnhandledRejection);
+    }
+  });
+
+  it("hides the stats block when the API returns a zeroed response", async () => {
+    mockFetch.mockResolvedValue({
+      ok: true,
+      json: async () => ({ domainCount: 0, ownerCount: 0, recentDomains: [] }),
+    });
     const { container } = render(<DomainStats />);
-    await waitFor(() => expect(container).toBeEmptyDOMElement());
+    await waitFor(() => expect(mockFetch).toHaveBeenCalled());
+    await new Promise((resolve) => setTimeout(resolve, 0));
+    expect(container).toBeEmptyDOMElement();
   });
 });

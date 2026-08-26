@@ -19,9 +19,9 @@ export function DetailsContent({
     <div className="flex flex-col gap-6">
       {profileRecords.length > 0 && (
         <section>
-          <h5 className="font-semibold mb-3 text-xs uppercase tracking-[0.15em] text-muted-foreground">
+          <h2 className="font-semibold mb-3 text-xs uppercase tracking-[0.15em] text-muted-foreground">
             Profile
-          </h5>
+          </h2>
           <div className="flex flex-wrap gap-2">
             {profileRecords.map((type) => {
               const val = domain.records[type];
@@ -44,9 +44,9 @@ export function DetailsContent({
         </section>
       )}
       <section>
-        <h5 className="font-semibold mb-3 text-xs uppercase tracking-[0.15em] text-muted-foreground">
+        <h2 className="font-semibold mb-3 text-xs uppercase tracking-[0.15em] text-muted-foreground">
           Whois
-        </h5>
+        </h2>
         <div className="flex flex-wrap gap-2">
           <Chip
             label="Owner"
@@ -67,9 +67,9 @@ export function DetailsContent({
       </section>
       {socialRecords.length > 0 && (
         <section>
-          <h5 className="font-semibold mb-3 text-xs uppercase tracking-[0.15em] text-muted-foreground">
+          <h2 className="font-semibold mb-3 text-xs uppercase tracking-[0.15em] text-muted-foreground">
             Social
-          </h5>
+          </h2>
           <div className="flex flex-wrap gap-2">
             {socialRecords.map((type) => (
               <Chip

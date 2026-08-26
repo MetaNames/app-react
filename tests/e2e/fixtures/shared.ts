@@ -115,7 +115,7 @@ export async function expectSectionVisible(
   sectionName: string,
   required = true,
 ) {
-  const section = page.locator(`h5:has-text("${sectionName}")`);
+  const section = page.locator(`h2:has-text("${sectionName}")`);
   if (required) {
     await expect(section).toBeVisible();
   }
@@ -129,7 +129,7 @@ export async function expectSectionConditional(
   page: Page,
   sectionName: string,
 ) {
-  const section = page.locator(`h5:has-text("${sectionName}")`);
+  const section = page.locator(`h2:has-text("${sectionName}")`);
   const isVisible = await section
     .isVisible({ timeout: 2000 })
     .catch(() => false);

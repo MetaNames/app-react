@@ -137,8 +137,8 @@ export function DomainSearch() {
                     <Badge
                       className={
                         result.available
-                          ? "bg-[hsl(var(--chip-available-bg))] text-[hsl(var(--chip-available-fg))]"
-                          : "bg-[hsl(var(--chip-registered-bg))] text-[hsl(var(--chip-registered-fg))]"
+                          ? "bg-[var(--chip-available-bg)] text-[var(--chip-available-fg)]"
+                          : "bg-[var(--chip-registered-bg)] text-[var(--chip-registered-fg)]"
                       }
                     >
                       {result.available ? "Available" : "Registered"}

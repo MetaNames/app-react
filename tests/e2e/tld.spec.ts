@@ -51,7 +51,7 @@ test.describe("TLD Information", () => {
     await expect(page.locator(SELECTORS.DOMAIN_TITLE)).toBeVisible({
       timeout: SPINNER_TIMEOUT_MS,
     });
-    const whoisSection = page.locator(`h5:has-text("${TEXT.WHOIS}")`);
+    const whoisSection = page.locator(`h2:has-text("${TEXT.WHOIS}")`);
     await expect(whoisSection).toBeVisible();
   });
 
@@ -81,7 +81,7 @@ test.describe("TLD Information", () => {
     });
 
     // Verify Whois section is visible directly (no tabs wrapping)
-    const whoisSection = page.locator(`h5:has-text("${TEXT.WHOIS}")`);
+    const whoisSection = page.locator(`h2:has-text("${TEXT.WHOIS}")`);
     await expect(whoisSection).toBeVisible();
 
     // Verify owner chip is visible (rendered as anchor due to href)

@@ -45,9 +45,9 @@ export class DomainPage {
     this.detailsTab = page.locator(SELECTORS.TAB_DETAILS);
     this.settingsTab = page.locator(SELECTORS.TAB_SETTINGS);
 
-    this.profileSection = page.locator(`h5:has-text("${TEXT.PROFILE}")`);
-    this.whoisSection = page.locator(`h5:has-text("${TEXT.WHOIS}")`);
-    this.socialSection = page.locator(`h5:has-text("${TEXT.SOCIAL}")`);
+    this.profileSection = page.locator(`h2:has-text("${TEXT.PROFILE}")`);
+    this.whoisSection = page.locator(`h2:has-text("${TEXT.WHOIS}")`);
+    this.socialSection = page.locator(`h2:has-text("${TEXT.SOCIAL}")`);
 
     this.ownerChip = page.getByText(/Owner/i);
     this.expiresChip = page.getByText(/Expires/i);

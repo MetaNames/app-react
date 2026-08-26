@@ -21,7 +21,7 @@ test.describe("User Profile", () => {
       await expect(message).toBeVisible();
     });
 
-    test("should not show Profile heading when disconnected", async ({
+    test("Profile heading is present but visually hidden when disconnected", async ({
       page,
     }) => {
       const profileHeading = page.locator(

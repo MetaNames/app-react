@@ -8,7 +8,7 @@
   --color-background: var(--background);
   --color-foreground: var(--foreground);
   --font-sans: var(--font-sans);
-  --font-mono: var(--font-geist-mono);
+  --font-mono: var(--font-mono);
   --font-heading: var(--font-sans);
   --color-sidebar-ring: var(--sidebar-ring);
   --color-sidebar-border: var(--sidebar-border);
@@ -109,6 +109,15 @@
   html {
     @apply font-sans;
   }
+  /*
+   * Default border colour for .glass-panel lives in the `base` layer (which Tailwind
+   * orders before `utilities`) so that any `border-*` colour utility applied alongside
+   * `.glass-panel` always wins the cascade, instead of the outcome depending on source
+   * order within the same layer.
+   */
+  .glass-panel {
+    border-color: hsl(0 0% 100% / 0.1);
+  }
 }
 
 @layer utilities {
@@ -134,7 +143,8 @@
   }
   .glass-panel {
     background: hsl(0 0% 100% / 0.05);
-    border: 1px solid hsl(0 0% 100% / 0.1);
+    border-width: 1px;
+    border-style: solid;
     backdrop-filter: blur(12px);
     -webkit-backdrop-filter: blur(12px);
   }

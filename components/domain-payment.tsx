@@ -45,7 +45,7 @@ export function DomainPayment({ domain, mode, onSuccess }: DomainPaymentProps) {
   const incrementYears = useCallback(() => setYears((y) => y + 1), [setYears]);
 
   return (
-    <Card className="w-full max-w-lg content checkout glass-panel border-primary/20 shadow-[0_0_60px_rgba(100,75,247,0.15)]">
+    <Card className="w-full max-w-lg content checkout glass-panel border-primary/20 shadow-[0_0_60px_var(--glow)]">
       <CardHeader>
         <CardTitle>
           {mode === "register" ? "Register" : "Renew"}{" "}

@@ -8,3 +8,5 @@ if (dsn) {
     tracesSampleRate: process.env.NEXT_PUBLIC_ENV === "prod" ? 0.1 : 1.0,
   });
 }
+
+export const onRouterTransitionStart = Sentry.captureRouterTransitionStart;

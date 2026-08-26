@@ -1,5 +1,5 @@
 "use client";
-import { useEffect, useState, useCallback, useRef } from "react";
+import { useEffect, useState, useRef } from "react";
 import { DomainsTable } from "@/components/domains-table";
 import { Chip } from "@/components/chip";
 import { useWalletStore } from "@/lib/stores/wallet-store";
@@ -15,34 +15,40 @@ export function ProfilePageClient() {
   const [loading, setLoading] = useState(false);
   const isFetchingRef = useRef(false);
 
-  const handleLoadDomains = useCallback(() => {
+  useEffect(() => {
     if (!address || !metaNamesSdk) return;
 
     // Prevent concurrent fetches
     if (isFetchingRef.current) return;
     isFetchingRef.current = true;
-    setLoading(true);
 
-    (
-      metaNamesSdk.domainRepository.findByOwner as (
-        addr: string,
-      ) => Promise<Domain[]>
-    )(address)
-      .then((result) => {
+    let cancelled = false;
+
+    async function loadDomains() {
+      setLoading(true);
+      try {
+        const result = await (
+          metaNamesSdk!.domainRepository.findByOwner as (
+            addr: string,
+          ) => Promise<Domain[]>
+        )(address!);
+        if (cancelled) return;
         setDomains(result);
-        setLoading(false);
-        isFetchingRef.current = false;
-      })
-      .catch(() => {
+      } catch {
+        if (cancelled) return;
         setDomains([]);
-        setLoading(false);
+      } finally {
+        if (!cancelled) setLoading(false);
         isFetchingRef.current = false;
-      });
-  }, [address, metaNamesSdk]);
+      }
+    }
 
-  useEffect(() => {
-    queueMicrotask(handleLoadDomains);
-  }, [address, metaNamesSdk, handleLoadDomains]);
+    loadDomains();
+
+    return () => {
+      cancelled = true;
+    };
+  }, [address, metaNamesSdk]);
 
   if (!address)
     return (

@@ -29,10 +29,9 @@ export function Chip({
   };
   const variantClass = {
     default: "bg-muted text-muted-foreground",
-    available:
-      "bg-[hsl(var(--chip-available-bg))] text-[hsl(var(--chip-available-fg))]",
+    available: "bg-[var(--chip-available-bg)] text-[var(--chip-available-fg)]",
     registered:
-      "bg-[hsl(var(--chip-registered-bg))] text-[hsl(var(--chip-registered-fg))]",
+      "bg-[var(--chip-registered-bg)] text-[var(--chip-registered-fg)]",
   }[variant];
   const content = (
     <span

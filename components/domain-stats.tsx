@@ -62,7 +62,8 @@ export function DomainStats() {
   const domains = useCountUp(stats?.domainCount ?? null);
   const owners = useCountUp(stats?.ownerCount ?? null);
 
-  if (!stats) return null;
+  if (!stats || (stats.domainCount === 0 && stats.ownerCount === 0))
+    return null;
 
   return (
     <div

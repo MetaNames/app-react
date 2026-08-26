@@ -65,7 +65,7 @@ export function SubdomainRegistration({
         </div>
         <div className="flex items-center justify-between py-2 border-t border-border/60">
           <span className="text-muted-foreground">Price</span>
-          <span className="font-bold text-[hsl(var(--chip-available-fg))]">
+          <span className="font-bold text-[var(--chip-available-fg)]">
             FREE
           </span>
         </div>
