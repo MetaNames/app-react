@@ -51,17 +51,24 @@ export function DetailsContent({
           <Chip
             label="Owner"
             value={truncateAddress(domain.owner)}
-            href={explorerAddressUrl(domain.owner, isTld)}
+            href={explorerAddressUrl(domain.owner)}
           />
-          {domain.expiresAt && (
-            <Chip label="Expires" value={formatDate(domain.expiresAt)} />
-          )}
-          {domain.parentId && (
-            <Chip
-              label="Parent"
-              value={domain.parentId}
-              href={`/domain/${domain.parentId}`}
-            />
+          {!isTld && (
+            <>
+              {domain.parentId && (
+                <Chip
+                  label="Parent"
+                  value={domain.parentId}
+                  href={`/domain/${domain.parentId}`}
+                />
+              )}
+              <Chip
+                label="Expires"
+                value={
+                  domain.expiresAt ? formatDate(domain.expiresAt) : "Never"
+                }
+              />
+            </>
           )}
         </div>
       </section>

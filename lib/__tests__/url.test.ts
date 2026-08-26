@@ -54,21 +54,6 @@ describe("explorerAddressUrl", () => {
       "https://browser.testnet.partisiablockchain.com/contracts/02xyz789",
     );
   });
-
-  it("ignores a stale second argument and still derives from the address prefix", () => {
-    // A contract-owned non-TLD domain used to be misrouted to /accounts/ because
-    // callers passed `isTld` as an `isContract` flag. The address prefix is now
-    // the only source of truth, so a truthy/falsy second arg must not matter.
-    const contractOwnedSubdomain = "01" + "d".repeat(62);
-    expect(explorerAddressUrl(contractOwnedSubdomain, false)).toBe(
-      `https://browser.testnet.partisiablockchain.com/contracts/${contractOwnedSubdomain}`,
-    );
-
-    const accountAddress = "00" + "e".repeat(62);
-    expect(explorerAddressUrl(accountAddress, true)).toBe(
-      `https://browser.testnet.partisiablockchain.com/accounts/${accountAddress}/assets`,
-    );
-  });
 });
 
 describe("bridgeUrl", () => {

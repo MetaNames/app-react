@@ -11,10 +11,7 @@ const ACCOUNT_ADDRESS_HEX_PREFIX = "00";
 export const explorerTransactionUrl = (tx: string) =>
   `${config.browserUrl}/transactions/${tx}`;
 
-// `_isContract` is accepted (but ignored) purely so existing call sites that still
-// pass a second argument keep compiling; the explorer link is always derived from
-// the address prefix now.
-export const explorerAddressUrl = (address: string, _isContract?: boolean) =>
+export const explorerAddressUrl = (address: string) =>
   address.startsWith(ACCOUNT_ADDRESS_HEX_PREFIX)
     ? `${config.browserUrl}/accounts/${address}/assets`
     : `${config.browserUrl}/contracts/${address}`;
