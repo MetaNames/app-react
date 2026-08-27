@@ -493,3 +493,32 @@ describe("Record", () => {
     });
   });
 });
+
+describe("Record classes the app cannot write", () => {
+  // Avatar and Main exist on chain but are not in RECORD_CLASS_MAP, so a save
+  // could only ever fail with "Unsupported record type" and a delete returned
+  // without a word. Neither control is offered any more.
+  it("offers no edit or delete for an unsupported class", () => {
+    render(
+      <Record
+        type={"Avatar" as never}
+        value="https://example.com/a.png"
+        onUpdate={vi.fn()}
+      />,
+    );
+    expect(screen.queryByTestId("edit-record")).not.toBeInTheDocument();
+    expect(screen.queryByTestId("delete-record")).not.toBeInTheDocument();
+    expect(screen.getByTestId("record-read-only")).toBeInTheDocument();
+  });
+
+  it("still shows the stored value", () => {
+    render(<Record type={"Main" as never} value="1" onUpdate={vi.fn()} />);
+    expect(screen.getByText("1")).toBeInTheDocument();
+  });
+
+  it("keeps edit and delete for a supported class", () => {
+    render(<Record type="Bio" value="hello" onUpdate={vi.fn()} />);
+    expect(screen.getByTestId("edit-record")).toBeInTheDocument();
+    expect(screen.queryByTestId("record-read-only")).not.toBeInTheDocument();
+  });
+});

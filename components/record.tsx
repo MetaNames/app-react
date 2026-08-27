@@ -10,6 +10,7 @@ import {
 } from "@/components/ui/dialog";
 import { Pencil, Trash2, X, Check } from "lucide-react";
 import { isUrlRecord } from "@/lib/records";
+import { RECORD_CLASS_MAP } from "@/lib/constants";
 import type { RecordClass } from "@/lib/types";
 import { useRecordManagement } from "@/lib/hooks/use-record-management";
 
@@ -35,6 +36,13 @@ export function Record({ type, value, onUpdate }: RecordProps) {
     setEditError,
     setDeleteOpen,
   } = useRecordManagement({ type, value, onUpdate: onUpdate! });
+
+  // A domain can carry record classes this app does not offer (Avatar and
+  // Main exist on chain but are not in RECORD_CLASS_MAP). Their Edit button
+  // led to a save that always failed with "Unsupported record type", and
+  // Delete did nothing at all — silently, with no message. Show the value,
+  // and say plainly that it cannot be changed here.
+  const editable = RECORD_CLASS_MAP[type] !== undefined;
 
   return (
     <div className="record-container flex items-start gap-3 py-3 border-b border-border/60 last:border-0">
@@ -79,7 +87,14 @@ export function Record({ type, value, onUpdate }: RecordProps) {
         )}
       </div>
       <div className="flex items-center gap-1 shrink-0">
-        {editing ? (
+        {!editable ? (
+          <span
+            className="text-xs text-muted-foreground"
+            data-testid="record-read-only"
+          >
+            Read-only
+          </span>
+        ) : editing ? (
           <>
             <Button
               size="icon"

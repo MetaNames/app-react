@@ -18,12 +18,20 @@ import {
   executeBlockchainOp,
   gotoAndRestoreWallet,
 } from "./helpers/wallet-helper";
-import { SELECTORS, TEXT, CSS_CLASSES, TEST_DOMAIN_NAME } from "./constants";
-import { navigateToSettingsTab, waitForDomainTitle } from "./fixtures/shared";
+import { SELECTORS, TEXT, TEST_DOMAIN_NAME } from "./constants";
+import {
+  editableRecord,
+  editedRecordValue,
+  navigateToSettingsTab,
+  waitForDomainTitle,
+} from "./fixtures/shared";
 
 test.describe("DNS Records Management", () => {
   test.describe.configure({ mode: "serial" });
-  test.setTimeout(60000);
+  // A record write waits up to 60s for the chain to confirm, so a 60s test
+  // budget could never contain one — the test timed out on the very wait it
+  // was there to perform.
+  test.setTimeout(150000);
 
   // Disconnected visitor viewing the domain — settings tab / editor not shown
   test("non-owner view does not show records editor", async ({ page }) => {
@@ -60,13 +68,19 @@ test.describe("DNS Records Management", () => {
       const recordsContainer = page.locator(SELECTORS.RECORDS_CONTAINER);
       await expect(recordsContainer).toBeVisible();
 
-      const firstRecord = page.locator(CSS_CLASSES.RECORD_CONTAINER).first();
+      // Bio-like classes take free text; the fallback still writes a value
+      // valid for whatever class the domain happens to expose.
+      const { record: firstRecord, type } = await editableRecord(page, [
+        "Bio",
+        "Twitter",
+        "Discord",
+      ]);
       const editButton = firstRecord.locator(SELECTORS.EDIT_RECORD);
       await editButton.click();
 
       const textarea = firstRecord.locator("textarea");
-      const originalValue = await textarea.inputValue();
-      const modifiedValue = `${originalValue} updated`;
+      await expect(textarea).toBeVisible();
+      const modifiedValue = editedRecordValue(type, String(Date.now()));
 
       await textarea.fill(modifiedValue);
 
@@ -96,7 +110,7 @@ test.describe("DNS Records Management", () => {
       const recordsContainer = page.locator(SELECTORS.RECORDS_CONTAINER);
       await expect(recordsContainer).toBeVisible();
 
-      const firstRecord = page.locator(CSS_CLASSES.RECORD_CONTAINER).first();
+      const { record: firstRecord } = await editableRecord(page);
 
       const editButton = firstRecord.locator(SELECTORS.EDIT_RECORD);
       await editButton.click();
@@ -123,7 +137,7 @@ test.describe("DNS Records Management", () => {
       const recordsContainer = page.locator(SELECTORS.RECORDS_CONTAINER);
       await expect(recordsContainer).toBeVisible();
 
-      const firstRecord = page.locator(CSS_CLASSES.RECORD_CONTAINER).first();
+      const { record: firstRecord } = await editableRecord(page);
       const deleteButton = firstRecord.locator(SELECTORS.DELETE_RECORD);
       await deleteButton.click();
 

@@ -11,8 +11,71 @@ import {
   SPINNER_TIMEOUT_MS,
   LONG_API_TIMEOUT_MS,
   DROPDOWN_TIMEOUT_MS,
+  CSS_CLASSES,
   PLACEHOLDERS,
 } from "../constants";
+
+/**
+ * Resolves the first record the owner can actually edit, together with its
+ * record class.
+ *
+ * "The first record" is not good enough on its own: a domain can carry
+ * classes the app renders read-only (Avatar, Main), which have no edit
+ * control. Nor can a `filter({ has: editButton })` locator be reused — the
+ * moment the record enters edit mode that button is gone and the same
+ * locator starts resolving to a different row — so the index is resolved
+ * once, up front, and the row is addressed by position afterwards.
+ *
+ * `preferred` classes are tried first, which lets a test ask for a record
+ * whose value it can safely rewrite.
+ */
+export async function editableRecord(
+  page: Page,
+  preferred: string[] = [],
+): Promise<{ record: Locator; type: string }> {
+  const records = page.locator(CSS_CLASSES.RECORD_CONTAINER);
+  await expect(records.first()).toBeVisible({ timeout: SPINNER_TIMEOUT_MS });
+
+  const editable: { record: Locator; type: string }[] = [];
+  const count = await records.count();
+  for (let i = 0; i < count; i++) {
+    const record = records.nth(i);
+    if ((await record.locator(SELECTORS.EDIT_RECORD).count()) === 0) continue;
+    // The class label is styled `uppercase`, and innerText reports rendered
+    // text — so this reads "EMAIL", not "Email". Compare case-insensitively.
+    const label = await record.locator("span").first().innerText();
+    editable.push({ record, type: label.trim().toLowerCase() });
+  }
+
+  const wanted = preferred.map((entry) => entry.toLowerCase());
+  const match =
+    editable.find((entry) => wanted.includes(entry.type)) ?? editable[0];
+  if (!match) {
+    throw new Error(
+      `None of the ${count} records on this domain is editable by this app`,
+    );
+  }
+  return match;
+}
+
+/**
+ * A record's value has to satisfy that class's validator — appending " updated"
+ * to an Email turns it into an invalid address the app rightly refuses to save.
+ */
+export function editedRecordValue(type: string, marker: string): string {
+  switch (type.toLowerCase()) {
+    case "email":
+      return `e2e+${marker}@example.com`;
+    case "uri":
+      return `https://example.com/${marker}`;
+    case "price":
+      return `${marker.replace(/\D/g, "").slice(-6) || "1"}`;
+    case "wallet":
+      return `00${marker.replace(/\D/g, "").padStart(40, "0").slice(-40)}`;
+    default:
+      return `e2e ${marker}`;
+  }
+}
 
 /**
  * Navigate to domain settings tab with proper waiting.
