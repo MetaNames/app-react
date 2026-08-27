@@ -1,5 +1,5 @@
 "use client";
-import { useCallback, useEffect, useMemo, useRef, useState } from "react";
+import { useCallback, useEffect, useMemo } from "react";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { JdenticonAvatar } from "@/components/domain-avatar";
 import { DetailsContent } from "@/components/domain-details";
@@ -30,6 +30,7 @@ import {
 } from "lucide-react";
 import { buildExpiryReminder, expiryReminderFilename } from "@/lib/calendar";
 import { WatchButton } from "@/components/watch-button";
+import { useCopyToClipboard } from "@/lib/hooks/use-copy-to-clipboard";
 
 interface DomainProps {
   domain: DomainType;
@@ -50,7 +51,7 @@ export function Domain({ domain, isTld = false, onUpdate }: DomainProps) {
   const setRepository = useRecordStore((s) => s.setRepository);
   const clearRepository = useRecordStore((s) => s.clear);
 
-  const [copied, setCopied] = useState(false);
+  const { copied, copy } = useCopyToClipboard();
 
   useEffect(() => {
     if (!metaNamesSdk) {
@@ -96,22 +97,10 @@ export function Domain({ domain, isTld = false, onUpdate }: DomainProps) {
     router.push(`/domain/${domain.name}/transfer`);
   }, [domain.name, router]);
 
-  // The reset timer is held so navigating away mid-countdown does not leave a
-  // pending setState on an unmounted component.
-  const copyResetTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
-  useEffect(
-    () => () => {
-      if (copyResetTimer.current) clearTimeout(copyResetTimer.current);
-    },
-    [],
+  const handleCopyName = useCallback(
+    () => copy(domain.name),
+    [copy, domain.name],
   );
-
-  const handleCopyName = useCallback(async () => {
-    await navigator.clipboard.writeText(domain.name);
-    setCopied(true);
-    if (copyResetTimer.current) clearTimeout(copyResetTimer.current);
-    copyResetTimer.current = setTimeout(() => setCopied(false), 1500);
-  }, [domain.name]);
 
   const profileRecords = PROFILE_RECORD_TYPES.filter(
     (t) => domain.records?.[t],

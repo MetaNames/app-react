@@ -8,11 +8,12 @@ import {
   DialogTitle,
   DialogFooter,
 } from "@/components/ui/dialog";
-import { Pencil, Trash2, X, Check } from "lucide-react";
+import { Copy, Pencil, Trash2, X, Check } from "lucide-react";
 import { isUrlRecord } from "@/lib/records";
 import { RECORD_CLASS_MAP } from "@/lib/constants";
 import type { RecordClass } from "@/lib/types";
 import { useRecordManagement } from "@/lib/hooks/use-record-management";
+import { useCopyToClipboard } from "@/lib/hooks/use-copy-to-clipboard";
 
 interface RecordProps {
   type: RecordClass;
@@ -43,6 +44,12 @@ export function Record({ type, value, onUpdate }: RecordProps) {
   // Delete did nothing at all — silently, with no message. Show the value,
   // and say plainly that it cannot be changed here.
   const editable = RECORD_CLASS_MAP[type] !== undefined;
+
+  // Record values are things people paste elsewhere — a wallet address, a
+  // profile URL — and the row truncates them, so selecting one by hand is
+  // both fiddly and unreliable. Read-only classes get the button too: not
+  // being able to change a value says nothing about wanting to copy it.
+  const { copied, copy } = useCopyToClipboard();
 
   return (
     <div className="record-container flex items-start gap-3 py-3 border-b border-border/60 last:border-0">
@@ -87,6 +94,26 @@ export function Record({ type, value, onUpdate }: RecordProps) {
         )}
       </div>
       <div className="flex items-center gap-1 shrink-0">
+        {!editing && (
+          <Button
+            size="icon"
+            variant="ghost"
+            aria-label={`Copy ${type} record`}
+            data-testid="copy-record"
+            onClick={() => copy(value)}
+          >
+            {copied ? (
+              <Check className="h-4 w-4" />
+            ) : (
+              <Copy className="h-4 w-4" />
+            )}
+          </Button>
+        )}
+        {copied && (
+          <span role="status" className="sr-only">
+            Copied to the clipboard
+          </span>
+        )}
         {!editable ? (
           <span
             className="text-xs text-muted-foreground"
