@@ -23,7 +23,11 @@ async function openDevKeyMenu(page: Page) {
   const devKeyInput = page.locator('[data-testid="dev-key-input"]');
   const menu = page.locator('[role="menu"]');
 
-  for (let attempt = 0; attempt < 3; attempt++) {
+  // Deadline rather than attempt count: under `next dev` a route can still be
+  // compiling when its page is on screen, so hydration lands seconds late and
+  // the trigger is inert until it does.
+  const deadline = Date.now() + 30000;
+  for (let attempt = 0; Date.now() < deadline; attempt++) {
     if (attempt > 0) {
       await page.keyboard.press("Escape").catch(() => {});
       await menu
@@ -43,7 +47,7 @@ async function openDevKeyMenu(page: Page) {
       await page.keyboard.press("Enter");
     }
     try {
-      await expect(devKeyInput).toBeVisible({ timeout: 5000 });
+      await expect(devKeyInput).toBeVisible({ timeout: 2500 });
       return devKeyInput;
     } catch {
       // Next attempt reopens the menu.

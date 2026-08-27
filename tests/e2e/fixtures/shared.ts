@@ -73,9 +73,6 @@ export async function ensureEditableRecord(
   const existing = await editableRecord(page, preferred).catch(() => null);
   if (existing) return existing;
 
-  const records = page.locator(CSS_CLASSES.RECORD_CONTAINER);
-  const countBefore = await records.count();
-
   const form = page.locator(SELECTORS.ADD_RECORD_FORM);
   await expect(form).toBeVisible({ timeout: SPINNER_TIMEOUT_MS });
 
@@ -95,10 +92,16 @@ export async function ensureEditableRecord(
   // The button leaving its pending state means the transaction resolved, not
   // that the list has re-rendered with the new row — re-scanning right then
   // found the same read-only records and reported the domain as uneditable
-  // while the record it had just added was seconds from appearing.
-  await expect(records).toHaveCount(countBefore + 1, {
-    timeout: LONG_API_TIMEOUT_MS * 2,
-  });
+  // while the record it had just added was seconds from appearing. Polling for
+  // the editable row itself, rather than for a row count, also tolerates the
+  // chain taking longer than the button did to reflect the write.
+  await expect
+    .poll(
+      async () =>
+        (await editableRecord(page, preferred).catch(() => null)) !== null,
+      { timeout: LONG_API_TIMEOUT_MS * 4 },
+    )
+    .toBe(true);
 
   return editableRecord(page, preferred);
 }

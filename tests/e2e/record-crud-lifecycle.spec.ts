@@ -236,8 +236,10 @@ test.describe("Record CRUD lifecycle on freshly registered subdomain", () => {
         .waitFor({ state: "visible", timeout: 5000 })
         .catch(() => {});
 
-      // Dialog closes after tx confirms
-      await expect(dialog).not.toBeVisible({ timeout: 60000 });
+      // Dialog closes after tx confirms. Testnet blocks are not uniform and a
+      // delete that needed 70s was being called a failure at 60s; the describe
+      // has the budget for the wait.
+      await expect(dialog).not.toBeVisible({ timeout: 90000 });
     }, "Delete record transaction failed");
 
     expect(deleteResult.success, deleteResult.error).toBe(true);

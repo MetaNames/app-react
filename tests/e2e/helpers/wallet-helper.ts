@@ -16,18 +16,14 @@ import { Locator, Page, expect } from "@playwright/test";
 // 5s, 10s and 15s waits, so which step timed out depended on how loaded the
 // testnet was rather than on what was actually broken.
 const CONNECT_TIMEOUT_MS = 15000;
-// Five short attempts rather than three long ones: what these retries wait out
-// is hydration, which either has happened or has not — a longer single window
-// buys nothing, while more windows cover the page that hydrates late.
-const CONNECT_ATTEMPTS = 5;
-// A click that lands before hydration needs the dialog re-opening, so each
-// attempt gets a window of its own. Three of them plus the close waits still
-// has to fit inside a spec's whole budget alongside navigation and the chain
-// reads that follow; at 10s each it did not, and a hook killed mid-retry
-// reported as "the wallet never connected" rather than as the timeout it was.
-// Hydration settles far inside 6s — the retries are for the render that misses
-// it, not for a slow one.
-const CONNECT_ATTEMPT_TIMEOUT_MS = 5000;
+// The suite runs against `next dev` with a worker per core, so a route can be
+// compiling while its page is already on screen: hydration lands whole seconds
+// after load, and the trigger is inert until it does. Retrying to a deadline
+// rather than for a fixed number of attempts covers the slow page without
+// making the fast one wait — each probe is short, and there are as many as the
+// budget allows.
+const CONNECT_OPEN_DEADLINE_MS = 30000;
+const CONNECT_ATTEMPT_TIMEOUT_MS = 2500;
 const MENU_CLOSE_TIMEOUT_MS = 2000;
 
 // Get the testnet private key from environment
@@ -103,7 +99,8 @@ export const connectWallet = async (page: Page): Promise<boolean> => {
   const menu = page.locator('[role="menu"]');
 
   let winner: "devKey" | "connected" | null = null;
-  for (let attempt = 0; attempt < CONNECT_ATTEMPTS && !winner; attempt++) {
+  const deadline = Date.now() + CONNECT_OPEN_DEADLINE_MS;
+  for (let attempt = 0; !winner && Date.now() < deadline; attempt++) {
     if (attempt > 0) {
       await page.keyboard.press("Escape").catch(() => {});
       await menu
@@ -127,7 +124,7 @@ export const connectWallet = async (page: Page): Promise<boolean> => {
 
   if (winner === null) {
     throw new Error(
-      `Wallet connect opened neither the dev-key dialog nor a connected state after ${CONNECT_ATTEMPTS} attempts`,
+      `Wallet connect opened neither the dev-key dialog nor a connected state within ${CONNECT_OPEN_DEADLINE_MS}ms`,
     );
   }
 
