@@ -306,4 +306,45 @@ describe("DomainSearch", () => {
       });
     });
   });
+
+  describe("keyboard shortcut", () => {
+    it("focuses the search box when / is pressed elsewhere on the page", () => {
+      render(<DomainSearch />);
+      const input = screen.getByPlaceholderText("Search for a .mpc domain...");
+      expect(input).not.toHaveFocus();
+
+      fireEvent.keyDown(document.body, { key: "/" });
+
+      expect(input).toHaveFocus();
+    });
+
+    it("focuses the search box on Cmd+K and on Ctrl+K", () => {
+      render(<DomainSearch />);
+      const input = screen.getByPlaceholderText("Search for a .mpc domain...");
+
+      fireEvent.keyDown(document.body, { key: "k", metaKey: true });
+      expect(input).toHaveFocus();
+
+      input.blur();
+      fireEvent.keyDown(document.body, { key: "K", ctrlKey: true });
+      expect(input).toHaveFocus();
+    });
+
+    // Otherwise a "/" typed into any other field on the page would be
+    // swallowed and yank focus away mid-sentence.
+    it("leaves / alone while another field has focus", () => {
+      render(
+        <>
+          <DomainSearch />
+          <input aria-label="other" />
+        </>,
+      );
+      const other = screen.getByLabelText("other");
+      other.focus();
+
+      fireEvent.keyDown(other, { key: "/" });
+
+      expect(other).toHaveFocus();
+    });
+  });
 });

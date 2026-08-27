@@ -68,6 +68,36 @@ export function DomainSearch() {
     inputRef.current?.focus();
   }, []);
 
+  // The search box is the only thing anyone comes to this page to use, but on
+  // a short viewport it can sit below the fold after scrolling. "/" is the
+  // conventional focus-search key; Cmd/Ctrl+K is the other one people reach
+  // for, and is claimed here so the browser's own find-in-page (Cmd+F) is
+  // left alone.
+  useEffect(() => {
+    function onKeyDown(event: KeyboardEvent) {
+      const shortcut =
+        event.key === "/" ||
+        ((event.metaKey || event.ctrlKey) && event.key.toLowerCase() === "k");
+      if (!shortcut) return;
+
+      // Typing "/" into any field — including this one — must insert the
+      // character, not steal focus back to the top of the page.
+      const target = event.target as HTMLElement | null;
+      const typing =
+        target instanceof HTMLInputElement ||
+        target instanceof HTMLTextAreaElement ||
+        target?.isContentEditable === true;
+      if (typing && event.key === "/") return;
+
+      event.preventDefault();
+      inputRef.current?.focus();
+      inputRef.current?.select();
+    }
+
+    document.addEventListener("keydown", onKeyDown);
+    return () => document.removeEventListener("keydown", onKeyDown);
+  }, []);
+
   useEffect(() => {
     if (!query) {
       setResult(null);
@@ -142,6 +172,12 @@ export function DomainSearch() {
           duplicate the signal and make `.animate-spin` ambiguous to assert on.
           The button reports the same state by going disabled.
         */}
+        <kbd
+          className="hidden sm:inline-flex items-center rounded-md border border-border/60 px-1.5 py-0.5 font-mono text-[10px] text-muted-foreground shrink-0"
+          aria-hidden="true"
+        >
+          /
+        </kbd>
         <button
           type="button"
           onClick={triggerSearch}
