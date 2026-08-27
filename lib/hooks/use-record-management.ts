@@ -6,6 +6,15 @@ import { toast } from "sonner";
 import { explorerTransactionUrl } from "@/lib/url";
 import { RECORD_CLASS_MAP } from "@/lib/constants";
 import { useRecordStore } from "@/lib/stores/record-store";
+import {
+  TransactionError,
+  errorMessage,
+  reportAndAlert,
+  runTransaction,
+} from "@/lib/error";
+
+const UPDATE_FAILED = "Failed to update record.";
+const DELETE_FAILED = "Failed to delete record.";
 
 interface UseRecordManagementProps {
   type: RecordClass;
@@ -55,21 +64,19 @@ export function useRecordManagement({
         },
         duration: 10000,
       });
-      try {
-        await intent.fetchResult;
-        toast.success("Record updated successfully");
-        setEditing(false);
-        onUpdate?.();
-      } catch (e) {
-        const msg = e instanceof Error ? e.message : "Transaction failed";
-        toast.error(msg);
-        setEditError(msg);
-      }
+      // A reverted transaction resolves rather than rejecting: without this
+      // check an on-chain failure was reported to the user as a success.
+      await runTransaction(intent.fetchResult, UPDATE_FAILED);
+      toast.success("Record updated successfully");
+      setEditing(false);
+      onUpdate?.();
     } catch (e) {
-      const message =
-        e instanceof Error ? e.message : "Failed to update record";
-      toast.error(message);
-      setEditError(message);
+      // runTransaction already reported and alerted its own failures; a wallet
+      // rejection or RPC error thrown earlier still needs both.
+      if (!(e instanceof TransactionError)) {
+        await reportAndAlert(e, errorMessage(e, UPDATE_FAILED));
+      }
+      setEditError(errorMessage(e, UPDATE_FAILED));
     } finally {
       setSaving(false);
     }
@@ -90,10 +97,16 @@ export function useRecordManagement({
         },
         duration: 10000,
       });
-      await intent.fetchResult;
+      await runTransaction(intent.fetchResult, DELETE_FAILED);
       toast.success("Record deleted successfully");
       setDeleteOpen(false);
       onUpdate?.();
+    } catch (e) {
+      // Without this catch a rejected delete became an unhandled rejection:
+      // no toast, no Sentry event, and the dialog left open with no reason why.
+      if (!(e instanceof TransactionError)) {
+        await reportAndAlert(e, errorMessage(e, DELETE_FAILED));
+      }
     } finally {
       setDeleting(false);
     }

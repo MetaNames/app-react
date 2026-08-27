@@ -19,6 +19,14 @@ import {
 import { toast } from "sonner";
 import { explorerTransactionUrl } from "@/lib/url";
 import { RECORD_CLASS_MAP } from "@/lib/constants";
+import {
+  TransactionError,
+  errorMessage,
+  reportAndAlert,
+  runTransaction,
+} from "@/lib/error";
+
+const ADD_FAILED = "Failed to add record.";
 
 interface RecordsAddFormProps {
   records: Record<string, string>;
@@ -65,12 +73,21 @@ export function RecordsAddForm({
         },
         duration: 10000,
       });
-      await intent.fetchResult;
+      // A reverted transaction resolves rather than rejecting: without this
+      // check an on-chain failure was reported to the user as a success.
+      await runTransaction(intent.fetchResult, ADD_FAILED);
       toast.success("Record added successfully");
       setNewType("");
       setNewValue("");
       setAddError(null);
       onSuccess();
+    } catch (e) {
+      // runTransaction already reported and alerted its own failures; a wallet
+      // rejection or RPC error thrown earlier still needs both.
+      if (!(e instanceof TransactionError)) {
+        await reportAndAlert(e, errorMessage(e, ADD_FAILED));
+      }
+      setAddError(errorMessage(e, ADD_FAILED));
     } finally {
       setAdding(false);
     }

@@ -2,6 +2,10 @@ import { describe, it, expect, vi, beforeEach, afterEach } from "vitest";
 import { render, screen, fireEvent, waitFor } from "@testing-library/react";
 import { Record } from "../record";
 
+vi.mock("@sentry/nextjs", () => ({
+  captureException: vi.fn(),
+}));
+
 vi.mock("sonner", () => {
   const fn = vi.fn((message: string) => message);
   return {
@@ -315,7 +319,7 @@ describe("Record", () => {
       fireEvent.click(screen.getByTestId("delete-record"));
       expect(screen.getByText("Confirm action")).toBeInTheDocument();
       expect(
-        screen.getByText("Do you really want to remove the record?"),
+        screen.getByText("Do you really want to remove the Bio record?"),
       ).toBeInTheDocument();
     });
 
@@ -398,6 +402,94 @@ describe("Record", () => {
       expect(link).toHaveAttribute("href", "https://example.com");
       expect(link).toHaveAttribute("target", "_blank");
       expect(link).toHaveAttribute("rel", "noopener noreferrer");
+    });
+  });
+
+  // A reverted transaction resolves with `hasError: true` rather than
+  // rejecting. Before these guards it flowed straight into the success toast,
+  // so the user was told a record was written that the chain had thrown out.
+  describe("failed transactions", () => {
+    const revertedIntent = () => ({
+      transactionHash: "mock-tx-hash",
+      fetchResult: Promise.resolve({
+        transactionHash: "mock-tx-hash",
+        hasError: true,
+        errorMessage: "out of gas",
+      }),
+    });
+
+    beforeEach(() => {
+      vi.spyOn(console, "error").mockImplementation(() => {});
+    });
+
+    it("does not claim success when an update reverts on chain", async () => {
+      const { toast } = await import("sonner");
+      mockRepository.update.mockResolvedValue(revertedIntent());
+
+      render(<Record {...defaultProps} />);
+      fireEvent.click(screen.getByTestId("edit-record"));
+      fireEvent.click(screen.getByTestId("save-record"));
+
+      await waitFor(() => {
+        expect(toast.error).toHaveBeenCalledWith("out of gas");
+      });
+      expect(toast.success).not.toHaveBeenCalled();
+      expect(defaultProps.onUpdate).not.toHaveBeenCalled();
+      // Still in edit mode, so the value is not lost on a failed write.
+      expect(screen.getByTestId("save-record")).toBeInTheDocument();
+    });
+
+    it("does not claim success when a delete reverts on chain", async () => {
+      const { toast } = await import("sonner");
+      mockRepository.delete.mockResolvedValue(revertedIntent());
+
+      render(<Record {...defaultProps} />);
+      fireEvent.click(screen.getByTestId("delete-record"));
+      fireEvent.click(screen.getByText("Yes"));
+
+      await waitFor(() => {
+        expect(toast.error).toHaveBeenCalledWith("out of gas");
+      });
+      expect(toast.success).not.toHaveBeenCalled();
+      expect(defaultProps.onUpdate).not.toHaveBeenCalled();
+    });
+
+    // A rejected delete used to escape as an unhandled rejection: no toast, no
+    // Sentry event, and a dialog stuck on "Deleting...".
+    it("reports a rejected delete instead of swallowing it", async () => {
+      const { toast } = await import("sonner");
+      const Sentry = await import("@sentry/nextjs");
+      mockRepository.delete.mockRejectedValue(new Error("user rejected"));
+
+      render(<Record {...defaultProps} />);
+      fireEvent.click(screen.getByTestId("delete-record"));
+      fireEvent.click(screen.getByText("Yes"));
+
+      await waitFor(() => {
+        expect(toast.error).toHaveBeenCalledWith("user rejected");
+      });
+      expect(Sentry.captureException).toHaveBeenCalled();
+      expect(screen.getByText("Yes")).not.toBeDisabled();
+    });
+  });
+
+  describe("accessible labels", () => {
+    it("names every icon-only action for screen readers", () => {
+      render(<Record {...defaultProps} />);
+      expect(
+        screen.getByRole("button", { name: "Edit Bio record" }),
+      ).toBeInTheDocument();
+      expect(
+        screen.getByRole("button", { name: "Delete Bio record" }),
+      ).toBeInTheDocument();
+
+      fireEvent.click(screen.getByTestId("edit-record"));
+      expect(
+        screen.getByRole("button", { name: "Save Bio record" }),
+      ).toBeInTheDocument();
+      expect(
+        screen.getByRole("button", { name: "Cancel editing Bio record" }),
+      ).toBeInTheDocument();
     });
   });
 });

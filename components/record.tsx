@@ -84,6 +84,7 @@ export function Record({ type, value, onUpdate }: RecordProps) {
             <Button
               size="icon"
               variant="ghost"
+              aria-label={`Save ${type} record`}
               data-testid="save-record"
               onClick={handleSave}
               disabled={saving}
@@ -93,6 +94,7 @@ export function Record({ type, value, onUpdate }: RecordProps) {
             <Button
               size="icon"
               variant="ghost"
+              aria-label={`Cancel editing ${type} record`}
               data-testid="cancel-edit"
               onClick={cancelEdit}
               disabled={saving}
@@ -105,6 +107,7 @@ export function Record({ type, value, onUpdate }: RecordProps) {
             <Button
               size="icon"
               variant="ghost"
+              aria-label={`Edit ${type} record`}
               data-testid="edit-record"
               onClick={() => setEditing(true)}
             >
@@ -113,6 +116,7 @@ export function Record({ type, value, onUpdate }: RecordProps) {
             <Button
               size="icon"
               variant="ghost"
+              aria-label={`Delete ${type} record`}
               data-testid="delete-record"
               onClick={() => setDeleteOpen(true)}
               className="text-destructive hover:text-destructive"
@@ -127,7 +131,7 @@ export function Record({ type, value, onUpdate }: RecordProps) {
           <DialogHeader>
             <DialogTitle>Confirm action</DialogTitle>
           </DialogHeader>
-          <p>Do you really want to remove the record?</p>
+          <p>Do you really want to remove the {type} record?</p>
           <DialogFooter>
             <Button
               variant="outline"

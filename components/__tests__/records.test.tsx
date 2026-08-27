@@ -19,6 +19,10 @@ vi.mock("@/lib/stores/record-store", () => ({
   }),
 }));
 
+vi.mock("@sentry/nextjs", () => ({
+  captureException: vi.fn(),
+}));
+
 vi.mock("sonner", () => {
   const fn = vi.fn((message: string) => message);
   return {
@@ -662,6 +666,60 @@ describe("Records", () => {
           data: "0x1234567890abcdef",
         });
       });
+    });
+  });
+
+  // The add path awaited `fetchResult` bare: a reverted transaction resolved,
+  // and the form told the user the record was added and cleared their input.
+  describe("failed add transactions", () => {
+    beforeEach(() => {
+      vi.spyOn(console, "error").mockImplementation(() => {});
+    });
+
+    async function submitAdd() {
+      render(<Records {...defaultProps} records={{ Bio: "Test bio" }} />);
+      fireEvent.click(screen.getByTestId("select-option-Twitter"));
+      const textarea = await screen.findByRole("textbox");
+      fireEvent.change(textarea, { target: { value: "@user" } });
+      fireEvent.click(screen.getByRole("button", { name: "Add record" }));
+    }
+
+    it("does not claim success when the add reverts on chain", async () => {
+      const { toast } = await import("sonner");
+      mockRepository.create.mockResolvedValue({
+        transactionHash: "mock-tx-hash",
+        fetchResult: Promise.resolve({
+          transactionHash: "mock-tx-hash",
+          hasError: true,
+          errorMessage: "out of gas",
+        }),
+      });
+
+      await submitAdd();
+
+      await waitFor(() => {
+        expect(toast.error).toHaveBeenCalledWith("out of gas");
+      });
+      expect(toast.success).not.toHaveBeenCalled();
+      expect(defaultProps.onUpdate).not.toHaveBeenCalled();
+      // The typed value survives a failed write.
+      expect(screen.getByRole("textbox")).toHaveValue("@user");
+    });
+
+    it("reports a rejected add instead of swallowing it", async () => {
+      const { toast } = await import("sonner");
+      const Sentry = await import("@sentry/nextjs");
+      mockRepository.create.mockRejectedValue(new Error("user rejected"));
+
+      await submitAdd();
+
+      await waitFor(() => {
+        expect(toast.error).toHaveBeenCalledWith("user rejected");
+      });
+      expect(Sentry.captureException).toHaveBeenCalled();
+      expect(
+        screen.getByRole("button", { name: "Add record" }),
+      ).not.toBeDisabled();
     });
   });
 });
