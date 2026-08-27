@@ -8,8 +8,14 @@ import { Badge } from "@/components/ui/badge";
 import { ArrowRight, Loader2, Search, X } from "lucide-react";
 import { validateDomainName, normalizeDomain } from "@/lib/domain-validator";
 import { useSdkStore } from "@/lib/stores/sdk-store";
+import { suggestNames } from "@/lib/suggestions";
 
 const EXAMPLE_NAMES = ["alice", "satoshi", "partisia"];
+
+// Each candidate costs one chain lookup, so we probe a small batch and show
+// the first few that come back free rather than checking every variation.
+const SUGGESTIONS_PROBED = 8;
+const SUGGESTIONS_SHOWN = 4;
 
 export function DomainSearch() {
   const [query, setQuery] = useState("");
@@ -19,6 +25,7 @@ export function DomainSearch() {
   } | null>(null);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const [suggestions, setSuggestions] = useState<string[]>([]);
   const metaNamesSdk = useSdkStore((s) => s.metaNamesSdk);
   const abortControllerRef = useRef<AbortController | null>(null);
   const inputRef = useRef<HTMLInputElement>(null);
@@ -119,6 +126,41 @@ export function DomainSearch() {
       controller.abort();
     };
   }, [query, searchDomain]);
+
+  // A taken name leaves the searcher with nothing to do. Probing a handful of
+  // variations turns the dead end into a next step — and only names confirmed
+  // free on chain are offered, so every chip leads to a registration that works.
+  useEffect(() => {
+    setSuggestions([]);
+    if (!metaNamesSdk || !result || result.available) return;
+
+    const controller = new AbortController();
+    const candidates = suggestNames(result.name, SUGGESTIONS_PROBED);
+
+    (async () => {
+      const free = await Promise.all(
+        candidates.map(async (candidate) => {
+          try {
+            const domain = await metaNamesSdk.domainRepository.find(
+              normalizeDomain(candidate),
+            );
+            return domain == null ? candidate : null;
+          } catch {
+            // One failed lookup should cost that one suggestion, not the row.
+            return null;
+          }
+        }),
+      );
+      if (controller.signal.aborted) return;
+      setSuggestions(
+        free
+          .filter((name): name is string => name !== null)
+          .slice(0, SUGGESTIONS_SHOWN),
+      );
+    })();
+
+    return () => controller.abort();
+  }, [metaNamesSdk, result]);
 
   const resultHref = result?.available
     ? `/register/${result.name.replace(/\.mpc$/, "")}`
@@ -232,6 +274,23 @@ export function DomainSearch() {
           </Link>
         ) : null}
       </div>
+      {suggestions.length > 0 && (
+        <div
+          className="flex flex-wrap items-center justify-center gap-2 text-xs text-muted-foreground px-1"
+          data-testid="name-suggestions"
+        >
+          <span>Taken. Try</span>
+          {suggestions.map((name) => (
+            <Link
+              key={name}
+              href={`/register/${name}`}
+              className="focus-ring glass-panel rounded-full px-2.5 py-1 hover:text-foreground hover:border-primary/40 transition-colors"
+            >
+              {name}.mpc
+            </Link>
+          ))}
+        </div>
+      )}
       {!query && (
         <div className="flex items-center justify-center gap-2 text-xs text-muted-foreground px-1">
           <span>Try</span>

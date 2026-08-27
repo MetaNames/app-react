@@ -21,7 +21,14 @@ import { formatDate } from "@/lib/utils";
 // which is the whole point of showing the date at all. The threshold is shared
 // with the profile table so the two views cannot disagree.
 import { expiryStatus, needsAttention } from "@/lib/expiry";
-import { AlertTriangle, Check, Copy } from "lucide-react";
+import {
+  AlertTriangle,
+  CalendarPlus,
+  Check,
+  Copy,
+  Loader2,
+} from "lucide-react";
+import { buildExpiryReminder, expiryReminderFilename } from "@/lib/calendar";
 
 interface DomainProps {
   domain: DomainType;
@@ -63,6 +70,26 @@ export function Domain({ domain, isTld = false, onUpdate }: DomainProps) {
   const handleRenew = useCallback(() => {
     router.push(`/domain/${domain.name}/renew`);
   }, [domain.name, router]);
+
+  // The expiry date is only a reminder while this page is open. Exporting it
+  // as a calendar event puts the warning where the owner will actually see it
+  // — a month out and a week out — without any account or notification setup.
+  const handleAddReminder = useCallback(() => {
+    if (!domain.expiresAt) return;
+    const ics = buildExpiryReminder({
+      domainName: domain.name,
+      expiresAt: new Date(domain.expiresAt),
+      url: window.location.href,
+    });
+    const url = URL.createObjectURL(
+      new Blob([ics], { type: "text/calendar;charset=utf-8" }),
+    );
+    const link = document.createElement("a");
+    link.href = url;
+    link.download = expiryReminderFilename(domain.name);
+    link.click();
+    URL.revokeObjectURL(url);
+  }, [domain.expiresAt, domain.name]);
 
   const handleTransfer = useCallback(() => {
     router.push(`/domain/${domain.name}/transfer`);
@@ -156,6 +183,19 @@ export function Domain({ domain, isTld = false, onUpdate }: DomainProps) {
             >
               Transfer
             </Button>
+            {domain.expiresAt && (
+              <Button
+                variant="outline"
+                size="icon"
+                aria-label="Add expiry reminder to calendar"
+                title="Add expiry reminder to calendar"
+                data-testid="add-expiry-reminder"
+                className="border-primary/40 hover:border-primary hover:bg-primary/10"
+                onClick={handleAddReminder}
+              >
+                <CalendarPlus className="h-4 w-4" aria-hidden="true" />
+              </Button>
+            )}
           </div>
         )}
       </div>
@@ -170,6 +210,18 @@ export function Domain({ domain, isTld = false, onUpdate }: DomainProps) {
               ? `Expired on ${formatDate(domain.expiresAt)}.`
               : `Expires in ${expiryDays} ${expiryDays === 1 ? "day" : "days"} (${formatDate(domain.expiresAt)}).`}
           </span>
+          {/* A warning with no way to act on it makes the owner hunt for the
+              renew button that is only rendered for them further up. */}
+          {isOwner && (
+            <Button
+              size="sm"
+              className="shrink-0"
+              onClick={handleRenew}
+              data-testid="expiry-renew"
+            >
+              Renew now
+            </Button>
+          )}
         </div>
       )}
       {isOwner && !isTld ? (
@@ -191,8 +243,19 @@ export function Domain({ domain, isTld = false, onUpdate }: DomainProps) {
             />
           </TabsContent>
           <TabsContent value="settings" className="mt-4 flex flex-col gap-4">
-            {repository && (
+            {repository ? (
               <Records records={domain.records ?? {}} onUpdate={onUpdate} />
+            ) : (
+              // The record repository is derived from a chain read; until it
+              // resolves this panel rendered as a blank rectangle, which reads
+              // as "this domain has no settings" rather than "still loading".
+              <div
+                className="glass-panel rounded-2xl p-6 flex items-center justify-center gap-2 text-sm text-muted-foreground"
+                role="status"
+              >
+                <Loader2 className="h-4 w-4 animate-spin" aria-hidden="true" />
+                Loading records...
+              </div>
             )}
           </TabsContent>
         </Tabs>
