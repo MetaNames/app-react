@@ -14,6 +14,7 @@ import {
   CSS_CLASSES,
   PLACEHOLDERS,
 } from "../constants";
+import { connectWallet } from "../helpers/wallet-helper";
 
 /**
  * Resolves the first record the owner can actually edit, together with its
@@ -95,11 +96,32 @@ export async function ensureEditableRecord(
   // while the record it had just added was seconds from appearing. Polling for
   // the editable row itself, rather than for a row count, also tolerates the
   // chain taking longer than the button did to reflect the write.
+  const appeared = await expect
+    .poll(
+      async () =>
+        (await editableRecord(page, preferred).catch(() => null)) !== null,
+      { timeout: LONG_API_TIMEOUT_MS * 2 },
+    )
+    .toBe(true)
+    .then(() => true)
+    .catch(() => false);
+
+  if (appeared) return editableRecord(page, preferred);
+
+  // A write that lands on chain but never reaches this page's state leaves the
+  // poll waiting on a row that will never arrive, and the test dies on the
+  // clock with a record it successfully created sitting in the contract. A
+  // reload reads the domain fresh; it also drops the wallet, which the
+  // settings tab needs back before it will mount.
+  await page.reload();
+  await connectWallet(page);
+  await navigateToSettingsTab(page);
+
   await expect
     .poll(
       async () =>
         (await editableRecord(page, preferred).catch(() => null)) !== null,
-      { timeout: LONG_API_TIMEOUT_MS * 4 },
+      { timeout: LONG_API_TIMEOUT_MS * 2 },
     )
     .toBe(true);
 

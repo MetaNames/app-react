@@ -29,6 +29,7 @@ import {
   Loader2,
 } from "lucide-react";
 import { buildExpiryReminder, expiryReminderFilename } from "@/lib/calendar";
+import { WatchButton } from "@/components/watch-button";
 
 interface DomainProps {
   domain: DomainType;
@@ -157,6 +158,10 @@ export function Domain({ domain, isTld = false, onUpdate }: DomainProps) {
                 Copied to the clipboard
               </span>
             )}
+            {/* Watching a name you already own says nothing, so the star is
+                for everyone else — the people who need somewhere to keep a
+                name they are waiting on. */}
+            {!isOwner && !isTld && <WatchButton name={domain.name} />}
             {isOwner && (
               <span className="rounded-full px-2.5 py-0.5 text-[11px] font-semibold bg-[var(--chip-registered-bg)] text-[var(--chip-registered-fg)]">
                 Yours

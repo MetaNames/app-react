@@ -9,6 +9,7 @@ import type { Domain } from "@/lib/types";
 import { Wallet } from "lucide-react";
 import { Skeleton } from "@/components/ui/skeleton";
 import { ConnectWalletCta } from "@/components/connect-wallet-cta";
+import { WatchlistSection } from "@/components/watchlist";
 
 export function ProfilePageClient() {
   const address = useWalletStore((s) => s.address);
@@ -72,6 +73,11 @@ export function ProfilePageClient() {
           Your .mpc names, their records and their expiry dates all live here.
         </p>
         <ConnectWalletCta label="Connect wallet" />
+        {/* The watchlist is local, so it is the one thing this page can still
+            show before a wallet exists — and the reason to come back. */}
+        <div className="mt-8 w-full max-w-md text-left">
+          <WatchlistSection />
+        </div>
       </div>
     );
 
@@ -107,6 +113,7 @@ export function ProfilePageClient() {
           <DomainsTable domains={domains} />
         )}
       </section>
+      <WatchlistSection />
     </div>
   );
 }
