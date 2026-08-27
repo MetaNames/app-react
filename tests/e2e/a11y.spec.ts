@@ -64,12 +64,26 @@ test.describe("WCAG 2.2 A + AA", () => {
 
 test("the search result is inside a live region", async ({ page }) => {
   await page.goto("/", { waitUntil: "domcontentloaded" });
-  await page
-    .locator("input[placeholder='Search for a .mpc domain...']")
-    .fill("test");
-
+  const input = page.locator(
+    "input[placeholder='Search for a .mpc domain...']",
+  );
   const status = page.locator('div[role="status"][aria-live="polite"]');
-  await expect(status.locator("a")).toBeVisible({ timeout: 15000 });
+
+  // Typing before hydration fills the DOM node without React ever seeing an
+  // onChange, so the lookup never fires and the region stays empty for the
+  // whole timeout. Re-typing after hydration is what un-sticks it.
+  for (let attempt = 0; attempt < 3; attempt++) {
+    await input.fill("");
+    await input.fill("test");
+    try {
+      await expect(status.locator("a")).toBeVisible({ timeout: 10000 });
+      return;
+    } catch {
+      // Next attempt retypes.
+    }
+  }
+
+  await expect(status.locator("a")).toBeVisible({ timeout: 10000 });
 });
 
 // The register route's loading spinner sits in a `role="status"` region that names what is being
@@ -113,11 +127,27 @@ test("a successful chip copy is announced", async ({ browser }) => {
 
   const chip = page.locator("button", { hasText: "Expires" }).first();
   await expect(chip).toBeVisible({ timeout: 15000 });
-  await chip.click();
 
-  await expect(chip.locator('[role="status"]')).toHaveText(
-    "Copied to the clipboard",
-  );
+  // A click that lands before the chip's handler is attached copies nothing and
+  // announces nothing, and the status node only exists once a copy succeeds —
+  // so the assertion had no element to wait on. Clicking again after hydration
+  // is harmless: the copy is idempotent.
+  const announcement = chip.locator('[role="status"]');
+  for (let attempt = 0; attempt < 3; attempt++) {
+    await chip.click();
+    try {
+      await expect(announcement).toHaveText("Copied to the clipboard", {
+        timeout: 5000,
+      });
+      break;
+    } catch {
+      if (attempt === 2) {
+        await expect(announcement).toHaveText("Copied to the clipboard", {
+          timeout: 5000,
+        });
+      }
+    }
+  }
   await ctx.close();
 });
 
@@ -243,9 +273,10 @@ test("reduced motion is honoured without hiding what was animating", async ({
 
   // Collapsing every duration to ~0 is only safe if the end state is the visible one: the wallet
   // dropdown still has to open with reduced motion honoured, not suppressed content.
-  await walletButton.focus();
-  await page.keyboard.press("Enter");
-  await expect(page.locator(MENU_ITEM).first()).toBeVisible();
+  // Same hydration race the ring test hit: a keypress that lands before the
+  // trigger is wired does nothing, so retry through the shared helper rather
+  // than assert on a single press.
+  await openWalletMenuFromKeyboard(page);
 
   await ctx.close();
 });

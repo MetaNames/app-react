@@ -83,15 +83,25 @@ export const connectWallet = async (page: Page): Promise<boolean> => {
     .first();
   await connectBtn.waitFor({ state: "visible", timeout: CONNECT_TIMEOUT_MS });
 
-  // The button mounts before hydration finishes; a click in that window does
-  // nothing and the test then waits out its whole budget on a menu that was
-  // never opened. But the trigger is a toggle — a blind retry closes the menu
-  // it was meant to open — so a retry only happens while the menu is shut.
+  // The button mounts before hydration finishes, and two different things can
+  // go wrong in that window: the click does nothing at all, or the menu opens
+  // while the dev-key section — gated on a post-mount effect — is still absent
+  // from it. The trigger is a toggle, so each retry closes whatever is open
+  // (Escape, not a second click, which would race the toggle) and opens it
+  // afresh; a retry that merely re-waited on the same stale menu burned the
+  // whole budget without ever changing the page.
   const devKeyInput = page.locator('[data-testid="dev-key-input"]');
   const menu = page.locator('[role="menu"]');
 
   let winner: "devKey" | "connected" | null = null;
   for (let attempt = 0; attempt < CONNECT_ATTEMPTS && !winner; attempt++) {
+    if (attempt > 0) {
+      await page.keyboard.press("Escape").catch(() => {});
+      await menu
+        .first()
+        .waitFor({ state: "hidden", timeout: CONNECT_ATTEMPT_TIMEOUT_MS })
+        .catch(() => {});
+    }
     const menuOpen = await menu
       .first()
       .isVisible()

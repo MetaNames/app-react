@@ -194,7 +194,10 @@ test.describe("Record CRUD lifecycle on freshly registered subdomain", () => {
 
     // And it must survive a reload — the component resetting is not proof the
     // chain accepted the write.
-    await page.reload();
+    // A plain reload drops the wallet — this app persists no session — so the
+    // owner-only settings tab never mounts and the re-read below timed out on
+    // a page that was working exactly as designed.
+    await gotoAndRestoreWallet(page, `/domain/${subdomain}`);
     await waitForDomainTitle(page, subdomain);
     await navigateToSettingsTab(page);
     await expect(
