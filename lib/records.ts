@@ -1,4 +1,5 @@
 import type { RecordClass, RecordRepository } from "./types";
+import { explorerAddressUrl } from "./url";
 import { RECORD_CLASS_MAP } from "./constants";
 import { getRecordValidator, type MetaNamesSdk } from "@metanames/sdk";
 
@@ -37,7 +38,67 @@ export function validateRecordValue(
   return null;
 }
 
-export const isUrlRecord = (type: RecordClass) => type === "Uri";
+/**
+ * Only these two schemes reach an href we build. A record is 64 characters of
+ * whatever its owner typed, so a value beginning `javascript:` or `data:`
+ * would otherwise become a link that runs it — anyone visiting the domain page
+ * being the target. Anything without a scheme is treated as a bare host and
+ * gets `https://`, which is what someone typing `example.com` means.
+ */
+const SAFE_URL_SCHEMES = ["http:", "https:"];
+
+/** A handle, with or without the leading @, and nothing else. */
+const TWITTER_HANDLE = /^@?[A-Za-z0-9_]{1,15}$/;
+
+function webUrl(value: string): string | null {
+  const candidate = /^[a-zA-Z][a-zA-Z0-9+.-]*:/.test(value)
+    ? value
+    : `https://${value}`;
+  try {
+    const url = new URL(candidate);
+    return SAFE_URL_SCHEMES.includes(url.protocol) ? url.toString() : null;
+  } catch {
+    return null;
+  }
+}
+
+/**
+ * Where a record value points, or null when it points nowhere.
+ *
+ * A record is only useful once you can act on it, and until now every class
+ * but Uri rendered as text: an email you had to retype, a handle you had to
+ * search for, an address you had to paste into the explorer yourself. The
+ * value is still shown verbatim — this only decides what clicking it does.
+ */
+export function recordLink(type: RecordClass, value: string): string | null {
+  const trimmed = value.trim();
+  if (!trimmed) return null;
+
+  switch (type) {
+    case "Uri":
+      return webUrl(trimmed);
+    case "Email":
+      // The chain accepts anything the SDK validator passed, but a value with
+      // a space or no @ is not an address and must not become a mailto link.
+      return /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(trimmed)
+        ? `mailto:${trimmed}`
+        : null;
+    case "Twitter":
+      return TWITTER_HANDLE.test(trimmed)
+        ? `https://x.com/${trimmed.replace(/^@/, "")}`
+        : null;
+    case "Wallet":
+      // Explorer links are built from the address bytes, so only a value that
+      // looks like one gets a link rather than a 404.
+      return /^[0-9a-fA-F]{42}$/.test(trimmed)
+        ? explorerAddressUrl(trimmed.toLowerCase())
+        : null;
+    // Bio, Price and Discord have nowhere to go: a Discord tag is not
+    // addressable by URL, and the other two are plain data.
+    default:
+      return null;
+  }
+}
 
 /**
  * Fetch the SDK Domain object and derive its RecordRepository.

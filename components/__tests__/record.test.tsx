@@ -21,11 +21,17 @@ vi.mock("@/lib/url", () => ({
     (tx: string) =>
       `https://browser.testnet.partisiablockchain.com/transactions/${tx}`,
   ),
+  explorerAddressUrl: vi.fn(
+    (address: string) =>
+      `https://browser.testnet.partisiablockchain.com/accounts/${address}/assets`,
+  ),
 }));
 
-vi.mock("@/lib/records", () => ({
+// `recordLink` stays real: which values become links is the behaviour these
+// tests are checking, and a mock would assert only that the mock was called.
+vi.mock("@/lib/records", async (importOriginal) => ({
+  ...(await importOriginal<typeof import("@/lib/records")>()),
   validateRecordValue: vi.fn(() => null),
-  isUrlRecord: vi.fn(() => false),
 }));
 
 vi.mock("@/components/ui/button", () => ({
@@ -389,19 +395,72 @@ describe("Record", () => {
     });
   });
 
-  describe("URL record rendering", () => {
-    it("renders URL record as clickable link when isUrlRecord returns true", async () => {
-      const { isUrlRecord } = await import("@/lib/records");
-      vi.mocked(isUrlRecord).mockReturnValue(true);
-
+  describe("record values that lead somewhere", () => {
+    it("links a URL record to the address it stores", () => {
       render(
         <Record {...defaultProps} type="Uri" value="https://example.com" />,
       );
 
       const link = screen.getByRole("link");
-      expect(link).toHaveAttribute("href", "https://example.com");
+      expect(link).toHaveAttribute("href", "https://example.com/");
       expect(link).toHaveAttribute("target", "_blank");
       expect(link).toHaveAttribute("rel", "noopener noreferrer");
+    });
+
+    // Someone typing a domain into a URL field means the site, not a path on
+    // this one — which is what a schemeless href would resolve to.
+    it("reads a schemeless URL as a website, not a path on this site", () => {
+      render(<Record {...defaultProps} type="Uri" value="example.com" />);
+
+      expect(screen.getByRole("link")).toHaveAttribute(
+        "href",
+        "https://example.com/",
+      );
+    });
+
+    it("opens a mail client for an email record", () => {
+      render(<Record {...defaultProps} type="Email" value="a@b.com" />);
+
+      expect(screen.getByRole("link")).toHaveAttribute(
+        "href",
+        "mailto:a@b.com",
+      );
+    });
+
+    it("links a Twitter handle to the profile, with or without the @", () => {
+      render(<Record {...defaultProps} type="Twitter" value="@metanames_" />);
+
+      expect(screen.getByRole("link")).toHaveAttribute(
+        "href",
+        "https://x.com/metanames_",
+      );
+    });
+
+    it("links a wallet record to the explorer", () => {
+      const address = "00" + "a".repeat(40);
+      render(<Record {...defaultProps} type="Wallet" value={address} />);
+
+      expect(screen.getByRole("link")).toHaveAttribute(
+        "href",
+        `https://browser.testnet.partisiablockchain.com/accounts/${address}/assets`,
+      );
+    });
+
+    it("leaves a value with nowhere to go as plain text", () => {
+      render(<Record {...defaultProps} type="Bio" value="hello there" />);
+
+      expect(screen.queryByRole("link")).not.toBeInTheDocument();
+      expect(screen.getByText("hello there")).toBeInTheDocument();
+    });
+
+    // A record is 64 characters of whatever its owner typed, so the page must
+    // never turn one into a link that executes it.
+    it("refuses to link a javascript: value", () => {
+      render(
+        <Record {...defaultProps} type="Uri" value="javascript:alert(1)" />,
+      );
+
+      expect(screen.queryByRole("link")).not.toBeInTheDocument();
     });
   });
 

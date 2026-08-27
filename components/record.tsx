@@ -9,7 +9,7 @@ import {
   DialogFooter,
 } from "@/components/ui/dialog";
 import { Copy, Pencil, Trash2, X, Check } from "lucide-react";
-import { isUrlRecord } from "@/lib/records";
+import { recordLink } from "@/lib/records";
 import { RECORD_CLASS_MAP } from "@/lib/constants";
 import type { RecordClass } from "@/lib/types";
 import { useRecordManagement } from "@/lib/hooks/use-record-management";
@@ -51,6 +51,12 @@ export function Record({ type, value, onUpdate }: RecordProps) {
   // being able to change a value says nothing about wanting to copy it.
   const { copied, copy } = useCopyToClipboard();
 
+  // A record is only worth something once you can act on it: mail the address,
+  // open the profile, look the wallet up on the explorer. The value is still
+  // shown exactly as stored — this decides only where clicking it goes, and
+  // stays null for values that lead nowhere.
+  const href = recordLink(type, value);
+
   return (
     <div className="record-container flex items-start gap-3 py-3 border-b border-border/60 last:border-0">
       <div className="flex-1 min-w-0">
@@ -77,12 +83,13 @@ export function Record({ type, value, onUpdate }: RecordProps) {
           </div>
         ) : (
           <p className="mt-0.5 truncate">
-            {isUrlRecord(type) ? (
+            {href ? (
               <a
-                href={value}
+                href={href}
                 target="_blank"
                 rel="noopener noreferrer"
                 className="hover:underline"
+                data-testid="record-link"
               >
                 {value}
               </a>

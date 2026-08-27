@@ -40,9 +40,9 @@ vi.mock("@/lib/url", () => ({
   ),
 }));
 
-vi.mock("@/lib/records", () => ({
+vi.mock("@/lib/records", async (importOriginal) => ({
+  ...(await importOriginal<typeof import("@/lib/records")>()),
   validateRecordValue: vi.fn(() => null),
-  isUrlRecord: vi.fn(() => false),
 }));
 
 vi.mock("@/components/ui/button", () => ({

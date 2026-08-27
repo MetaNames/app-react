@@ -1,8 +1,8 @@
 import { describe, it, expect, vi } from "vitest";
 import {
   validateRecordValue,
-  isUrlRecord,
   createRecordRepository,
+  recordLink,
 } from "../records";
 
 describe("validateRecordValue", () => {
@@ -265,36 +265,6 @@ describe("validateRecordValue", () => {
   });
 });
 
-describe("isUrlRecord", () => {
-  it("returns true for Uri", () => {
-    expect(isUrlRecord("Uri")).toBe(true);
-  });
-
-  it("returns false for Bio", () => {
-    expect(isUrlRecord("Bio")).toBe(false);
-  });
-
-  it("returns false for Email", () => {
-    expect(isUrlRecord("Email")).toBe(false);
-  });
-
-  it("returns false for Wallet", () => {
-    expect(isUrlRecord("Wallet")).toBe(false);
-  });
-
-  it("returns false for Price", () => {
-    expect(isUrlRecord("Price")).toBe(false);
-  });
-
-  it("returns false for Twitter", () => {
-    expect(isUrlRecord("Twitter")).toBe(false);
-  });
-
-  it("returns false for Discord", () => {
-    expect(isUrlRecord("Discord")).toBe(false);
-  });
-});
-
 describe("createRecordRepository", () => {
   function sdkWith(domain: unknown) {
     return {
@@ -319,5 +289,77 @@ describe("createRecordRepository", () => {
     await expect(
       createRecordRepository(sdkWith(null), "nobody.mpc"),
     ).resolves.toBeNull();
+  });
+});
+
+describe("recordLink", () => {
+  it("keeps a URL that already carries a scheme", () => {
+    expect(recordLink("Uri", "https://example.com/path")).toBe(
+      "https://example.com/path",
+    );
+  });
+
+  // Without a scheme the browser resolves the href against this site, so
+  // `example.com` would link to /domain/name.mpc/example.com.
+  it("treats a schemeless URL as a website", () => {
+    expect(recordLink("Uri", "example.com")).toBe("https://example.com/");
+  });
+
+  it.each(["javascript:alert(1)", "data:text/html,<script>", "file:///etc"])(
+    "refuses to link %s",
+    (value) => {
+      expect(recordLink("Uri", value)).toBeNull();
+    },
+  );
+
+  it("links an email to a mail client", () => {
+    expect(recordLink("Email", "someone@example.com")).toBe(
+      "mailto:someone@example.com",
+    );
+  });
+
+  it("leaves a value that is not an address unlinked", () => {
+    expect(recordLink("Email", "not an email")).toBeNull();
+  });
+
+  it("links a Twitter handle whether or not it carries the @", () => {
+    expect(recordLink("Twitter", "@metanames_")).toBe(
+      "https://x.com/metanames_",
+    );
+    expect(recordLink("Twitter", "metanames_")).toBe(
+      "https://x.com/metanames_",
+    );
+  });
+
+  it("leaves anything longer than a handle unlinked", () => {
+    expect(recordLink("Twitter", "a".repeat(16))).toBeNull();
+    expect(recordLink("Twitter", "two words")).toBeNull();
+  });
+
+  it("links an account address to its explorer page", () => {
+    const address = `00${"a".repeat(40)}`;
+    expect(recordLink("Wallet", address)).toContain(`/accounts/${address}`);
+  });
+
+  it("links a contract address to the contract page", () => {
+    const address = `01${"b".repeat(40)}`;
+    expect(recordLink("Wallet", address)).toContain(`/contracts/${address}`);
+  });
+
+  it("leaves a wallet value that is not an address unlinked", () => {
+    expect(recordLink("Wallet", "my wallet")).toBeNull();
+    expect(recordLink("Wallet", "00abc")).toBeNull();
+  });
+
+  it.each(["Bio", "Price", "Discord"] as const)(
+    "gives %s nowhere to go",
+    (type) => {
+      expect(recordLink(type, "anything")).toBeNull();
+    },
+  );
+
+  it("ignores surrounding whitespace, and an empty value", () => {
+    expect(recordLink("Email", "  a@b.com  ")).toBe("mailto:a@b.com");
+    expect(recordLink("Uri", "   ")).toBeNull();
   });
 });
