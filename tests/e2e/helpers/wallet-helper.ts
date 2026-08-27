@@ -16,7 +16,10 @@ import { Locator, Page, expect } from "@playwright/test";
 // 5s, 10s and 15s waits, so which step timed out depended on how loaded the
 // testnet was rather than on what was actually broken.
 const CONNECT_TIMEOUT_MS = 15000;
-const CONNECT_ATTEMPTS = 3;
+// Five short attempts rather than three long ones: what these retries wait out
+// is hydration, which either has happened or has not — a longer single window
+// buys nothing, while more windows cover the page that hydrates late.
+const CONNECT_ATTEMPTS = 5;
 // A click that lands before hydration needs the dialog re-opening, so each
 // attempt gets a window of its own. Three of them plus the close waits still
 // has to fit inside a spec's whole budget alongside navigation and the chain
@@ -24,7 +27,7 @@ const CONNECT_ATTEMPTS = 3;
 // reported as "the wallet never connected" rather than as the timeout it was.
 // Hydration settles far inside 6s — the retries are for the render that misses
 // it, not for a slow one.
-const CONNECT_ATTEMPT_TIMEOUT_MS = 6000;
+const CONNECT_ATTEMPT_TIMEOUT_MS = 5000;
 const MENU_CLOSE_TIMEOUT_MS = 2000;
 
 // Get the testnet private key from environment

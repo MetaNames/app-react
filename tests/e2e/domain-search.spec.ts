@@ -1,7 +1,11 @@
 import { test, expect } from "@playwright/test";
 import { type Page } from "@playwright/test";
 import { LONG_API_TIMEOUT_MS, PLACEHOLDERS } from "./constants";
-import { generateTestDomain, waitForSearchSettled } from "./fixtures/shared";
+import {
+  generateTestDomain,
+  typeSearch,
+  waitForSearchSettled,
+} from "./fixtures/shared";
 
 const getSearchInput = (page: Page) =>
   page.getByPlaceholder(PLACEHOLDERS.SEARCH_DOMAIN);
@@ -19,8 +23,7 @@ test.describe("Domain Search", () => {
   test("should show validation error for invalid characters", async ({
     page,
   }) => {
-    const input = getSearchInput(page);
-    await input.fill("test!@#");
+    await typeSearch(page, "test!@#");
 
     const errorMsg = page.locator("p.text-destructive");
     await expect(errorMsg).toContainText(
@@ -29,24 +32,21 @@ test.describe("Domain Search", () => {
   });
 
   test("should show validation error for leading hyphen", async ({ page }) => {
-    const input = getSearchInput(page);
-    await input.fill("-test");
+    await typeSearch(page, "-test");
 
     const errorMsg = page.locator("p.text-destructive");
     await expect(errorMsg).toContainText("Cannot start or end with a hyphen");
   });
 
   test("should show validation error for trailing hyphen", async ({ page }) => {
-    const input = getSearchInput(page);
-    await input.fill("test-");
+    await typeSearch(page, "test-");
 
     const errorMsg = page.locator("p.text-destructive");
     await expect(errorMsg).toContainText("Cannot start or end with a hyphen");
   });
 
   test("should allow searching for 1-letter domain", async ({ page }) => {
-    const input = getSearchInput(page);
-    await input.fill("a");
+    await typeSearch(page, "a");
     await waitForSearchSettled(page);
 
     // A single character is a legal name: the lookup must resolve to a verdict
@@ -59,8 +59,7 @@ test.describe("Domain Search", () => {
   test("should report progress while checking availability", async ({
     page,
   }) => {
-    const input = getSearchInput(page);
-    await input.fill("loadingtest" + Date.now());
+    await typeSearch(page, "loadingtest" + Date.now());
 
     // Asserting the spinner is *visible* races the lookup: a fast testnet read
     // resolves before the assertion runs and the test fails on healthy
@@ -78,9 +77,8 @@ test.describe("Domain Search", () => {
   });
 
   test("should show available badge for new domain", async ({ page }) => {
-    const input = getSearchInput(page);
     const testDomain = generateTestDomain("zzztest");
-    await input.fill(testDomain);
+    await typeSearch(page, testDomain);
     await waitForSearchSettled(page);
 
     const availableBadge = page.getByText("Available");
@@ -88,8 +86,7 @@ test.describe("Domain Search", () => {
   });
 
   test("should show registered badge for existing domain", async ({ page }) => {
-    const input = getSearchInput(page);
-    await input.fill("test");
+    await typeSearch(page, "test");
     await waitForSearchSettled(page);
 
     const registeredBadge = page.getByText("Registered");
@@ -99,9 +96,8 @@ test.describe("Domain Search", () => {
   test("should navigate to register page for available domain", async ({
     page,
   }) => {
-    const input = getSearchInput(page);
     const testDomain = generateTestDomain("avail");
-    await input.fill(testDomain);
+    await typeSearch(page, testDomain);
     await waitForSearchSettled(page);
 
     const card = page.locator('a[href^="/register/"]');
@@ -111,8 +107,7 @@ test.describe("Domain Search", () => {
   test("should navigate to domain page for registered domain", async ({
     page,
   }) => {
-    const input = getSearchInput(page);
-    await input.fill("test");
+    await typeSearch(page, "test");
     await waitForSearchSettled(page);
 
     const card = page.locator('a[href^="/domain/"]');
@@ -121,7 +116,7 @@ test.describe("Domain Search", () => {
 
   test("should clear results when input is cleared", async ({ page }) => {
     const input = getSearchInput(page);
-    await input.fill("test");
+    await typeSearch(page, "test");
     await waitForSearchSettled(page);
 
     await expect(page.getByText("Registered")).toBeVisible({
@@ -134,7 +129,7 @@ test.describe("Domain Search", () => {
 
   test("should trigger search immediately on Enter key", async ({ page }) => {
     const input = getSearchInput(page);
-    await input.fill("enterkeytest" + Date.now());
+    await typeSearch(page, "enterkeytest" + Date.now());
     await input.press("Enter");
 
     await expect(page.getByText(/^(Available|Registered)$/)).toBeVisible({
@@ -147,7 +142,7 @@ test.describe("Domain Search", () => {
   }) => {
     const input = getSearchInput(page);
     const testDomain = generateTestDomain("zzzenter");
-    await input.fill(testDomain);
+    await typeSearch(page, testDomain);
     await input.press("Enter");
 
     const availableBadge = page.getByText("Available");
@@ -159,7 +154,7 @@ test.describe("Domain Search", () => {
   }) => {
     const input = getSearchInput(page);
     const testDomain = generateTestDomain("zzznavig");
-    await input.fill(testDomain);
+    await typeSearch(page, testDomain);
     await waitForSearchSettled(page);
 
     const availableBadge = page.getByText("Available");

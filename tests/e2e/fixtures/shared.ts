@@ -203,9 +203,40 @@ export async function waitForSearchSettled(
 /**
  * Fill the search input and wait for the lookup it triggers to settle.
  */
-export async function searchDomain(page: Page, domain: string) {
+/**
+ * Type a query into the home-page search and wait until React has actually
+ * taken it.
+ *
+ * Typing before hydration sets the DOM value and nothing else: no onChange
+ * fires, so no lookup runs and no validation renders, and every assertion that
+ * follows fails against a page that never saw the query. Either the live region
+ * or a validation message appearing is proof the input landed — until one of
+ * them does, retype.
+ */
+export async function typeSearch(page: Page, domain: string) {
   const input = page.getByPlaceholder(PLACEHOLDERS.SEARCH_DOMAIN);
   await input.fill(domain);
+  if (!domain) return input;
+
+  const reacted = page
+    .locator('div[role="status"] a')
+    .or(page.locator("p.text-destructive"))
+    .first();
+  for (let attempt = 0; attempt < 3; attempt++) {
+    try {
+      await expect(reacted).toBeVisible({ timeout: 5000 });
+      break;
+    } catch {
+      await input.fill("");
+      await input.fill(domain);
+    }
+  }
+
+  return input;
+}
+
+export async function searchDomain(page: Page, domain: string) {
+  await typeSearch(page, domain);
   if (!domain) return;
   await waitForSearchSettled(page);
 }
