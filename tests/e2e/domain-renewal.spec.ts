@@ -16,7 +16,7 @@ const RENEWAL_URL = `/domain/${TEST_DOMAIN_NAME}/renew`;
 
 test.describe("Domain Renewal", () => {
   // Two wallet connects plus the ownership read outgrow 60s on testnet.
-  test.setTimeout(120000);
+  test.describe.configure({ timeout: 120000 });
 
   // Disconnected-state test must be outside the wallet-connected describe
   test("should show wallet connection prompt when not connected", async ({

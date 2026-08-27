@@ -130,7 +130,10 @@
     left: 50%;
     top: 0;
     transform: translateX(-50%);
-    width: min(120vw, 960px);
+    /* 120vw pushed the decoration past the right edge of a phone screen and
+       gave every page a horizontal scrollbar. The beam is a background flourish;
+       it has no business widening the document. */
+    width: min(100vw, 960px);
     height: 480px;
     background: radial-gradient(
       50% 60% at 50% 0%,

@@ -59,7 +59,7 @@ export default async function DomainPage({ params }: PageProps) {
   const domainName = normalizeDomain(lowered);
 
   return (
-    <div className="flex flex-col items-center justify-center flex-1 gap-8 py-12">
+    <div className="flex flex-col items-center flex-1 gap-8 py-12">
       <Suspense fallback={<Loading />}>
         <DomainPageContent domainName={domainName} />
       </Suspense>

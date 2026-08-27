@@ -38,18 +38,22 @@ export function Header() {
   return (
     <header className="border-b border-border/60 sticky top-0 z-50 bg-background/70 backdrop-blur-xl">
       <div className="container mx-auto px-4 h-16 flex items-center justify-between">
-        <div className="flex items-center gap-3">
+        <div className="flex min-w-0 items-center gap-2 sm:gap-3">
           <Logo />
+          {/* The testnet badge is hidden on the narrowest screens: with the
+              logo, the wallet button and the menu toggle all competing for
+              390px, keeping it pushed the right-hand group past the edge of
+              the viewport. */}
           {config.isTestnet && (
             <Badge
               variant="outline"
-              className="text-[10px] tracking-[0.15em] text-muted-foreground border-border"
+              className="hidden sm:inline-flex text-[10px] tracking-[0.15em] text-muted-foreground border-border"
             >
               TESTNET
             </Badge>
           )}
         </div>
-        <div className="flex items-center gap-4">
+        <div className="flex shrink-0 items-center gap-2 sm:gap-4">
           <nav className="hidden md:flex items-center gap-4">
             {NAV_LINKS.map(({ href, label }) => {
               const active =

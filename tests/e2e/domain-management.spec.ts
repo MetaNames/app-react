@@ -13,7 +13,7 @@ test.describe("Domain Management", () => {
   // A wallet connect plus a chain read for ownership regularly outlasts 60s on
   // testnet, and the budget expiring mid-hook reported as "wallet never
   // connected" rather than as the timeout it was.
-  test.setTimeout(150000);
+  test.describe.configure({ timeout: 150000 });
 
   test.beforeEach(async ({ page }) => {
     await gotoAndRestoreWallet(page, `/domain/${TEST_DOMAIN_NAME}`);

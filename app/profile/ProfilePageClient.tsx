@@ -8,6 +8,7 @@ import { explorerAddressUrl } from "@/lib/url";
 import type { Domain } from "@/lib/types";
 import { Wallet } from "lucide-react";
 import { Skeleton } from "@/components/ui/skeleton";
+import { ConnectWalletCta } from "@/components/connect-wallet-cta";
 
 export function ProfilePageClient() {
   const address = useWalletStore((s) => s.address);
@@ -68,8 +69,9 @@ export function ProfilePageClient() {
           Connect your wallet to see your domains
         </p>
         <p className="text-sm text-muted-foreground">
-          Use the Connect Wallet button in the top right to get started.
+          Your .mpc names, their records and their expiry dates all live here.
         </p>
+        <ConnectWalletCta label="Connect wallet" />
       </div>
     );
 

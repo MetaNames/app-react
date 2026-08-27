@@ -31,7 +31,7 @@ test.describe("DNS Records Management", () => {
   // A record write waits up to 60s for the chain to confirm, so a 60s test
   // budget could never contain one — the test timed out on the very wait it
   // was there to perform.
-  test.setTimeout(150000);
+  test.describe.configure({ timeout: 150000 });
 
   // Disconnected visitor viewing the domain — settings tab / editor not shown
   test("non-owner view does not show records editor", async ({ page }) => {

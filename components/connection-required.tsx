@@ -1,5 +1,7 @@
 "use client";
 
+import { ConnectWalletCta } from "@/components/connect-wallet-cta";
+
 interface ConnectionRequiredProps {
   children: React.ReactNode;
   fallback?: React.ReactNode;
@@ -19,6 +21,7 @@ export function ConnectionRequired({
         <p className="text-muted-foreground text-lg">
           Connect your wallet to continue
         </p>
+        <ConnectWalletCta />
       </div>
     );
   return <>{children}</>;

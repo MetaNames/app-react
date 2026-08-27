@@ -41,7 +41,7 @@ const EDITED_VALUE = `edited by e2e test ${RUN_ID}`;
 test.describe("Record CRUD lifecycle on freshly registered subdomain", () => {
   test.describe.configure({ mode: "serial" });
   // Subdomain registration is a single blockchain tx — allow up to 3 min.
-  test.setTimeout(180000);
+  test.describe.configure({ timeout: 180000 });
 
   // ── Step 1: Mint ────────────────────────────────────────────────────────────
   test("step 1 — register a subdomain of name.mpc", async ({ page }) => {

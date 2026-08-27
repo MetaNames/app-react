@@ -303,7 +303,7 @@ test.describe("Domain Registration", () => {
 
   test.describe("Full Registration Flow with TEST_COIN", () => {
     // Two blockchain transactions: approve fees + register domain.
-    test.setTimeout(300000);
+    test.describe.configure({ timeout: 300000 });
 
     test("should register a new domain end-to-end using TEST_COIN", async ({
       page,
