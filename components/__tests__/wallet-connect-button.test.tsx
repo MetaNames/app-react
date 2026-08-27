@@ -138,4 +138,93 @@ describe("WalletConnectButton", () => {
       screen.queryByTestId("wallet-connect-button"),
     ).not.toBeInTheDocument();
   });
+
+  it("connects through Ledger and stores the returned address", async () => {
+    connectLedger.mockResolvedValue("0xledger");
+    render(<WalletConnectButton />);
+
+    fireEvent.click(screen.getByText("Ledger"));
+
+    await waitFor(() => {
+      expect(useWalletStore.getState().address).toBe("0xledger");
+    });
+    expect(toast.success).toHaveBeenCalledWith("Wallet connected");
+  });
+
+  it("connects with a valid dev key and reports it as a dev connection", async () => {
+    connectDevPrivateKey.mockResolvedValue("0xdev");
+    render(<WalletConnectButton />);
+
+    const key = "a".repeat(64);
+    fireEvent.change(screen.getByTestId("dev-key-input"), {
+      target: { value: key },
+    });
+    fireEvent.click(screen.getByTestId("dev-key-connect-button"));
+
+    await waitFor(() => {
+      expect(toast.success).toHaveBeenCalledWith("Dev wallet connected");
+    });
+    expect(connectDevPrivateKey).toHaveBeenCalledWith(expect.anything(), key);
+  });
+
+  // A half-typed key must not be submittable: the connector would reject it and
+  // the user would read a cryptic failure instead of "keep typing".
+  it("keeps the dev connect button disabled until the key is 64 hex chars", () => {
+    render(<WalletConnectButton />);
+    const button = screen.getByTestId("dev-key-connect-button");
+
+    expect(button).toBeDisabled();
+
+    fireEvent.change(screen.getByTestId("dev-key-input"), {
+      target: { value: "a".repeat(63) },
+    });
+    expect(button).toBeDisabled();
+
+    fireEvent.change(screen.getByTestId("dev-key-input"), {
+      target: { value: "a".repeat(64) },
+    });
+    expect(button).toBeEnabled();
+  });
+
+  // Clicking a connector before the SDK finishes booting is a no-op rather than
+  // a crash, and must not leave a half-connected address behind.
+  it("ignores a connect click while the SDK is still initialising", async () => {
+    useSdkStore.setState({ metaNamesSdk: undefined });
+    render(<WalletConnectButton />);
+
+    fireEvent.click(screen.getByText("MetaMask Wallet"));
+
+    await waitFor(() => {
+      expect(connectMetaMask).not.toHaveBeenCalled();
+    });
+    expect(useWalletStore.getState().address).toBeUndefined();
+  });
+
+  it("tells the user to wait when a dev key is submitted before the SDK is ready", async () => {
+    useSdkStore.setState({ metaNamesSdk: undefined });
+    render(<WalletConnectButton />);
+
+    fireEvent.change(screen.getByTestId("dev-key-input"), {
+      target: { value: "a".repeat(64) },
+    });
+    fireEvent.click(screen.getByTestId("dev-key-connect-button"));
+
+    await waitFor(() => {
+      expect(toast.error).toHaveBeenCalledWith("SDK not ready, please wait...");
+    });
+    expect(connectDevPrivateKey).not.toHaveBeenCalled();
+  });
+
+  it("clears the address and resets the signing strategy on disconnect", async () => {
+    useWalletStore.setState({ address: "0x1234567890abcdef1234567890" });
+    render(<WalletConnectButton />);
+
+    fireEvent.click(screen.getByText("Disconnect"));
+
+    await waitFor(() => {
+      expect(useWalletStore.getState().address).toBeUndefined();
+    });
+    expect(disconnectWallet).toHaveBeenCalled();
+    expect(toast.success).toHaveBeenCalledWith("Wallet disconnected");
+  });
 });

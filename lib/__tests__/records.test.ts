@@ -1,5 +1,9 @@
-import { describe, it, expect } from "vitest";
-import { validateRecordValue, isUrlRecord } from "../records";
+import { describe, it, expect, vi } from "vitest";
+import {
+  validateRecordValue,
+  isUrlRecord,
+  createRecordRepository,
+} from "../records";
 
 describe("validateRecordValue", () => {
   describe("required field validation", () => {
@@ -288,5 +292,32 @@ describe("isUrlRecord", () => {
 
   it("returns false for Discord", () => {
     expect(isUrlRecord("Discord")).toBe(false);
+  });
+});
+
+describe("createRecordRepository", () => {
+  function sdkWith(domain: unknown) {
+    return {
+      domainRepository: { find: vi.fn().mockResolvedValue(domain) },
+    } as unknown as Parameters<typeof createRecordRepository>[0];
+  }
+
+  it("derives the record repository from the domain the chain returns", async () => {
+    const repository = { getRecords: vi.fn() };
+    const getRecordRepository = vi.fn().mockReturnValue(repository);
+    const sdk = sdkWith({ getRecordRepository });
+
+    await expect(createRecordRepository(sdk, "alice.mpc")).resolves.toBe(
+      repository,
+    );
+    expect(getRecordRepository).toHaveBeenCalledWith(sdk);
+  });
+
+  // An unregistered name is not an error condition — the caller renders the
+  // register flow instead — so this must resolve null rather than throw.
+  it("returns null when the domain does not exist", async () => {
+    await expect(
+      createRecordRepository(sdkWith(null), "nobody.mpc"),
+    ).resolves.toBeNull();
   });
 });

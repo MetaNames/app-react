@@ -94,3 +94,84 @@ describe("DetailsContent Whois chips", () => {
     expect(screen.getByText("Owner")).toBeInTheDocument();
   });
 });
+
+describe("DetailsContent profile and social sections", () => {
+  const withRecords = {
+    ...baseDomain,
+    records: {
+      Bio: "hello world",
+      Uri: "https://example.com",
+      Price: "42",
+      Twitter: "@example",
+    },
+  };
+
+  it("omits the Profile and Social sections when there are no such records", () => {
+    render(
+      <DetailsContent
+        domain={baseDomain}
+        profileRecords={[]}
+        socialRecords={[]}
+        isTld={false}
+      />,
+    );
+    expect(screen.queryByText("Profile")).not.toBeInTheDocument();
+    expect(screen.queryByText("Social")).not.toBeInTheDocument();
+  });
+
+  it("renders a Uri record as a followable link rather than a copy chip", () => {
+    render(
+      <DetailsContent
+        domain={withRecords}
+        profileRecords={["Uri"]}
+        socialRecords={[]}
+        isTld={false}
+      />,
+    );
+    expect(
+      screen.getByRole("link", { name: /https:\/\/example\.com/ }),
+    ).toHaveAttribute("href", "https://example.com");
+  });
+
+  // Price is stored as a bare number; the "$" belongs to presentation, and
+  // dropping it would silently change what the number means.
+  it("suffixes a Price record with its currency", () => {
+    render(
+      <DetailsContent
+        domain={withRecords}
+        profileRecords={["Price"]}
+        socialRecords={[]}
+        isTld={false}
+      />,
+    );
+    expect(screen.getByText("42 $")).toBeInTheDocument();
+  });
+
+  it("always offers the short link alongside the profile records", () => {
+    render(
+      <DetailsContent
+        domain={withRecords}
+        profileRecords={["Bio"]}
+        socialRecords={[]}
+        isTld={false}
+      />,
+    );
+    expect(
+      screen.getByRole("link", { name: /metanam\.es\/example\.mpc/ }),
+    ).toHaveAttribute("href", "https://metanam.es/example.mpc");
+  });
+
+  it("lists social records under their own heading with lowercased labels", () => {
+    render(
+      <DetailsContent
+        domain={withRecords}
+        profileRecords={[]}
+        socialRecords={["Twitter"]}
+        isTld={false}
+      />,
+    );
+    expect(screen.getByText("Social")).toBeInTheDocument();
+    expect(screen.getByText("twitter")).toBeInTheDocument();
+    expect(screen.getByText("@example")).toBeInTheDocument();
+  });
+});

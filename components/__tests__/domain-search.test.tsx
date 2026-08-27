@@ -347,4 +347,88 @@ describe("DomainSearch", () => {
       expect(other).toHaveFocus();
     });
   });
+
+  describe("Suggestions for a taken name", () => {
+    const search = async (value: string) => {
+      render(<DomainSearch />);
+      const input = screen.getByPlaceholderText("Search for a .mpc domain...");
+      await act(async () => {
+        fireEvent.change(input, { target: { value } });
+      });
+    };
+
+    it("offers available variations when the searched name is taken", async () => {
+      // The searched name resolves to a domain; every variation is free.
+      mockFind.mockImplementation(async (name: string) =>
+        name === "alice.mpc" ? { name } : null,
+      );
+
+      await search("alice");
+
+      await waitFor(() => {
+        expect(screen.getByTestId("name-suggestions")).toBeInTheDocument();
+      });
+      const links = screen
+        .getByTestId("name-suggestions")
+        .querySelectorAll("a");
+      expect(links.length).toBeGreaterThan(0);
+      expect(links[0].getAttribute("href")).toMatch(/^\/register\//);
+    });
+
+    it("shows at most four suggestions", async () => {
+      mockFind.mockImplementation(async (name: string) =>
+        name === "alice.mpc" ? { name } : null,
+      );
+
+      await search("alice");
+
+      await waitFor(() => {
+        expect(
+          screen.getByTestId("name-suggestions").querySelectorAll("a"),
+        ).toHaveLength(4);
+      });
+    });
+
+    it("never suggests a variation that is itself taken", async () => {
+      mockFind.mockImplementation(async (name: string) =>
+        name === "alice.mpc" || name === "alicehq.mpc" ? { name } : null,
+      );
+
+      await search("alice");
+
+      await waitFor(() => {
+        expect(screen.getByTestId("name-suggestions")).toBeInTheDocument();
+      });
+      expect(screen.queryByText("alicehq.mpc")).not.toBeInTheDocument();
+    });
+
+    it("stays quiet when the searched name is available", async () => {
+      mockFind.mockResolvedValue(null);
+
+      await search("alice");
+
+      await waitFor(() => {
+        expect(screen.getByText("Available")).toBeInTheDocument();
+      });
+      expect(screen.queryByTestId("name-suggestions")).not.toBeInTheDocument();
+    });
+
+    // A lookup that throws should cost that one suggestion, not the whole row.
+    it("keeps the suggestions it could verify when a lookup fails", async () => {
+      mockFind.mockImplementation(async (name: string) => {
+        if (name === "alice.mpc") return { name };
+        if (name === "alicehq.mpc") throw new Error("rpc down");
+        return null;
+      });
+
+      await search("alice");
+
+      await waitFor(() => {
+        expect(
+          screen.getByTestId("name-suggestions").querySelectorAll("a").length,
+        ).toBeGreaterThan(0);
+      });
+      expect(screen.queryByText("alicehq.mpc")).not.toBeInTheDocument();
+    });
+  });
 });
