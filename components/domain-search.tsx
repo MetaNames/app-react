@@ -9,6 +9,10 @@ import { ArrowRight, Loader2, Search, X } from "lucide-react";
 import { validateDomainName, normalizeDomain } from "@/lib/domain-validator";
 import { useSdkStore } from "@/lib/stores/sdk-store";
 import { suggestNames } from "@/lib/suggestions";
+import {
+  useRecentSearches,
+  useRecentSearchesStore,
+} from "@/lib/stores/recent-searches-store";
 
 const EXAMPLE_NAMES = ["alice", "satoshi", "partisia"];
 
@@ -27,6 +31,9 @@ export function DomainSearch() {
   const [error, setError] = useState<string | null>(null);
   const [suggestions, setSuggestions] = useState<string[]>([]);
   const metaNamesSdk = useSdkStore((s) => s.metaNamesSdk);
+  const recentSearches = useRecentSearches();
+  const recordSearch = useRecentSearchesStore((s) => s.record);
+  const clearRecentSearches = useRecentSearchesStore((s) => s.clear);
   const abortControllerRef = useRef<AbortController | null>(null);
   const inputRef = useRef<HTMLInputElement>(null);
   const router = useRouter();
@@ -40,6 +47,10 @@ export function DomainSearch() {
         const domain = await metaNamesSdk.domainRepository.find(domainName);
         if (signal.aborted) return;
         setResult({ name: domainName, available: domain == null });
+        // Only a lookup that reached the chain is worth remembering: a name
+        // typed halfway and abandoned never gets here, and neither does one
+        // that failed, so the row stays a list of real searches.
+        recordSearch(domainName);
       } catch (e) {
         if (signal.aborted) return;
         console.error("Error searching domain:", e);
@@ -49,7 +60,7 @@ export function DomainSearch() {
         if (!signal.aborted) setLoading(false);
       }
     },
-    [metaNamesSdk],
+    [metaNamesSdk, recordSearch],
   );
 
   const triggerSearch = useCallback(() => {
@@ -291,7 +302,33 @@ export function DomainSearch() {
           ))}
         </div>
       )}
-      {!query && (
+      {!query && recentSearches.length > 0 && (
+        <div
+          className="flex flex-wrap items-center justify-center gap-2 text-xs text-muted-foreground px-1"
+          data-testid="recent-searches"
+        >
+          <span>Recent</span>
+          {recentSearches.map((name) => (
+            <button
+              key={name}
+              type="button"
+              onClick={() => setQuery(name.replace(/\.mpc$/, ""))}
+              className="focus-ring glass-panel rounded-full px-2.5 py-1 hover:text-foreground hover:border-primary/40 transition-colors"
+            >
+              {name}
+            </button>
+          ))}
+          <button
+            type="button"
+            onClick={clearRecentSearches}
+            data-testid="clear-recent-searches"
+            className="focus-ring rounded-full px-2 py-1 underline underline-offset-2 hover:text-foreground transition-colors"
+          >
+            Clear
+          </button>
+        </div>
+      )}
+      {!query && recentSearches.length === 0 && (
         <div className="flex items-center justify-center gap-2 text-xs text-muted-foreground px-1">
           <span>Try</span>
           {EXAMPLE_NAMES.map((name) => (

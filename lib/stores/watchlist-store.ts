@@ -1,6 +1,7 @@
 import { useSyncExternalStore } from "react";
 import { create } from "zustand";
 import { persist, createJSONStorage } from "zustand/middleware";
+import { browserStorage } from "./browser-storage";
 
 /**
  * Names the user wants to keep an eye on.
@@ -25,34 +26,6 @@ export const WATCHLIST_LIMIT = 100;
 
 export const WATCHLIST_STORAGE_KEY = "metanames:watchlist";
 
-/**
- * localStorage is not a given: Safari denies it in private windows, embedded
- * contexts can have it removed, and jsdom ships without it. Every one of those
- * throws on first touch, and an unhandled throw here takes down the module and
- * every page that imports it. The watchlist then lives for the session only,
- * which is a far better outcome than a blank page.
- */
-function watchlistStorage(): Storage {
-  try {
-    const storage = globalThis.localStorage;
-    // Reading the property can throw on its own; touching it proves it works.
-    storage.getItem(WATCHLIST_STORAGE_KEY);
-    return storage;
-  } catch {
-    const memory = new Map<string, string>();
-    return {
-      getItem: (key) => memory.get(key) ?? null,
-      setItem: (key, value) => void memory.set(key, value),
-      removeItem: (key) => void memory.delete(key),
-      clear: () => memory.clear(),
-      key: (index) => [...memory.keys()][index] ?? null,
-      get length() {
-        return memory.size;
-      },
-    } satisfies Storage;
-  }
-}
-
 export const useWatchlistStore = create<WatchlistStore>()(
   persist(
     (set) => ({
@@ -72,7 +45,7 @@ export const useWatchlistStore = create<WatchlistStore>()(
     }),
     {
       name: WATCHLIST_STORAGE_KEY,
-      storage: createJSONStorage(watchlistStorage),
+      storage: createJSONStorage(() => browserStorage(WATCHLIST_STORAGE_KEY)),
       // Only the list is worth persisting; the actions are rebuilt on every
       // load and a persisted copy of them would be dead weight.
       partialize: (state) => ({ names: state.names }),

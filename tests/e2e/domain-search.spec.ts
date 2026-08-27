@@ -171,4 +171,41 @@ test.describe("Domain Search", () => {
     await input.press("Enter");
     await expect(page).toHaveURL(/\/register\//);
   });
+  test("should offer the last searched name once the box is empty", async ({
+    page,
+  }) => {
+    const input = getSearchInput(page);
+    await typeSearch(page, "test");
+    await waitForSearchSettled(page);
+    await expect(page.getByText("Registered")).toBeVisible({
+      timeout: LONG_API_TIMEOUT_MS,
+    });
+
+    await input.clear();
+
+    const recent = page.getByTestId("recent-searches");
+    await expect(recent).toContainText("test.mpc");
+
+    // Clicking a remembered name puts it back in the box, ready to search.
+    await recent.getByRole("button", { name: "test.mpc" }).click();
+    await expect(input).toHaveValue("test");
+
+    await input.clear();
+    await page.getByTestId("clear-recent-searches").click();
+    await expect(recent).toBeHidden();
+  });
+
+  test("should keep recent searches across a reload", async ({ page }) => {
+    const input = getSearchInput(page);
+    await typeSearch(page, "test");
+    await waitForSearchSettled(page);
+    await expect(page.getByText("Registered")).toBeVisible({
+      timeout: LONG_API_TIMEOUT_MS,
+    });
+
+    await page.reload();
+
+    await expect(page.getByTestId("recent-searches")).toContainText("test.mpc");
+    await expect(input).toHaveValue("");
+  });
 });

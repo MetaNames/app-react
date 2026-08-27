@@ -8,6 +8,7 @@ import {
 } from "@testing-library/react";
 import { DomainSearch } from "../domain-search";
 import { validateDomainName } from "@/lib/domain-validator";
+import { useRecentSearchesStore } from "@/lib/stores/recent-searches-store";
 
 const mockFind = vi.hoisted(() => vi.fn());
 
@@ -429,6 +430,81 @@ describe("DomainSearch", () => {
         ).toBeGreaterThan(0);
       });
       expect(screen.queryByText("alicehq.mpc")).not.toBeInTheDocument();
+    });
+  });
+  describe("Recent searches", () => {
+    beforeEach(() => {
+      useRecentSearchesStore.setState({ names: [] });
+    });
+
+    const searchAndClear = async (value: string) => {
+      render(<DomainSearch />);
+      const input = screen.getByPlaceholderText("Search for a .mpc domain...");
+      await act(async () => {
+        fireEvent.change(input, { target: { value } });
+      });
+      await waitFor(() => {
+        expect(useRecentSearchesStore.getState().names).toContain(
+          `${value}.mpc`,
+        );
+      });
+      await act(async () => {
+        fireEvent.change(input, { target: { value: "" } });
+      });
+      return input;
+    };
+
+    it("offers the last searched name once the box is empty again", async () => {
+      await searchAndClear("alice");
+
+      const row = await screen.findByTestId("recent-searches");
+      expect(row).toHaveTextContent("alice.mpc");
+    });
+
+    it("puts a remembered name back in the box when clicked", async () => {
+      const input = await searchAndClear("alice");
+
+      fireEvent.click(await screen.findByText("alice.mpc"));
+
+      expect(input).toHaveValue("alice");
+    });
+
+    it("empties the row on request", async () => {
+      await searchAndClear("alice");
+
+      fireEvent.click(await screen.findByTestId("clear-recent-searches"));
+
+      await waitFor(() => {
+        expect(screen.queryByTestId("recent-searches")).not.toBeInTheDocument();
+      });
+    });
+
+    // A failed lookup never reached the chain, so it is not a search anyone
+    // would recognise in the row.
+    it("remembers nothing when the lookup fails", async () => {
+      mockFind.mockRejectedValue(new Error("rpc down"));
+      render(<DomainSearch />);
+      const input = screen.getByPlaceholderText("Search for a .mpc domain...");
+
+      await act(async () => {
+        fireEvent.change(input, { target: { value: "alice" } });
+      });
+      await waitFor(() => {
+        expect(screen.getByRole("alert")).toBeInTheDocument();
+      });
+
+      expect(useRecentSearchesStore.getState().names).toEqual([]);
+    });
+
+    it("shows the example names only while there is no history", async () => {
+      render(<DomainSearch />);
+      expect(screen.getByText("satoshi.mpc")).toBeInTheDocument();
+
+      useRecentSearchesStore.setState({ names: ["alice.mpc"] });
+
+      await waitFor(() => {
+        expect(screen.queryByText("satoshi.mpc")).not.toBeInTheDocument();
+      });
     });
   });
 });
