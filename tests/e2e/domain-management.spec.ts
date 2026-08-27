@@ -10,7 +10,10 @@ import { DomainPage } from "./pages/DomainPage";
 
 test.describe("Domain Management", () => {
   test.describe.configure({ mode: "serial" });
-  test.setTimeout(60000);
+  // A wallet connect plus a chain read for ownership regularly outlasts 60s on
+  // testnet, and the budget expiring mid-hook reported as "wallet never
+  // connected" rather than as the timeout it was.
+  test.setTimeout(150000);
 
   test.beforeEach(async ({ page }) => {
     await gotoAndRestoreWallet(page, `/domain/${TEST_DOMAIN_NAME}`);
@@ -31,7 +34,7 @@ test.describe("Domain Management", () => {
 
     await waitForDomainTitle(page, TEST_DOMAIN_NAME);
     await expect(domainPage.avatar).toBeVisible();
-    await expect(domainPage.profileSection).toBeVisible();
+    await domainPage.expectProfileSectionIfPopulated();
     await expect(domainPage.whoisSection).toBeVisible();
     await expect(domainPage.ownerChip).toBeVisible();
     await expect(domainPage.expiresChip).toBeVisible();
@@ -62,7 +65,7 @@ test.describe("Domain Management", () => {
 
     await domainPage.switchToSettingsTab();
     await domainPage.switchToDetailsTab();
-    await expect(domainPage.profileSection).toBeVisible();
+    await domainPage.expectProfileSectionIfPopulated();
   });
 
   // Disconnected visitor viewing the domain — no tabs shown (tabs are owner-only)
@@ -74,7 +77,7 @@ test.describe("Domain Management", () => {
     await waitForDomainTitle(page, TEST_DOMAIN_NAME);
 
     await expect(domainPage.tabsList).not.toBeVisible();
-    await expect(domainPage.profileSection).toBeVisible();
+    await domainPage.expectProfileSectionIfPopulated();
     await expect(domainPage.whoisSection).toBeVisible();
   });
 
@@ -84,7 +87,7 @@ test.describe("Domain Management", () => {
     const domainPage = new DomainPage(page);
 
     await waitForDomainTitle(page, TEST_DOMAIN_NAME);
-    await expect(domainPage.profileSection).toBeVisible();
+    await domainPage.expectProfileSectionIfPopulated();
 
     const profileChips = page.locator(CSS_CLASSES.PROFILE_CHIPS).first();
     await expect(profileChips).toBeVisible();

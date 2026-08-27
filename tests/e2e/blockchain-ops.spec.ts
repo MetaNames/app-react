@@ -38,6 +38,12 @@ test.describe("Disconnected state", () => {
 });
 
 test.describe("Blockchain Operations", () => {
+  // The delete tests strip records from the shared domain, so a later test
+  // often has to mint one before it can act — a chain write the default 90s
+  // budget cannot hold on top of navigation and two wallet connects. The
+  // budget expiring mid-hook surfaced as a bogus "wallet never connected".
+  test.setTimeout(180000);
+
   test.beforeEach(async ({ page }) => {
     await page.goto("/");
     await connectWallet(page);

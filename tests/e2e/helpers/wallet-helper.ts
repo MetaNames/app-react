@@ -17,11 +17,15 @@ import { Locator, Page, expect } from "@playwright/test";
 // testnet was rather than on what was actually broken.
 const CONNECT_TIMEOUT_MS = 15000;
 const CONNECT_ATTEMPTS = 3;
-// A click lands before the SDK finishes initialising often enough that the
-// dialog needs re-opening, so each attempt gets a full window of its own
-// rather than a third of one — a loaded testnet took longer than 5s to open
-// the dialog and the helper gave up while it was still coming.
-const CONNECT_ATTEMPT_TIMEOUT_MS = 10000;
+// A click that lands before hydration needs the dialog re-opening, so each
+// attempt gets a window of its own. Three of them plus the close waits still
+// has to fit inside a spec's whole budget alongside navigation and the chain
+// reads that follow; at 10s each it did not, and a hook killed mid-retry
+// reported as "the wallet never connected" rather than as the timeout it was.
+// Hydration settles far inside 6s — the retries are for the render that misses
+// it, not for a slow one.
+const CONNECT_ATTEMPT_TIMEOUT_MS = 6000;
+const MENU_CLOSE_TIMEOUT_MS = 2000;
 
 // Get the testnet private key from environment
 export const getTestPrivateKey = (): string => {
@@ -99,7 +103,7 @@ export const connectWallet = async (page: Page): Promise<boolean> => {
       await page.keyboard.press("Escape").catch(() => {});
       await menu
         .first()
-        .waitFor({ state: "hidden", timeout: CONNECT_ATTEMPT_TIMEOUT_MS })
+        .waitFor({ state: "hidden", timeout: MENU_CLOSE_TIMEOUT_MS })
         .catch(() => {});
     }
     const menuOpen = await menu
