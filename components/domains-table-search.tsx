@@ -23,14 +23,18 @@ export function DomainsTableSearch({
       <Input
         data-testid="search-bar"
         placeholder="Search domains..."
+        aria-label="Filter your domains"
         value={value}
         onChange={(e) => onChange(e.target.value)}
         className="pr-8"
       />
       {value && (
         <button
+          type="button"
           onClick={handleClear}
-          className="absolute right-2 top-1/2 -translate-y-1/2"
+          aria-label="Clear domain filter"
+          data-testid="clear-domain-filter"
+          className="focus-ring absolute right-2 top-1/2 -translate-y-1/2 rounded-sm"
         >
           <X className="h-4 w-4 text-muted-foreground" />
         </button>

@@ -42,10 +42,15 @@ export function DomainsTable({ domains }: DomainsTableProps) {
     [domains, search],
   );
 
+  // Rebuilding the column definitions on every render replaces each header
+  // button's DOM node, so a keyboard user who activates "sort by name" loses
+  // focus the instant the sort applies and has to tab back in.
+  const columns = useMemo(() => domainsTableColumns(), []);
+
   // eslint-disable-next-line react-hooks/incompatible-library
   const table = useReactTable({
     data: filtered,
-    columns: domainsTableColumns(),
+    columns,
     state: { sorting },
     onSortingChange: setSorting,
     // Legacy's table never returns to a true "unsorted" state once loaded —
@@ -62,6 +67,13 @@ export function DomainsTable({ domains }: DomainsTableProps) {
   useEffect(() => {
     table.setPageSize(pageSize);
   }, [pageSize, table]);
+
+  // Filtering from page 3 down to two results used to leave the table parked
+  // on a page the result set no longer has — an empty table for a query that
+  // matches. Any change to the query starts again from the first page.
+  useEffect(() => {
+    table.setPageIndex(0);
+  }, [search, table]);
 
   const { pageIndex } = table.getState().pagination;
   const total = filtered.length;

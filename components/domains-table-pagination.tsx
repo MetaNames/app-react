@@ -37,7 +37,11 @@ export function DomainsTablePagination({
 
   return (
     <div className="flex items-center justify-between">
-      <span className="text-sm text-muted-foreground">
+      <span
+        className="text-sm text-muted-foreground"
+        data-testid="pagination-info"
+        aria-live="polite"
+      >
         {total > 0 ? `${from}-${to} of ${total}` : "0 results"}
       </span>
       <div className="flex items-center gap-2">
@@ -47,7 +51,7 @@ export function DomainsTablePagination({
             onPageSizeChange(v === "max" ? 9999 : Number(v))
           }
         >
-          <SelectTrigger className="w-20">
+          <SelectTrigger className="w-20" aria-label="Rows per page">
             <SelectValue />
           </SelectTrigger>
           <SelectContent>
@@ -62,6 +66,8 @@ export function DomainsTablePagination({
         <Button
           variant="outline"
           size="icon"
+          aria-label="First page"
+          data-testid="pagination-first"
           className="border-border/60"
           onClick={() => table.setPageIndex(0)}
           disabled={!table.getCanPreviousPage()}
@@ -71,6 +77,8 @@ export function DomainsTablePagination({
         <Button
           variant="outline"
           size="icon"
+          aria-label="Previous page"
+          data-testid="pagination-previous"
           className="border-border/60"
           onClick={() => table.previousPage()}
           disabled={!table.getCanPreviousPage()}
@@ -80,6 +88,8 @@ export function DomainsTablePagination({
         <Button
           variant="outline"
           size="icon"
+          aria-label="Next page"
+          data-testid="pagination-next"
           className="border-border/60"
           onClick={() => table.nextPage()}
           disabled={!table.getCanNextPage()}
@@ -89,6 +99,8 @@ export function DomainsTablePagination({
         <Button
           variant="outline"
           size="icon"
+          aria-label="Last page"
+          data-testid="pagination-last"
           className="border-border/60"
           onClick={() => table.setPageIndex(table.getPageCount() - 1)}
           disabled={!table.getCanNextPage()}

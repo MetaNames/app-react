@@ -55,7 +55,7 @@ export function Chip({
       <span className="text-xs opacity-70">{label}</span>
       {value && <span className="font-semibold">{value}</span>}
       {href ? (
-        <ExternalLink className="h-3 w-3 opacity-60" />
+        <ExternalLink className="h-3 w-3 opacity-60" aria-hidden="true" />
       ) : value ? (
         copied ? (
           <Check className="h-3 w-3" />
@@ -70,17 +70,21 @@ export function Chip({
       )}
     </span>
   );
-  if (href)
+  if (href) {
+    // A chip pointing inside the app (the Parent chip, for one) was opening a
+    // new tab, stranding the user with a second copy of the site instead of
+    // navigating. Only external destinations get the new-tab treatment.
+    const external = /^[a-z][a-z0-9+.-]*:/i.test(href) || href.startsWith("//");
     return (
       <a
         href={href}
-        target="_blank"
-        rel="noopener noreferrer"
+        {...(external ? { target: "_blank", rel: "noopener noreferrer" } : {})}
         className="focus-ring rounded-full"
       >
         {content}
       </a>
     );
+  }
   if (onClick)
     return (
       <button onClick={onClick} className="focus-ring rounded-full">
