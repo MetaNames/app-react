@@ -2,6 +2,7 @@ import { expect, test, type Locator, type Page } from "@playwright/test";
 import { readFileSync } from "node:fs";
 import path from "node:path";
 
+import { waitForHydratedTrigger } from "./helpers/wallet-helper";
 import { ROUTES, gotoLoaded } from "./routes";
 
 // This package is CommonJS (no "type": "module" in package.json) and Playwright compiles test
@@ -218,6 +219,10 @@ const MENU_ITEM = '[data-slot="dropdown-menu-item"]';
 async function openWalletMenuFromKeyboard(page: Page) {
   const trigger = page.locator('[data-testid="wallet-connect-button"]');
   const item = page.locator(MENU_ITEM).first();
+
+  // The server-rendered trigger has no handler; pressing keys at it does
+  // nothing until the menu hydrates.
+  await waitForHydratedTrigger(trigger);
 
   for (let attempt = 1; attempt <= 5; attempt++) {
     await trigger.focus();

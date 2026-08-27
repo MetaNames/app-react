@@ -13,7 +13,6 @@ export default defineConfig({
   // product defect. One local retry separates a real regression from noise
   // without hiding a test that fails deterministically.
   retries: process.env.CI ? 2 : 1,
-  workers: process.env.CI ? 1 : undefined,
   reporter: process.env.CI ? [["github"], ["html"]] : [["list"], ["html"]],
   // A blockchain write can take a minute; the 30s default kills healthy tests.
   timeout: 90_000,
@@ -28,12 +27,28 @@ export default defineConfig({
     actionTimeout: 15_000,
     navigationTimeout: 30_000,
   },
+  // One worker per core turns the dev server into the bottleneck: every worker
+  // requests a different uncompiled route at once and they all wait. Four keeps
+  // the suite parallel without the compile storm.
+  workers: process.env.CI ? 1 : 4,
   projects: [
     {
-      name: "chromium",
+      name: "warmup",
+      testMatch: /warmup\.setup\.ts/,
       use: { ...devices["Desktop Chrome"] },
     },
+    {
+      name: "chromium",
+      testIgnore: /warmup\.setup\.ts/,
+      use: { ...devices["Desktop Chrome"] },
+      dependencies: ["warmup"],
+    },
   ],
+  // `next dev`, not a production build: the dev private-key connector the whole
+  // suite signs with refuses to run outside development ("This method is only
+  // available in development mode", lib/wallet.ts), so a production server can
+  // never authenticate a test. The compile-on-demand cost that comes with dev
+  // is paid up front by the warmup project instead.
   webServer: {
     command: "npm run dev",
     url: "http://localhost:3000",

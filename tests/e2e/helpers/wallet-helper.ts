@@ -25,6 +25,9 @@ const CONNECT_TIMEOUT_MS = 15000;
 const CONNECT_OPEN_DEADLINE_MS = 30000;
 const CONNECT_ATTEMPT_TIMEOUT_MS = 2500;
 const MENU_CLOSE_TIMEOUT_MS = 2000;
+// Hydration is the slow step, so it gets the long wait and the open loop keeps
+// the short one.
+const HYDRATION_TIMEOUT_MS = 30000;
 
 // Get the testnet private key from environment
 export const getTestPrivateKey = (): string => {
@@ -66,6 +69,34 @@ const firstVisible = async <K extends string>(
   ]);
 };
 
+/**
+ * Wait until the dropdown trigger is React's, not the server's.
+ *
+ * The markup arrives before the client bundle runs, so the button is on screen
+ * and focusable while nothing is listening: a key press reaches no handler and
+ * the failure reads as "the menu never opened". React stamps every DOM node it
+ * hydrates with `__reactFiber$…`/`__reactProps$…` expando keys, so their
+ * presence is the exact moment the element gained its handlers. ARIA state is
+ * not a substitute — the menu leaves `aria-expanded` off entirely while closed.
+ */
+export const waitForHydratedTrigger = async (
+  trigger: Locator,
+): Promise<void> => {
+  await expect
+    .poll(
+      () =>
+        trigger.evaluate((el) =>
+          Object.keys(el).some(
+            (key) =>
+              key.startsWith("__reactFiber$") ||
+              key.startsWith("__reactProps$"),
+          ),
+        ),
+      { timeout: HYDRATION_TIMEOUT_MS },
+    )
+    .toBe(true);
+};
+
 // Shared wallet connection helper that reads from process.env.TESTNET_PRIVATE_KEY
 // No sessionStorage persistence - wallet must be reconnected on each page reload
 export const connectWallet = async (page: Page): Promise<boolean> => {
@@ -85,6 +116,7 @@ export const connectWallet = async (page: Page): Promise<boolean> => {
     .locator('[data-testid="wallet-connect-button"]')
     .first();
   await connectBtn.waitFor({ state: "visible", timeout: CONNECT_TIMEOUT_MS });
+  await waitForHydratedTrigger(connectBtn);
 
   // Opened from the keyboard, not with a click. The trigger toggles on the
   // pointer-down half of a click, so a click that arrives while the menu is

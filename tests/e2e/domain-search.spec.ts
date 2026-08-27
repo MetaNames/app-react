@@ -100,7 +100,12 @@ test.describe("Domain Search", () => {
     await typeSearch(page, testDomain);
     await waitForSearchSettled(page);
 
-    const card = page.locator('a[href^="/register/"]');
+    // Scoped to the search result's live region: the home page also lists
+    // recent domains, so an unscoped href match resolves to every card on the
+    // page and fails strict mode.
+    const card = page
+      .locator('div[role="status"] a[href^="/register/"]')
+      .first();
     await expect(card).toBeVisible({ timeout: LONG_API_TIMEOUT_MS });
   });
 
@@ -110,7 +115,10 @@ test.describe("Domain Search", () => {
     await typeSearch(page, "test");
     await waitForSearchSettled(page);
 
-    const card = page.locator('a[href^="/domain/"]');
+    // Scoped to the search result's live region: the home page also lists
+    // recent domains, so an unscoped href match resolves to every card on the
+    // page and fails strict mode.
+    const card = page.locator('div[role="status"] a[href^="/domain/"]').first();
     await expect(card).toBeVisible({ timeout: LONG_API_TIMEOUT_MS });
   });
 

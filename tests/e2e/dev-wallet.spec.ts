@@ -6,7 +6,10 @@
  */
 
 import { test, expect, type Page } from "@playwright/test";
-import { getTestPrivateKey } from "./helpers/wallet-helper";
+import {
+  waitForHydratedTrigger,
+  getTestPrivateKey,
+} from "./helpers/wallet-helper";
 import { SELECTORS, TEXT, WALLET_CONNECT_TIMEOUT_MS } from "./constants";
 
 /**
@@ -23,9 +26,10 @@ async function openDevKeyMenu(page: Page) {
   const devKeyInput = page.locator('[data-testid="dev-key-input"]');
   const menu = page.locator('[role="menu"]');
 
-  // Deadline rather than attempt count: under `next dev` a route can still be
-  // compiling when its page is on screen, so hydration lands seconds late and
-  // the trigger is inert until it does.
+  // Nothing can open a trigger the server rendered and React has not claimed
+  // yet, so wait for the menu's own hydration marker before pressing keys.
+  await waitForHydratedTrigger(connectBtn);
+
   const deadline = Date.now() + 30000;
   for (let attempt = 0; Date.now() < deadline; attempt++) {
     if (attempt > 0) {
