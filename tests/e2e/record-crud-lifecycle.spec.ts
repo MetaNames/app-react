@@ -32,6 +32,12 @@ const PARENT_DOMAIN = "name.mpc";
 // Shared across all serial tests — set by step 1 (registration).
 let subdomain = "";
 
+// Unique per run so a leftover record from an earlier run cannot satisfy the
+// assertions of this one.
+const RUN_ID = Date.now();
+const ADDED_VALUE = `hello from e2e test ${RUN_ID}`;
+const EDITED_VALUE = `edited by e2e test ${RUN_ID}`;
+
 test.describe("Record CRUD lifecycle on freshly registered subdomain", () => {
   test.describe.configure({ mode: "serial" });
   // Subdomain registration is a single blockchain tx — allow up to 3 min.
@@ -109,13 +115,13 @@ test.describe("Record CRUD lifecycle on freshly registered subdomain", () => {
     // Fill in a value
     const valueTextarea = addRecordForm.locator("textarea");
     await expect(valueTextarea).toBeVisible();
-    await valueTextarea.fill("hello from e2e test");
+    await valueTextarea.fill(ADDED_VALUE);
 
     // Submit and wait for the transaction to complete
     const addButton = page.locator(SELECTORS.ADD_RECORD_BUTTON);
     await expect(addButton).toBeEnabled();
 
-    await executeBlockchainOp(async () => {
+    const addResult = await executeBlockchainOp(async () => {
       await addButton.click();
 
       // Loading state may be very brief
@@ -128,10 +134,17 @@ test.describe("Record CRUD lifecycle on freshly registered subdomain", () => {
       await expect(addButton).not.toHaveText("Adding...", { timeout: 60000 });
     }, "Add record transaction failed");
 
-    // Record container must appear after tx
-    await page.waitForTimeout(2000);
+    // The helper swallows its failure and returns it; ignoring the return value
+    // let a failed transaction pass as a green test.
+    expect(addResult.success, addResult.error).toBe(true);
+
+    // The record must exist AND carry the value that was typed — a visible
+    // container proves only that something rendered.
     const records = page.locator(CSS_CLASSES.RECORD_CONTAINER);
-    await expect(records.first()).toBeVisible({ timeout: 10000 });
+    await expect(records.first()).toBeVisible({ timeout: 30000 });
+    await expect(records.first()).toContainText(ADDED_VALUE, {
+      timeout: 30000,
+    });
   });
 
   // ── Step 3: Edit record ─────────────────────────────────────────────────────
@@ -151,13 +164,13 @@ test.describe("Record CRUD lifecycle on freshly registered subdomain", () => {
 
     const textarea = recordContainer.locator("textarea");
     await expect(textarea).toBeVisible();
-    await textarea.fill("edited by e2e test");
+    await textarea.fill(EDITED_VALUE);
 
     // Save
     const saveBtn = recordContainer.locator(SELECTORS.SAVE_RECORD);
     await expect(saveBtn).toBeVisible();
 
-    await executeBlockchainOp(async () => {
+    const editResult = await executeBlockchainOp(async () => {
       await saveBtn.click();
 
       // Button disables while tx is pending
@@ -170,6 +183,23 @@ test.describe("Record CRUD lifecycle on freshly registered subdomain", () => {
         timeout: 60000,
       });
     }, "Edit record transaction failed");
+
+    expect(editResult.success, editResult.error).toBe(true);
+
+    // This step previously ended without a single assertion on the outcome: an
+    // edit that reverted on-chain still reported as a passing test.
+    await expect(recordContainer).toContainText(EDITED_VALUE, {
+      timeout: 30000,
+    });
+
+    // And it must survive a reload — the component resetting is not proof the
+    // chain accepted the write.
+    await page.reload();
+    await waitForDomainTitle(page, subdomain);
+    await navigateToSettingsTab(page);
+    await expect(
+      page.locator(CSS_CLASSES.RECORD_CONTAINER).first(),
+    ).toContainText(EDITED_VALUE, { timeout: 30000 });
   });
 
   // ── Step 4: Delete record ───────────────────────────────────────────────────
@@ -194,7 +224,7 @@ test.describe("Record CRUD lifecycle on freshly registered subdomain", () => {
     );
     await expect(dialog).toBeVisible();
 
-    await executeBlockchainOp(async () => {
+    const deleteResult = await executeBlockchainOp(async () => {
       await dialog.locator('button:has-text("Yes")').click();
 
       // Loading state may be brief
@@ -207,11 +237,13 @@ test.describe("Record CRUD lifecycle on freshly registered subdomain", () => {
       await expect(dialog).not.toBeVisible({ timeout: 60000 });
     }, "Delete record transaction failed");
 
-    // Domain should now have no records
-    await page.waitForTimeout(2000);
-    const remainingRecords = await page
-      .locator(CSS_CLASSES.RECORD_CONTAINER)
-      .count();
-    expect(remainingRecords).toBe(0);
+    expect(deleteResult.success, deleteResult.error).toBe(true);
+
+    // Domain should now have no records. `toHaveCount` polls, so this replaces
+    // a 2s sleep that was simultaneously too long for a fast chain and too
+    // short for a slow one.
+    await expect(page.locator(CSS_CLASSES.RECORD_CONTAINER)).toHaveCount(0, {
+      timeout: 30000,
+    });
   });
 });

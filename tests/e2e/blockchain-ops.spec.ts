@@ -15,7 +15,7 @@ import {
   TEST_DOMAIN,
   gotoAndRestoreWallet,
 } from "./helpers/wallet-helper";
-import { SELECTORS, CSS_CLASSES, TEST_DOMAIN_NAME } from "./constants";
+import { SELECTORS, TEXT, CSS_CLASSES, TEST_DOMAIN_NAME } from "./constants";
 import { navigateToSettingsTab, waitForDomainTitle } from "./fixtures/shared";
 import { RegisterPage } from "./pages/RegisterPage";
 
@@ -111,15 +111,17 @@ test.describe("Blockchain Operations", () => {
 
       await registerPage.approveFeesButton.click();
 
-      // After clicking, the button should react; wait for either approval or any state change
-      await page.waitForTimeout(3000);
-
-      // Whether tx succeeded or not, verify the page is still functional
-      const pageStillLoaded = await page
-        .locator("h1")
-        .isVisible({ timeout: 5000 })
-        .catch(() => false);
-      expect(pageStillLoaded).toBe(true);
+      // "Wait 3s, then check an h1 still exists" passed even when the click did
+      // nothing. Approving fees must visibly move the flow on: either the
+      // button reports its pending state, or the register button unlocks, or
+      // the failure surfaces as an alert.
+      await expect(
+        registerPage.approveFeesButton
+          .and(page.locator("[disabled]"))
+          .or(page.getByRole("button", { name: TEXT.REGISTER_DOMAIN }))
+          .or(page.getByRole("alert"))
+          .first(),
+      ).toBeVisible({ timeout: 30000 });
     });
 
     test("should redirect to /domain/{name} after successful registration", async ({
@@ -128,7 +130,9 @@ test.describe("Blockchain Operations", () => {
       await gotoAndRestoreWallet(page, `/register/${TEST_DOMAIN}`);
 
       const result = await executeBlockchainOp(async () => {
-        await page.waitForTimeout(2000);
+        // The page decides between register and domain view once the
+        // availability read resolves; there is nothing to do but let it.
+        await page.waitForLoadState("domcontentloaded");
       }, "Registration check failed");
 
       if (result.success) {

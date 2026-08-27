@@ -10,7 +10,18 @@
  * All blockchain operations should be wrapped in try-catch.
  */
 
-import { Page, expect } from "@playwright/test";
+import { Locator, Page, expect } from "@playwright/test";
+
+// One budget for every step of the connect handshake. The old helper mixed
+// 5s, 10s and 15s waits, so which step timed out depended on how loaded the
+// testnet was rather than on what was actually broken.
+const CONNECT_TIMEOUT_MS = 15000;
+const CONNECT_ATTEMPTS = 3;
+// A click lands before the SDK finishes initialising often enough that the
+// dialog needs re-opening, so each attempt gets a full window of its own
+// rather than a third of one — a loaded testnet took longer than 5s to open
+// the dialog and the helper gave up while it was still coming.
+const CONNECT_ATTEMPT_TIMEOUT_MS = 10000;
 
 // Get the testnet private key from environment
 export const getTestPrivateKey = (): string => {
@@ -21,16 +32,48 @@ export const getTestPrivateKey = (): string => {
   return pk;
 };
 
+/**
+ * Resolve as soon as one of the locators becomes visible, without ever
+ * rejecting. `Promise.race` over two `waitFor` calls loses whichever branch
+ * has the shorter timeout: the loser rejects first and takes the race down
+ * with it even though the other element was about to appear. Both branches
+ * here share one deadline and swallow their own timeout, so the race settles
+ * on the first *success* and returns null only when neither ever showed.
+ */
+const firstVisible = async <K extends string>(
+  candidates: Record<K, Locator>,
+  timeout: number,
+): Promise<K | null> => {
+  const attempts = (Object.entries(candidates) as [K, Locator][]).map(
+    ([key, locator]) =>
+      locator
+        .waitFor({ state: "visible", timeout })
+        .then(() => key)
+        .catch(() => null),
+  );
+
+  // A branch that resolves null must not win the race ahead of a branch still
+  // waiting, so a failed branch is parked forever and only the all-settled
+  // guard can produce the null result.
+  return Promise.race([
+    ...attempts.map((attempt) =>
+      attempt.then((key) => key ?? new Promise<never>(() => {})),
+    ),
+    Promise.all(attempts).then(() => null),
+  ]);
+};
+
 // Shared wallet connection helper that reads from process.env.TESTNET_PRIVATE_KEY
-// Returns true if connected, false if SDK not ready (caller should skip test)
 // No sessionStorage persistence - wallet must be reconnected on each page reload
 export const connectWallet = async (page: Page): Promise<boolean> => {
   const privateKey = getTestPrivateKey();
 
-  // Check if already connected
-  const walletConnected = await page
+  const walletConnectedEl = page
     .locator('[data-testid="wallet-connected"]')
-    .first()
+    .first();
+
+  // Check if already connected
+  const walletConnected = await walletConnectedEl
     .isVisible()
     .catch(() => false);
   if (walletConnected) return true;
@@ -38,33 +81,41 @@ export const connectWallet = async (page: Page): Promise<boolean> => {
   const connectBtn = page
     .locator('[data-testid="wallet-connect-button"]')
     .first();
-  await connectBtn.waitFor({ state: "visible", timeout: 15000 });
-  await connectBtn.click();
+  await connectBtn.waitFor({ state: "visible", timeout: CONNECT_TIMEOUT_MS });
 
+  // The button mounts before the SDK finishes initialising; clicking in that
+  // window opens nothing and the test then waits out its whole budget on a
+  // dialog that was never asked for. Retrying the click costs one second and
+  // removes the single largest source of flake in this suite.
   const devKeyInput = page.locator('[data-testid="dev-key-input"]');
-  const walletConnectedEl = page.locator('[data-testid="wallet-connected"]');
 
-  const winner = await Promise.race([
-    devKeyInput
-      .waitFor({ state: "visible", timeout: 10000 })
-      .then(() => "devKey"),
-    walletConnectedEl
-      .waitFor({ state: "visible", timeout: 5000 })
-      .then(() => "connected"),
-  ]);
-
-  if (winner === "connected") {
-    return true;
+  let winner: "devKey" | "connected" | null = null;
+  for (let attempt = 0; attempt < CONNECT_ATTEMPTS && !winner; attempt++) {
+    await connectBtn.click();
+    winner = await firstVisible(
+      { devKey: devKeyInput, connected: walletConnectedEl },
+      CONNECT_ATTEMPT_TIMEOUT_MS,
+    );
   }
+
+  if (winner === null) {
+    throw new Error(
+      `Wallet connect opened neither the dev-key dialog nor a connected state after ${CONNECT_ATTEMPTS} attempts`,
+    );
+  }
+
+  if (winner === "connected") return true;
 
   await devKeyInput.fill(privateKey);
 
   const devConnectBtn = page.locator('[data-testid="dev-key-connect-button"]');
-  await devConnectBtn.waitFor({ state: "visible", timeout: 5000 });
-  await expect(devConnectBtn).toBeEnabled({ timeout: 5000 });
+  await expect(devConnectBtn).toBeEnabled({ timeout: CONNECT_TIMEOUT_MS });
   await devConnectBtn.click();
 
-  await walletConnectedEl.waitFor({ state: "visible", timeout: 10000 });
+  await walletConnectedEl.waitFor({
+    state: "visible",
+    timeout: CONNECT_TIMEOUT_MS,
+  });
 
   return true;
 };
@@ -113,11 +164,11 @@ export const waitForToast = async (
   text: string,
   timeout = 10000,
 ): Promise<void> => {
-  try {
-    await page.locator(`role=alert >> text=${text}`).waitFor({ timeout });
-  } catch {
-    throw new Error(`Toast with text "${text}" not found within ${timeout}ms`);
-  }
+  // `role=alert >> text=<value>` breaks on any value containing a quote or a
+  // `>>`; a filter passes the string through as data instead of selector
+  // syntax. Sonner also stacks toasts, so match any of them, not the first.
+  const toast = page.getByRole("alert").filter({ hasText: text });
+  await expect(toast.first()).toBeVisible({ timeout });
 };
 
 // Helper to safely execute blockchain operations with error handling
@@ -150,9 +201,14 @@ export const ensureDomainOwnership = async (
     .locator('[data-testid="domain-title"]')
     .waitFor({ state: "visible", timeout: 10000 });
 
-  // Check if settings tab is visible (indicates ownership)
+  // Check if settings tab is visible (indicates ownership). The tab renders
+  // only after the owner read resolves, which lands after the title — polling
+  // once immediately reports "not owner" for a domain the wallet does own.
   const settingsTab = page.locator('[data-testid="tab-settings"]');
-  const isOwner = await settingsTab.isVisible().catch(() => false);
+  const isOwner = await settingsTab
+    .waitFor({ state: "visible", timeout: 10000 })
+    .then(() => true)
+    .catch(() => false);
 
   if (!isOwner) {
     console.log(

@@ -212,7 +212,14 @@ test.describe("Domain Renewal", () => {
         if (isEnabled) {
           await executeBlockchainOp(async () => {
             await renewButton.click();
-            await page.waitForTimeout(3000);
+            // Observe the click landing rather than sleeping through it: the
+            // button goes busy, or the failure reaches the user as an alert.
+            await expect(
+              renewButton
+                .and(page.locator("[disabled]"))
+                .or(page.getByRole("alert"))
+                .first(),
+            ).toBeVisible({ timeout: 30000 });
           }, "Domain renewal failed");
         }
         // Test passes — we verified the renew button is present and reachable

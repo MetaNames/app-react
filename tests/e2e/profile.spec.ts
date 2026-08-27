@@ -1,11 +1,7 @@
-import { test, expect } from "@playwright/test";
-import {
-  SELECTORS,
-  TEXT,
-  PAGINATION_WAIT_MS,
-  TEST_DOMAIN_NAME,
-} from "./constants";
+import { test, expect, type Page } from "@playwright/test";
+import { SELECTORS, TEXT, TEST_DOMAIN_NAME } from "./constants";
 import { connectWallet } from "./helpers/wallet-helper";
+import { waitForDomainsLoaded } from "./fixtures/shared";
 
 test.describe("User Profile", () => {
   test.beforeEach(async ({ page }) => {
@@ -82,8 +78,7 @@ test.describe("User Profile", () => {
 
     test("should show domains table with correct columns", async ({ page }) => {
       await connectWallet(page);
-      await page.waitForLoadState("networkidle");
-      await page.waitForTimeout(2000);
+      await waitForDomainsLoaded(page);
 
       const table = page.locator("table");
       await expect(table).toBeVisible({ timeout: 30000 });
@@ -94,8 +89,7 @@ test.describe("User Profile", () => {
 
     test("should show name.mpc domain in table", async ({ page }) => {
       await connectWallet(page);
-      await page.waitForLoadState("networkidle");
-      await page.waitForTimeout(2000);
+      await waitForDomainsLoaded(page);
 
       const table = page.locator("table");
       await expect(table).toBeVisible({ timeout: 30000 });
@@ -106,8 +100,7 @@ test.describe("User Profile", () => {
 
     test("should show pagination after domains load", async ({ page }) => {
       await connectWallet(page);
-      await page.waitForLoadState("networkidle");
-      await page.waitForTimeout(2000);
+      await waitForDomainsLoaded(page);
 
       const table = page.locator("table");
       await expect(table).toBeVisible({ timeout: 30000 });
@@ -120,8 +113,7 @@ test.describe("User Profile", () => {
   test.describe("Domain Search/Filter", () => {
     test("should show search bar when connected", async ({ page }) => {
       await connectWallet(page);
-      await page.waitForLoadState("networkidle");
-      await page.waitForTimeout(2000);
+      await waitForDomainsLoaded(page);
 
       const searchBar = page.locator(SELECTORS.SEARCH_BAR);
       await expect(searchBar).toBeVisible({ timeout: 30000 });
@@ -129,8 +121,7 @@ test.describe("User Profile", () => {
 
     test("should filter domains by exact prefix match", async ({ page }) => {
       await connectWallet(page);
-      await page.waitForLoadState("networkidle");
-      await page.waitForTimeout(2000);
+      await waitForDomainsLoaded(page);
 
       const searchBar = page.locator(SELECTORS.SEARCH_BAR);
       await expect(searchBar).toBeVisible({ timeout: 30000 });
@@ -145,8 +136,7 @@ test.describe("User Profile", () => {
       page,
     }) => {
       await connectWallet(page);
-      await page.waitForLoadState("networkidle");
-      await page.waitForTimeout(2000);
+      await waitForDomainsLoaded(page);
 
       const searchBar = page.locator(SELECTORS.SEARCH_BAR);
       await expect(searchBar).toBeVisible({ timeout: 30000 });
@@ -161,8 +151,7 @@ test.describe("User Profile", () => {
       page,
     }) => {
       await connectWallet(page);
-      await page.waitForLoadState("networkidle");
-      await page.waitForTimeout(2000);
+      await waitForDomainsLoaded(page);
 
       const searchBar = page.locator(SELECTORS.SEARCH_BAR);
       await expect(searchBar).toBeVisible({ timeout: 30000 });
@@ -175,8 +164,7 @@ test.describe("User Profile", () => {
 
     test("should clear search with X button", async ({ page }) => {
       await connectWallet(page);
-      await page.waitForLoadState("networkidle");
-      await page.waitForTimeout(2000);
+      await waitForDomainsLoaded(page);
 
       const searchBar = page.locator(SELECTORS.SEARCH_BAR);
       await expect(searchBar).toBeVisible({ timeout: 30000 });
@@ -192,182 +180,193 @@ test.describe("User Profile", () => {
   });
 
   test.describe("Table Sorting", () => {
-    test("should toggle sort on Token ID column", async ({ page }) => {
+    /**
+     * These used to click a header and sleep. Sorting that silently stopped
+     * working would still have passed, so each test now asserts that the
+     * visible page is actually ordered afterwards.
+     *
+     * Comparing "before" against "after" is not enough: a column that is
+     * already sorted (Token ID) or entirely tied (Parent, on an account with
+     * no subdomains) never changes on the first click. And with more rows
+     * than fit one page, descending is not the reverse of ascending — it is
+     * a different slice of the data — so each direction is checked on its own.
+     */
+    async function columnValues(page: Page, index: number): Promise<string[]> {
+      return page
+        .locator(`tbody tr td:nth-child(${index + 1})`)
+        .allInnerTexts();
+    }
+
+    function compareValues(a: string, b: string): number {
+      const [na, nb] = [Number(a), Number(b)];
+      if (!Number.isNaN(na) && !Number.isNaN(nb)) return na - nb;
+      return a.localeCompare(b);
+    }
+
+    function isOrdered(values: string[], direction: 1 | -1): boolean {
+      return values.every(
+        (value, i) =>
+          i === 0 || compareValues(values[i - 1], value) * direction <= 0,
+      );
+    }
+
+    async function expectSortToggles(page: Page, columnIndex: number) {
       await connectWallet(page);
-      await page.waitForLoadState("networkidle");
-      await page.waitForTimeout(2000);
+      await waitForDomainsLoaded(page);
 
-      const table = page.locator("table");
-      await expect(table).toBeVisible({ timeout: 30000 });
+      const header = page.locator("thead th").nth(columnIndex);
+      await expect(header).toBeVisible();
 
-      const tokenIdHeader = page.locator("thead th").first();
-      await expect(tokenIdHeader).toBeVisible({ timeout: 10000 });
+      // Only sortable columns carry a header button; clicking the cell itself
+      // lands on padding as often as not, which reads as "sorting is broken"
+      // when nothing was ever wired to that click.
+      const toggle = header.getByRole("button");
+      test.skip(
+        (await toggle.count()) === 0,
+        "Column has no sort control to toggle",
+      );
 
-      await tokenIdHeader.click();
+      const rowCount = (await columnValues(page, columnIndex)).length;
+      test.skip(
+        rowCount < 2,
+        "Sorting needs at least two rows to be observable",
+      );
 
-      await page.waitForTimeout(PAGINATION_WAIT_MS);
+      // Which direction a first click produces is TanStack's call, not ours —
+      // numeric columns default to descending-first. What matters is that the
+      // page comes back ordered, and that a second click flips it.
+      await toggle.click();
+      await expect
+        .poll(async () => {
+          const values = await columnValues(page, columnIndex);
+          return isOrdered(values, 1) || isOrdered(values, -1);
+        })
+        .toBe(true);
+      const firstDirection = isOrdered(await columnValues(page, columnIndex), 1)
+        ? 1
+        : -1;
 
-      await tokenIdHeader.click();
+      await toggle.click();
+      await expect
+        .poll(async () =>
+          isOrdered(
+            await columnValues(page, columnIndex),
+            (firstDirection * -1) as 1 | -1,
+          ),
+        )
+        .toBe(true);
 
-      await page.waitForTimeout(PAGINATION_WAIT_MS);
+      // Sorting reorders rows; it must never drop or duplicate them.
+      expect(await columnValues(page, columnIndex)).toHaveLength(rowCount);
+    }
+
+    test("should toggle sort on Token ID column", async ({ page }) => {
+      await expectSortToggles(page, 0);
     });
 
     test("should toggle sort on Domain Name column", async ({ page }) => {
-      await connectWallet(page);
-      await page.waitForLoadState("networkidle");
-      await page.waitForTimeout(2000);
-
-      const table = page.locator("table");
-      await expect(table).toBeVisible({ timeout: 30000 });
-
-      const domainNameHeader = page.locator("thead th").nth(1);
-      await expect(domainNameHeader).toBeVisible({ timeout: 10000 });
-
-      await domainNameHeader.click();
-
-      await page.waitForTimeout(PAGINATION_WAIT_MS);
-
-      await domainNameHeader.click();
-
-      await page.waitForTimeout(PAGINATION_WAIT_MS);
+      await expectSortToggles(page, 1);
     });
 
     test("should toggle sort on Parent column", async ({ page }) => {
-      await connectWallet(page);
-      await page.waitForLoadState("networkidle");
-      await page.waitForTimeout(2000);
-
-      const table = page.locator("table");
-      await expect(table).toBeVisible({ timeout: 30000 });
-
-      const parentHeader = page.locator("thead th").nth(2);
-      await expect(parentHeader).toBeVisible({ timeout: 10000 });
-
-      await parentHeader.click();
-
-      await page.waitForTimeout(PAGINATION_WAIT_MS);
-
-      await parentHeader.click();
-
-      await page.waitForTimeout(PAGINATION_WAIT_MS);
+      await expectSortToggles(page, 2);
     });
   });
 
   test.describe("Pagination", () => {
+    const pageInfo = (page: Page) => page.getByTestId("pagination-info");
+
     test("should show rows per page selector", async ({ page }) => {
       await connectWallet(page);
-      await page.waitForLoadState("networkidle");
-      await page.waitForTimeout(2000);
+      await waitForDomainsLoaded(page);
 
-      const table = page.locator("table");
-      await expect(table).toBeVisible({ timeout: 30000 });
-
-      const pageSizeSelector = page.locator('[role="combobox"]').first();
-      await expect(pageSizeSelector).toBeVisible({ timeout: 10000 });
+      await expect(
+        page.getByRole("combobox", { name: "Rows per page" }),
+      ).toBeVisible();
     });
 
     test("should show pagination navigation arrows", async ({ page }) => {
       await connectWallet(page);
-      await page.waitForLoadState("networkidle");
-      await page.waitForTimeout(2000);
+      await waitForDomainsLoaded(page);
 
-      const table = page.locator("table");
-      await expect(table).toBeVisible({ timeout: 30000 });
-
-      const paginationNav = page.locator(".flex.items-center.gap-2").last();
-      await expect(paginationNav).toBeVisible({ timeout: 10000 });
+      for (const name of [
+        "First page",
+        "Previous page",
+        "Next page",
+        "Last page",
+      ]) {
+        await expect(page.getByRole("button", { name })).toBeVisible();
+      }
     });
 
     test("should show correct pagination format", async ({ page }) => {
       await connectWallet(page);
-      await page.waitForLoadState("networkidle");
-      await page.waitForTimeout(2000);
+      await waitForDomainsLoaded(page);
 
-      const table = page.locator("table");
-      await expect(table).toBeVisible({ timeout: 30000 });
-
-      const paginationInfo = page.locator("text=/\\d+ of \\d+/");
-      await expect(paginationInfo).toBeVisible({ timeout: 15000 });
+      await expect(pageInfo(page)).toHaveText(/^\d+-\d+ of \d+$/);
     });
 
     test("should change page size to 5", async ({ page }) => {
       await connectWallet(page);
-      await page.waitForLoadState("networkidle");
-      await page.waitForTimeout(2000);
+      await waitForDomainsLoaded(page);
 
-      const table = page.locator("table");
-      await expect(table).toBeVisible({ timeout: 30000 });
+      await page.getByRole("combobox", { name: "Rows per page" }).click();
+      await page.getByRole("option", { name: "5", exact: true }).click();
 
-      const pageSizeSelector = page.locator('[role="combobox"]').first();
-      await expect(pageSizeSelector).toBeVisible({ timeout: 10000 });
+      // The size change must actually cap the rendered rows, not just the label.
+      await expect
+        .poll(() => page.locator("tbody tr").count())
+        .toBeLessThanOrEqual(5);
+      await expect(pageInfo(page)).toHaveText(/^1-\d+ of \d+$/);
     });
 
-    test("should navigate to next page when available", async ({ page }) => {
+    test("should navigate forward and back through pages", async ({ page }) => {
       await connectWallet(page);
-      await page.waitForLoadState("networkidle");
-      await page.waitForTimeout(2000);
+      await waitForDomainsLoaded(page);
 
-      const table = page.locator("table");
-      await expect(table).toBeVisible({ timeout: 30000 });
+      // Force a page size the fixture wallet can actually overflow.
+      await page.getByRole("combobox", { name: "Rows per page" }).click();
+      await page.getByRole("option", { name: "5", exact: true }).click();
 
-      const paginationNav = page.locator(".flex.items-center.gap-2").last();
-      const nextBtn = paginationNav.locator("button").nth(2);
+      const nextBtn = page.getByRole("button", { name: "Next page" });
+      test.skip(
+        await nextBtn.isDisabled(),
+        "Wallet owns a single page of domains",
+      );
 
-      const isDisabled = await nextBtn.isDisabled();
-      if (!isDisabled) {
-        await nextBtn.click();
-        await page.waitForTimeout(PAGINATION_WAIT_MS);
-      }
+      const firstPage = await pageInfo(page).innerText();
+      await nextBtn.click();
+      await expect(pageInfo(page)).not.toHaveText(firstPage);
+
+      await page.getByRole("button", { name: "Previous page" }).click();
+      await expect(pageInfo(page)).toHaveText(firstPage);
     });
 
-    test("should navigate to previous page when on page > 1", async ({
+    test("should jump to the last page and back to the first", async ({
       page,
     }) => {
       await connectWallet(page);
-      await page.waitForLoadState("networkidle");
-      await page.waitForTimeout(2000);
+      await waitForDomainsLoaded(page);
 
-      const table = page.locator("table");
-      await expect(table).toBeVisible({ timeout: 30000 });
+      await page.getByRole("combobox", { name: "Rows per page" }).click();
+      await page.getByRole("option", { name: "5", exact: true }).click();
 
-      const paginationNav = page.locator(".flex.items-center.gap-2").last();
-      const prevBtn = paginationNav.locator("button").nth(1);
+      const lastBtn = page.getByRole("button", { name: "Last page" });
+      test.skip(
+        await lastBtn.isDisabled(),
+        "Wallet owns a single page of domains",
+      );
 
-      const isDisabled = await prevBtn.isDisabled();
-      if (!isDisabled) {
-        await prevBtn.click();
-        await page.waitForTimeout(PAGINATION_WAIT_MS);
-      }
-    });
+      const firstPage = await pageInfo(page).innerText();
+      await lastBtn.click();
+      await expect(pageInfo(page)).not.toHaveText(firstPage);
+      await expect(lastBtn).toBeDisabled();
 
-    test("should go to first page with chevron-first button", async ({
-      page,
-    }) => {
-      await connectWallet(page);
-      await page.waitForLoadState("networkidle");
-      await page.waitForTimeout(2000);
-
-      const table = page.locator("table");
-      await expect(table).toBeVisible({ timeout: 30000 });
-
-      const paginationNav = page.locator(".flex.items-center.gap-2").last();
-      const firstPageBtn = paginationNav.locator("button").first();
-      await expect(firstPageBtn).toBeVisible({ timeout: 10000 });
-    });
-
-    test("should go to last page with chevron-last button", async ({
-      page,
-    }) => {
-      await connectWallet(page);
-      await page.waitForLoadState("networkidle");
-      await page.waitForTimeout(2000);
-
-      const table = page.locator("table");
-      await expect(table).toBeVisible({ timeout: 30000 });
-
-      const paginationNav = page.locator(".flex.items-center.gap-2").last();
-      const lastPageBtn = paginationNav.locator("button").last();
-      await expect(lastPageBtn).toBeVisible({ timeout: 10000 });
+      await page.getByRole("button", { name: "First page" }).click();
+      await expect(pageInfo(page)).toHaveText(firstPage);
+      await expect(
+        page.getByRole("button", { name: "First page" }),
+      ).toBeDisabled();
     });
   });
 
@@ -376,8 +375,7 @@ test.describe("User Profile", () => {
       page,
     }) => {
       await connectWallet(page);
-      await page.waitForLoadState("networkidle");
-      await page.waitForTimeout(2000);
+      await waitForDomainsLoaded(page);
 
       const table = page.locator("table");
       await expect(table).toBeVisible({ timeout: 30000 });
@@ -394,8 +392,7 @@ test.describe("User Profile", () => {
       page,
     }) => {
       await connectWallet(page);
-      await page.waitForLoadState("networkidle");
-      await page.waitForTimeout(2000);
+      await waitForDomainsLoaded(page);
 
       const table = page.locator("table");
       await expect(table).toBeVisible({ timeout: 30000 });

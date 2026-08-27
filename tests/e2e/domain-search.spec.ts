@@ -1,13 +1,7 @@
 import { test, expect } from "@playwright/test";
 import { type Page } from "@playwright/test";
-import {
-  DEBOUNCE_MS,
-  SPINNER_TIMEOUT_MS,
-  LONG_API_TIMEOUT_MS,
-  CSS_CLASSES,
-  PLACEHOLDERS,
-} from "./constants";
-import { generateTestDomain } from "./fixtures/shared";
+import { LONG_API_TIMEOUT_MS, PLACEHOLDERS } from "./constants";
+import { generateTestDomain, waitForSearchSettled } from "./fixtures/shared";
 
 const getSearchInput = (page: Page) =>
   page.getByPlaceholder(PLACEHOLDERS.SEARCH_DOMAIN);
@@ -53,30 +47,41 @@ test.describe("Domain Search", () => {
   test("should allow searching for 1-letter domain", async ({ page }) => {
     const input = getSearchInput(page);
     await input.fill("a");
+    await waitForSearchSettled(page);
 
-    await page.waitForTimeout(DEBOUNCE_MS);
-
-    const spinner = page.locator(CSS_CLASSES.ANIMATE_SPIN);
-    await expect(spinner).toBeVisible({ timeout: SPINNER_TIMEOUT_MS });
+    // A single character is a legal name: the lookup must resolve to a verdict
+    // rather than a validation error.
+    await expect(page.getByText(/^(Available|Registered)$/)).toBeVisible({
+      timeout: LONG_API_TIMEOUT_MS,
+    });
   });
 
-  test("should show loading spinner while checking availability", async ({
+  test("should report progress while checking availability", async ({
     page,
   }) => {
     const input = getSearchInput(page);
     await input.fill("loadingtest" + Date.now());
 
-    await page.waitForTimeout(DEBOUNCE_MS);
-    const spinner = page.locator(CSS_CLASSES.ANIMATE_SPIN);
-    await expect(spinner).toBeVisible({ timeout: SPINNER_TIMEOUT_MS });
+    // Asserting the spinner is *visible* races the lookup: a fast testnet read
+    // resolves before the assertion runs and the test fails on healthy
+    // behaviour. The durable contract is that the live region announces a
+    // busy state and then a settled one.
+    const status = page.getByRole("status");
+    await expect(status).toContainText(
+      /Checking availability|Register this name|View this domain/,
+      { timeout: LONG_API_TIMEOUT_MS },
+    );
+    await waitForSearchSettled(page);
+    await expect(
+      page.getByRole("button", { name: "Search", exact: true }),
+    ).toHaveAttribute("aria-busy", "false");
   });
 
   test("should show available badge for new domain", async ({ page }) => {
     const input = getSearchInput(page);
     const testDomain = generateTestDomain("zzztest");
     await input.fill(testDomain);
-
-    await page.waitForTimeout(DEBOUNCE_MS);
+    await waitForSearchSettled(page);
 
     const availableBadge = page.getByText("Available");
     await expect(availableBadge).toBeVisible({ timeout: LONG_API_TIMEOUT_MS });
@@ -85,8 +90,7 @@ test.describe("Domain Search", () => {
   test("should show registered badge for existing domain", async ({ page }) => {
     const input = getSearchInput(page);
     await input.fill("test");
-
-    await page.waitForTimeout(DEBOUNCE_MS);
+    await waitForSearchSettled(page);
 
     const registeredBadge = page.getByText("Registered");
     await expect(registeredBadge).toBeVisible({ timeout: LONG_API_TIMEOUT_MS });
@@ -98,8 +102,7 @@ test.describe("Domain Search", () => {
     const input = getSearchInput(page);
     const testDomain = generateTestDomain("avail");
     await input.fill(testDomain);
-
-    await page.waitForTimeout(DEBOUNCE_MS);
+    await waitForSearchSettled(page);
 
     const card = page.locator('a[href^="/register/"]');
     await expect(card).toBeVisible({ timeout: LONG_API_TIMEOUT_MS });
@@ -110,8 +113,7 @@ test.describe("Domain Search", () => {
   }) => {
     const input = getSearchInput(page);
     await input.fill("test");
-
-    await page.waitForTimeout(DEBOUNCE_MS);
+    await waitForSearchSettled(page);
 
     const card = page.locator('a[href^="/domain/"]');
     await expect(card).toBeVisible({ timeout: LONG_API_TIMEOUT_MS });
@@ -120,7 +122,7 @@ test.describe("Domain Search", () => {
   test("should clear results when input is cleared", async ({ page }) => {
     const input = getSearchInput(page);
     await input.fill("test");
-    await page.waitForTimeout(DEBOUNCE_MS);
+    await waitForSearchSettled(page);
 
     await expect(page.getByText("Registered")).toBeVisible({
       timeout: LONG_API_TIMEOUT_MS,
@@ -132,10 +134,12 @@ test.describe("Domain Search", () => {
 
   test("should trigger search immediately on Enter key", async ({ page }) => {
     const input = getSearchInput(page);
-    await input.fill("enterkeytest");
+    await input.fill("enterkeytest" + Date.now());
+    await input.press("Enter");
 
-    const spinner = page.locator(CSS_CLASSES.ANIMATE_SPIN);
-    await expect(spinner).toBeVisible({ timeout: SPINNER_TIMEOUT_MS });
+    await expect(page.getByText(/^(Available|Registered)$/)).toBeVisible({
+      timeout: LONG_API_TIMEOUT_MS,
+    });
   });
 
   test("should show available badge after Enter key search", async ({
@@ -156,7 +160,7 @@ test.describe("Domain Search", () => {
     const input = getSearchInput(page);
     const testDomain = generateTestDomain("zzznavig");
     await input.fill(testDomain);
-    await page.waitForTimeout(DEBOUNCE_MS);
+    await waitForSearchSettled(page);
 
     const availableBadge = page.getByText("Available");
     await expect(availableBadge).toBeVisible({ timeout: LONG_API_TIMEOUT_MS });

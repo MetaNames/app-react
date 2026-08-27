@@ -8,11 +8,10 @@
 import { type Page, type Locator, expect } from "@playwright/test";
 import {
   SELECTORS,
-  DEBOUNCE_MS,
   SPINNER_TIMEOUT_MS,
-  VISIBILITY_TIMEOUT_MS,
+  LONG_API_TIMEOUT_MS,
   DROPDOWN_TIMEOUT_MS,
-  PAGINATION_WAIT_MS,
+  PLACEHOLDERS,
 } from "../constants";
 
 /**
@@ -21,9 +20,11 @@ import {
  */
 export async function navigateToSettingsTab(page: Page): Promise<Locator> {
   const settingsTab = page.locator(SELECTORS.TAB_SETTINGS);
+  // The tab only mounts once the ownership read resolves against the chain,
+  // which regularly takes longer than the 2s this used to allow.
   await settingsTab.waitFor({
     state: "visible",
-    timeout: VISIBILITY_TIMEOUT_MS,
+    timeout: SPINNER_TIMEOUT_MS,
   });
   await settingsTab.click();
   await expect(settingsTab).toHaveAttribute("aria-selected", "true");
@@ -66,12 +67,51 @@ export async function selectFirstDropdownOption(
 }
 
 /**
- * Fill search input and wait for results/debounce.
+ * Wait until the home-page search has finished reacting to the current query:
+ * the Search button reports `aria-busy="false"` and the live region holds a
+ * settled outcome rather than the "Checking availability..." spinner.
+ *
+ * Sleeping for the debounce alone proved both too long (most lookups settle
+ * sooner) and too short (a slow testnet read outlives it), so assertions that
+ * followed it raced the result they were about to check.
+ */
+export async function waitForSearchSettled(
+  page: Page,
+  timeout = LONG_API_TIMEOUT_MS,
+) {
+  const searchButton = page.getByRole("button", {
+    name: "Search",
+    exact: true,
+  });
+  await expect(searchButton).toHaveAttribute("aria-busy", "false", { timeout });
+  // Scoped to the search widget's own text: the home page carries other
+  // spinners (the recent-domains ticker among them), so a global
+  // `.animate-spin` count never settles at zero.
+  await expect(page.getByText("Checking availability")).toHaveCount(0, {
+    timeout,
+  });
+}
+
+/**
+ * Fill the search input and wait for the lookup it triggers to settle.
  */
 export async function searchDomain(page: Page, domain: string) {
-  const input = page.getByPlaceholder("Search for a .mpc domain...");
+  const input = page.getByPlaceholder(PLACEHOLDERS.SEARCH_DOMAIN);
   await input.fill(domain);
-  await page.waitForTimeout(DEBOUNCE_MS);
+  if (!domain) return;
+  await waitForSearchSettled(page);
+}
+
+/**
+ * Wait for the owner's domain list to resolve. The section shows a spinner
+ * until the chain read returns, then either rows or an explicit empty state —
+ * both are settled outcomes, and either one means the page is safe to assert
+ * against. Callers used to sleep 2s and hope.
+ */
+export async function waitForDomainsLoaded(page: Page) {
+  await expect(
+    page.locator("tbody tr").or(page.getByText("No domains found")).first(),
+  ).toBeVisible({ timeout: LONG_API_TIMEOUT_MS * 2 });
 }
 
 /**
@@ -140,10 +180,19 @@ export async function expectSectionConditional(
 }
 
 /**
- * Wait for pagination to settle.
+ * Wait for a pagination click to land. Comparing the "N of M" indicator before
+ * and after is the only signal the table actually turned the page; the old
+ * fixed 300ms sleep passed whether or not anything moved.
  */
-export async function waitForPagination(page: Page) {
-  await page.waitForTimeout(PAGINATION_WAIT_MS);
+export async function waitForPagination(page: Page, previousLabel?: string) {
+  const indicator = page.locator("text=/\\d+ of \\d+/").first();
+  await expect(indicator).toBeVisible({ timeout: SPINNER_TIMEOUT_MS });
+  if (previousLabel !== undefined) {
+    await expect(indicator).not.toHaveText(previousLabel, {
+      timeout: SPINNER_TIMEOUT_MS,
+    });
+  }
+  return (await indicator.textContent()) ?? "";
 }
 
 /**
@@ -185,7 +234,7 @@ export async function deleteRecordTypeByName(
       // Need to expand the record to see delete button
       const editBtn = record.locator('[data-testid="edit-record"]');
       await editBtn.click().catch(() => {});
-      await page.waitForTimeout(200);
+      await expect(deleteBtn).toBeVisible({ timeout: DROPDOWN_TIMEOUT_MS });
     }
 
     await deleteBtn.click();
@@ -200,8 +249,13 @@ export async function deleteRecordTypeByName(
     if (dialogVisible) {
       const yesBtn = dialog.locator('button:has-text("Yes")');
       await yesBtn.click();
-      // Wait for deletion to complete
-      await page.waitForTimeout(1500);
+      // The dialog stays open for the whole transaction and closes only on
+      // success, so its disappearance — not a 1.5s guess — is the completion
+      // signal. Without this the next iteration clicked into a stale record.
+      await expect(dialog).toBeHidden({ timeout: LONG_API_TIMEOUT_MS * 4 });
+      await expect(records).toHaveCount(count - i - 1, {
+        timeout: LONG_API_TIMEOUT_MS,
+      });
     }
   }
 

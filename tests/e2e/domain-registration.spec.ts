@@ -15,12 +15,13 @@ import {
   TEXT,
   CSS_CLASSES,
   PLACEHOLDERS,
-  VISIBILITY_TIMEOUT_MS,
+  LONG_API_TIMEOUT_MS,
 } from "./constants";
 import {
   generateTestDomain,
   waitForDomainTitle,
   waitForDropdown,
+  waitForSearchSettled,
 } from "./fixtures/shared";
 
 test.describe("Domain Registration", () => {
@@ -51,7 +52,11 @@ test.describe("Domain Registration", () => {
       const testDomain = generateTestDomain("nopayment");
       await page.goto(`/register/${testDomain}`);
 
-      await page.waitForTimeout(VISIBILITY_TIMEOUT_MS / 5);
+      // Wait for the page's disconnected branch to actually render; asserting
+      // "not visible" against a still-blank page would pass trivially.
+      await expect(page.locator("h1").first()).toBeVisible({
+        timeout: LONG_API_TIMEOUT_MS,
+      });
 
       const paymentTokenSelect = page.locator(SELECTORS.PAYMENT_TOKEN_SELECT);
       await expect(paymentTokenSelect).not.toBeVisible();
@@ -72,8 +77,7 @@ test.describe("Domain Registration", () => {
       const input = page.getByPlaceholder(PLACEHOLDERS.SEARCH_DOMAIN);
       const testDomain = generateTestDomain("availreg");
       await input.fill(testDomain);
-
-      await page.waitForTimeout(VISIBILITY_TIMEOUT_MS / 5);
+      await waitForSearchSettled(page);
 
       const card = page.locator(`a[href^="/register/"]`);
       await expect(card).toBeVisible({ timeout: 15000 });
@@ -283,7 +287,14 @@ test.describe("Domain Registration", () => {
       if (isEnabled) {
         await executeBlockchainOp(async () => {
           await registerBtn.click();
-          await page.waitForTimeout(3000);
+          // The button goes busy and the flow either redirects to the new
+          // domain or surfaces an error toast — all observable, unlike a sleep.
+          await expect(
+            page
+              .locator(`button:has-text("${TEXT.REGISTER_DOMAIN}")[disabled]`)
+              .or(page.getByRole("alert"))
+              .first(),
+          ).toBeVisible({ timeout: 30000 });
         }, "Domain registration failed");
       }
       // Test passes whether button is enabled or not — we've verified the UI is correct

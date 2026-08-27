@@ -74,12 +74,18 @@ test.describe("DNS Records Management", () => {
 
       const result = await executeBlockchainOp(async () => {
         await saveButton.click();
-        await page.waitForTimeout(5000);
+        // Sleeping five seconds asserted nothing: the test passed whether the
+        // write landed, reverted, or never started. The component leaves edit
+        // mode only once the transaction resolves without error.
+        await expect(firstRecord.locator(SELECTORS.EDIT_RECORD)).toBeVisible({
+          timeout: 60000,
+        });
       }, "Edit record transaction failed");
 
-      if (!result.success) {
-        console.log("Edit record failed (expected on testnet):", result.error);
-      }
+      expect(result.success, result.error).toBe(true);
+      await expect(firstRecord).toContainText(modifiedValue, {
+        timeout: 30000,
+      });
     });
 
     test("cancel edit restores original value", async ({ page }) => {
@@ -137,9 +143,10 @@ test.describe("DNS Records Management", () => {
         .waitFor({ state: "visible", timeout: 3000 })
         .catch(() => {});
 
-      await page.waitForTimeout(2000);
-      const dialogGone = await dialog.isHidden().catch(() => true);
-      expect(dialogGone || true).toBe(true);
+      // `expect(dialogGone || true).toBe(true)` is true for every possible
+      // run, so this step asserted nothing at all. The dialog closes only when
+      // the delete transaction resolves successfully.
+      await expect(dialog).toBeHidden({ timeout: 60000 });
     });
 
     test("record CRUD operations in settings tab on domain page", async ({
@@ -197,7 +204,15 @@ test.describe("DNS Records Management", () => {
     await page.goto(`/domain/${uniqueDomain}`);
     await connectWallet(page).catch(() => {});
 
-    await page.waitForTimeout(2000);
+    // An unregistered name redirects to /register; wait for whichever end
+    // state the page settles into rather than sampling mid-flight.
+    await expect(
+      page
+        .locator(SELECTORS.DOMAIN_TITLE)
+        .or(page.locator(SELECTORS.TAB_SETTINGS))
+        .or(page.locator("h1"))
+        .first(),
+    ).toBeVisible({ timeout: 30000 });
 
     const settingsTab = page.locator(SELECTORS.TAB_SETTINGS);
     if (await settingsTab.isVisible()) {
