@@ -15,8 +15,13 @@ import {
   TEST_DOMAIN,
   gotoAndRestoreWallet,
 } from "./helpers/wallet-helper";
-import { SELECTORS, TEXT, CSS_CLASSES, TEST_DOMAIN_NAME } from "./constants";
-import { navigateToSettingsTab, waitForDomainTitle } from "./fixtures/shared";
+import { SELECTORS, TEXT, TEST_DOMAIN_NAME } from "./constants";
+import {
+  editedRecordValue,
+  ensureEditableRecord,
+  navigateToSettingsTab,
+  waitForDomainTitle,
+} from "./fixtures/shared";
 import { RegisterPage } from "./pages/RegisterPage";
 
 // Disconnected-state tests: must run BEFORE any wallet connection (no beforeEach here)
@@ -172,10 +177,10 @@ test.describe("Blockchain Operations", () => {
 
       await navigateToSettingsTab(page);
 
-      const recordContainer = page
-        .locator(CSS_CLASSES.RECORD_CONTAINER)
-        .first();
-      await expect(recordContainer).toBeVisible();
+      // The domain carries read-only classes (Avatar, Main) with no edit or
+      // delete control, so the first record is not necessarily an actionable
+      // one.
+      const { record: recordContainer } = await ensureEditableRecord(page);
 
       const editBtn = recordContainer.locator(SELECTORS.EDIT_RECORD);
       await expect(editBtn).toBeVisible();
@@ -188,10 +193,10 @@ test.describe("Blockchain Operations", () => {
 
       await navigateToSettingsTab(page);
 
-      const recordContainer = page
-        .locator(CSS_CLASSES.RECORD_CONTAINER)
-        .first();
-      await expect(recordContainer).toBeVisible();
+      // The domain carries read-only classes (Avatar, Main) with no edit or
+      // delete control, so the first record is not necessarily an actionable
+      // one.
+      const { record: recordContainer } = await ensureEditableRecord(page);
 
       const editBtn = recordContainer.locator(SELECTORS.EDIT_RECORD);
       await editBtn.click();
@@ -213,10 +218,10 @@ test.describe("Blockchain Operations", () => {
 
       await navigateToSettingsTab(page);
 
-      const recordContainer = page
-        .locator(CSS_CLASSES.RECORD_CONTAINER)
-        .first();
-      await expect(recordContainer).toBeVisible();
+      // The domain carries read-only classes (Avatar, Main) with no edit or
+      // delete control, so the first record is not necessarily an actionable
+      // one.
+      const { record: recordContainer } = await ensureEditableRecord(page);
 
       const originalValue = await recordContainer.locator("p").textContent();
 
@@ -224,7 +229,7 @@ test.describe("Blockchain Operations", () => {
       await editBtn.click();
 
       const textarea = recordContainer.locator("textarea");
-      await textarea.fill("Modified value");
+      await textarea.fill("modified value");
 
       const cancelBtn = recordContainer.locator(SELECTORS.CANCEL_EDIT);
       await cancelBtn.click();
@@ -241,16 +246,19 @@ test.describe("Blockchain Operations", () => {
 
       await navigateToSettingsTab(page);
 
-      const recordContainer = page
-        .locator(CSS_CLASSES.RECORD_CONTAINER)
-        .first();
-      await expect(recordContainer).toBeVisible();
+      // The domain carries read-only classes (Avatar, Main) with no edit or
+      // delete control, so the first record is not necessarily an actionable
+      // one.
+      const { record: recordContainer, type } =
+        await ensureEditableRecord(page);
 
       const editBtn = recordContainer.locator(SELECTORS.EDIT_RECORD);
       await editBtn.click();
 
       const textarea = recordContainer.locator("textarea");
-      await textarea.fill("Updated bio value");
+      // Each record class has its own validator: " updated" appended to an
+      // Email is a value the app rightly refuses to save.
+      await textarea.fill(editedRecordValue(type, String(Date.now())));
 
       const saveBtn = recordContainer.locator(SELECTORS.SAVE_RECORD);
       await expect(saveBtn).toBeVisible();
@@ -276,10 +284,10 @@ test.describe("Blockchain Operations", () => {
 
       await navigateToSettingsTab(page);
 
-      const recordContainer = page
-        .locator(CSS_CLASSES.RECORD_CONTAINER)
-        .first();
-      await expect(recordContainer).toBeVisible();
+      // The domain carries read-only classes (Avatar, Main) with no edit or
+      // delete control, so the first record is not necessarily an actionable
+      // one.
+      const { record: recordContainer } = await ensureEditableRecord(page);
 
       const deleteBtn = recordContainer.locator(SELECTORS.DELETE_RECORD);
       await expect(deleteBtn).toBeVisible();
@@ -292,10 +300,10 @@ test.describe("Blockchain Operations", () => {
 
       await navigateToSettingsTab(page);
 
-      const recordContainer = page
-        .locator(CSS_CLASSES.RECORD_CONTAINER)
-        .first();
-      await expect(recordContainer).toBeVisible();
+      // The domain carries read-only classes (Avatar, Main) with no edit or
+      // delete control, so the first record is not necessarily an actionable
+      // one.
+      const { record: recordContainer } = await ensureEditableRecord(page);
 
       const deleteBtn = recordContainer.locator(SELECTORS.DELETE_RECORD);
       await deleteBtn.click();
@@ -320,10 +328,10 @@ test.describe("Blockchain Operations", () => {
 
       await navigateToSettingsTab(page);
 
-      const recordContainer = page
-        .locator(CSS_CLASSES.RECORD_CONTAINER)
-        .first();
-      await expect(recordContainer).toBeVisible();
+      // The domain carries read-only classes (Avatar, Main) with no edit or
+      // delete control, so the first record is not necessarily an actionable
+      // one.
+      const { record: recordContainer } = await ensureEditableRecord(page);
 
       const deleteBtn = recordContainer.locator(SELECTORS.DELETE_RECORD);
       await deleteBtn.click();
@@ -346,10 +354,10 @@ test.describe("Blockchain Operations", () => {
 
       await navigateToSettingsTab(page);
 
-      const recordContainer = page
-        .locator(CSS_CLASSES.RECORD_CONTAINER)
-        .first();
-      await expect(recordContainer).toBeVisible();
+      // The domain carries read-only classes (Avatar, Main) with no edit or
+      // delete control, so the first record is not necessarily an actionable
+      // one.
+      const { record: recordContainer } = await ensureEditableRecord(page);
 
       const deleteBtn = recordContainer.locator(SELECTORS.DELETE_RECORD);
       await deleteBtn.click();

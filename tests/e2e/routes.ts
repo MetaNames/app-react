@@ -2,9 +2,9 @@ import { expect, type Page } from "@playwright/test";
 
 /**
  * The seven routes the accessibility gate walks, and the anchor that proves each one arrived on
- * its loaded branch rather than a spinner or an error redirect. `networkidle` fires on the shell;
- * without a reliable anchor + path check a scan could silently judge a loading state instead of
- * the page it names.
+ * its loaded branch rather than a spinner or an error redirect. The anchor plus the path check is
+ * what proves arrival — `networkidle` never fires on pages that poll (the home page's recent-domains
+ * ticker keeps a request in flight), so waiting for it only ever bought a 30s timeout.
  */
 
 const unregisteredName = `zzunregistered${Date.now()}`;
@@ -36,7 +36,7 @@ export type Route = (typeof ROUTES)[number];
  * confirmed absence, or /register/[name] to /domain/[name] if it is already taken).
  */
 export async function gotoLoaded(page: Page, route: Route) {
-  await page.goto(route.path, { waitUntil: "networkidle" });
+  await page.goto(route.path, { waitUntil: "domcontentloaded" });
   await expect(page.locator(route.anchor).first()).toBeVisible({
     timeout: 15000,
   });

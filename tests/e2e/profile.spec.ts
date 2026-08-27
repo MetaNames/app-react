@@ -6,7 +6,7 @@ import { waitForDomainsLoaded } from "./fixtures/shared";
 test.describe("User Profile", () => {
   test.beforeEach(async ({ page }) => {
     await page.goto("/profile");
-    await page.waitForLoadState("networkidle");
+    await page.waitForLoadState("domcontentloaded");
   });
 
   test.describe("Disconnected State", () => {

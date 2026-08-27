@@ -59,6 +59,41 @@ export async function editableRecord(
 }
 
 /**
+ * Guarantees the domain has at least one record this app can edit, adding a
+ * Bio (or whatever class is offered) if it does not.
+ *
+ * The shared test domain is mutable: the delete tests remove records from it,
+ * so a suite that ran green yesterday could find nothing editable today and
+ * fail for reasons that have nothing to do with the code under test.
+ */
+export async function ensureEditableRecord(
+  page: Page,
+  preferred: string[] = [],
+): Promise<{ record: Locator; type: string }> {
+  const existing = await editableRecord(page, preferred).catch(() => null);
+  if (existing) return existing;
+
+  const form = page.locator(SELECTORS.ADD_RECORD_FORM);
+  await expect(form).toBeVisible({ timeout: SPINNER_TIMEOUT_MS });
+
+  await form.locator('button[role="combobox"]').first().click();
+  await waitForDropdown(page);
+  const bio = page.locator('[data-testid="select-option-Bio"]');
+  const anyOption = page.locator('[data-testid^="select-option-"]').first();
+  await ((await bio.isVisible().catch(() => false)) ? bio : anyOption).click();
+
+  await form.locator("textarea").fill(`e2e fixture ${Date.now()}`);
+  const addButton = page.locator(SELECTORS.ADD_RECORD_BUTTON);
+  await expect(addButton).toBeEnabled();
+  await addButton.click();
+  await expect(addButton).not.toHaveText("Adding...", {
+    timeout: LONG_API_TIMEOUT_MS * 4,
+  });
+
+  return editableRecord(page, preferred);
+}
+
+/**
  * A record's value has to satisfy that class's validator — appending " updated"
  * to an Email turns it into an invalid address the app rightly refuses to save.
  */

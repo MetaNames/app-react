@@ -63,7 +63,7 @@ test.describe("WCAG 2.2 A + AA", () => {
 });
 
 test("the search result is inside a live region", async ({ page }) => {
-  await page.goto("/", { waitUntil: "networkidle" });
+  await page.goto("/", { waitUntil: "domcontentloaded" });
   await page
     .locator("input[placeholder='Search for a .mpc domain...']")
     .fill("test");
@@ -109,7 +109,7 @@ test("a successful chip copy is announced", async ({ browser }) => {
   test.skip(!granted, "clipboard permissions unsupported in this environment");
 
   const page = await ctx.newPage();
-  await page.goto("/domain/test.mpc", { waitUntil: "networkidle" });
+  await page.goto("/domain/test.mpc", { waitUntil: "domcontentloaded" });
 
   const chip = page.locator("button", { hasText: "Expires" }).first();
   await expect(chip).toBeVisible({ timeout: 15000 });
@@ -212,7 +212,7 @@ test("every focusable control gets a visible, contrasting outline at 320px", asy
   page,
 }) => {
   await page.setViewportSize({ width: 320, height: 720 });
-  await page.goto("/domain/test.mpc", { waitUntil: "networkidle" });
+  await page.goto("/domain/test.mpc", { waitUntil: "domcontentloaded" });
 
   const chip = page.locator("button", { hasText: "Expires" }).first();
   await expect(chip).toBeVisible({ timeout: 15000 });
@@ -233,7 +233,7 @@ test("reduced motion is honoured without hiding what was animating", async ({
 }) => {
   const ctx = await browser.newContext({ reducedMotion: "reduce" });
   const page = await ctx.newPage();
-  await page.goto("/", { waitUntil: "networkidle" });
+  await page.goto("/", { waitUntil: "domcontentloaded" });
 
   const walletButton = page.locator('[data-testid="wallet-connect-button"]');
   const duration = await walletButton.evaluate(

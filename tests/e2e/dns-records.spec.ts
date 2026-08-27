@@ -20,8 +20,8 @@ import {
 } from "./helpers/wallet-helper";
 import { SELECTORS, TEXT, TEST_DOMAIN_NAME } from "./constants";
 import {
-  editableRecord,
   editedRecordValue,
+  ensureEditableRecord,
   navigateToSettingsTab,
   waitForDomainTitle,
 } from "./fixtures/shared";
@@ -70,7 +70,7 @@ test.describe("DNS Records Management", () => {
 
       // Bio-like classes take free text; the fallback still writes a value
       // valid for whatever class the domain happens to expose.
-      const { record: firstRecord, type } = await editableRecord(page, [
+      const { record: firstRecord, type } = await ensureEditableRecord(page, [
         "Bio",
         "Twitter",
         "Discord",
@@ -110,7 +110,7 @@ test.describe("DNS Records Management", () => {
       const recordsContainer = page.locator(SELECTORS.RECORDS_CONTAINER);
       await expect(recordsContainer).toBeVisible();
 
-      const { record: firstRecord } = await editableRecord(page);
+      const { record: firstRecord } = await ensureEditableRecord(page);
 
       const editButton = firstRecord.locator(SELECTORS.EDIT_RECORD);
       await editButton.click();
@@ -137,7 +137,7 @@ test.describe("DNS Records Management", () => {
       const recordsContainer = page.locator(SELECTORS.RECORDS_CONTAINER);
       await expect(recordsContainer).toBeVisible();
 
-      const { record: firstRecord } = await editableRecord(page);
+      const { record: firstRecord } = await ensureEditableRecord(page);
       const deleteButton = firstRecord.locator(SELECTORS.DELETE_RECORD);
       await deleteButton.click();
 

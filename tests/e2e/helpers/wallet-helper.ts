@@ -83,15 +83,20 @@ export const connectWallet = async (page: Page): Promise<boolean> => {
     .first();
   await connectBtn.waitFor({ state: "visible", timeout: CONNECT_TIMEOUT_MS });
 
-  // The button mounts before the SDK finishes initialising; clicking in that
-  // window opens nothing and the test then waits out its whole budget on a
-  // dialog that was never asked for. Retrying the click costs one second and
-  // removes the single largest source of flake in this suite.
+  // The button mounts before hydration finishes; a click in that window does
+  // nothing and the test then waits out its whole budget on a menu that was
+  // never opened. But the trigger is a toggle — a blind retry closes the menu
+  // it was meant to open — so a retry only happens while the menu is shut.
   const devKeyInput = page.locator('[data-testid="dev-key-input"]');
+  const menu = page.locator('[role="menu"]');
 
   let winner: "devKey" | "connected" | null = null;
   for (let attempt = 0; attempt < CONNECT_ATTEMPTS && !winner; attempt++) {
-    await connectBtn.click();
+    const menuOpen = await menu
+      .first()
+      .isVisible()
+      .catch(() => false);
+    if (!menuOpen) await connectBtn.click();
     winner = await firstVisible(
       { devKey: devKeyInput, connected: walletConnectedEl },
       CONNECT_ATTEMPT_TIMEOUT_MS,
