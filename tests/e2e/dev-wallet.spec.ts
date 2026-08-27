@@ -37,7 +37,10 @@ async function openDevKeyMenu(page: Page) {
         .isVisible()
         .catch(() => false))
     ) {
-      await connectBtn.click();
+      // Enter, not click: the trigger toggles on pointer-down, so a click that
+      // lands mid-open closes the menu again.
+      await connectBtn.focus();
+      await page.keyboard.press("Enter");
     }
     try {
       await expect(devKeyInput).toBeVisible({ timeout: 5000 });

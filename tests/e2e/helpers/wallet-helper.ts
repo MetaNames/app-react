@@ -87,13 +87,15 @@ export const connectWallet = async (page: Page): Promise<boolean> => {
     .first();
   await connectBtn.waitFor({ state: "visible", timeout: CONNECT_TIMEOUT_MS });
 
-  // The button mounts before hydration finishes, and two different things can
-  // go wrong in that window: the click does nothing at all, or the menu opens
-  // while the dev-key section — gated on a post-mount effect — is still absent
-  // from it. The trigger is a toggle, so each retry closes whatever is open
-  // (Escape, not a second click, which would race the toggle) and opens it
-  // afresh; a retry that merely re-waited on the same stale menu burned the
-  // whole budget without ever changing the page.
+  // Opened from the keyboard, not with a click. The trigger toggles on the
+  // pointer-down half of a click, so a click that arrives while the menu is
+  // mid-open toggles it straight back shut — the failure looked like "the menu
+  // never opened" and no amount of clicking fixed it, because every retry could
+  // lose the same race. Enter on a focused trigger opens once, deterministically.
+  //
+  // The retry that remains is for the pre-hydration window, where the key press
+  // reaches a button with no handler yet. Each attempt closes whatever state the
+  // last one left behind before trying again.
   const devKeyInput = page.locator('[data-testid="dev-key-input"]');
   const menu = page.locator('[role="menu"]');
 
@@ -110,7 +112,10 @@ export const connectWallet = async (page: Page): Promise<boolean> => {
       .first()
       .isVisible()
       .catch(() => false);
-    if (!menuOpen) await connectBtn.click();
+    if (!menuOpen) {
+      await connectBtn.focus();
+      await page.keyboard.press("Enter");
+    }
     winner = await firstVisible(
       { devKey: devKeyInput, connected: walletConnectedEl },
       CONNECT_ATTEMPT_TIMEOUT_MS,
