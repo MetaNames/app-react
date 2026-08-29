@@ -47,3 +47,4 @@ test-results/
 .superpowers/
 .kilo/
 kilo.json
+.local-sdk/
