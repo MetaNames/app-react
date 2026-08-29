@@ -14,7 +14,7 @@ import { RequireWalletConnection } from "@/components/require-wallet-connection"
 import { useDomainPayment } from "@/lib/hooks/use-domain-payment";
 import { Minus, Plus, Loader2, Check } from "lucide-react";
 import { cn } from "@/lib/utils";
-import type { BYOCSymbol as SdkBYOCSymbol } from "@metanames/sdk/dist/providers/config";
+import type { BYOCSymbol as SdkBYOCSymbol } from "@metanames/sdk/providers/config";
 
 interface DomainPaymentProps {
   domain: string;

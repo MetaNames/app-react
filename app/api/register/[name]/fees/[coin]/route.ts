@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from "next/server";
-import type { BYOCSymbol } from "@metanames/sdk/dist/providers/config";
+import type { BYOCSymbol } from "@metanames/sdk/providers/config";
 import { getServerSdk } from "@/lib/sdk";
 import { handleError, jsonError } from "@/lib/server-error";
 import { validateDomainName, normalizeDomain } from "@/lib/domain-validator";

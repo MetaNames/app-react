@@ -19,7 +19,7 @@ vi.mock("@ledgerhq/hw-transport-webusb", () => ({
 }));
 
 const ledgerGetAddress = vi.fn();
-vi.mock("@metanames/sdk/dist/transactions/ledger", () => ({
+vi.mock("@metanames/sdk/transactions/ledger", () => ({
   PartisiaLedgerClient: class {
     constructor(public transport: unknown) {}
     getAddress = ledgerGetAddress;

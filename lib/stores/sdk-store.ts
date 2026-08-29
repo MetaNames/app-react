@@ -1,6 +1,6 @@
 import { create } from "zustand";
 import type { MetaNamesSdk } from "@metanames/sdk";
-import type { BYOCSymbol } from "@metanames/sdk/dist/providers/config";
+import type { BYOCSymbol } from "@metanames/sdk/providers/config";
 
 interface SdkStore {
   metaNamesSdk: MetaNamesSdk | null;
