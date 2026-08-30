@@ -108,11 +108,11 @@ export function WalletConnectButton() {
         </DropdownMenuTrigger>
         <DropdownMenuContent
           align="end"
-          className="glass-panel border-border/60"
+          className="border border-foreground/15 bg-popover shadow-xl shadow-black/60 ring-0 backdrop-blur-none"
         >
           <DropdownMenuItem
             onClick={handleDisconnect}
-            className="gap-2 text-destructive"
+            className="gap-2 px-2.5 py-2 text-destructive"
           >
             <LogOut className="h-4 w-4" /> Disconnect
           </DropdownMenuItem>
@@ -131,22 +131,30 @@ export function WalletConnectButton() {
       </DropdownMenuTrigger>
       <DropdownMenuContent
         align="end"
-        className="w-64 glass-panel border-border/60"
+        className="w-64 border border-foreground/15 bg-popover shadow-xl shadow-black/60 ring-0 backdrop-blur-none"
       >
-        <DropdownMenuItem onClick={handleMetaMask}>
+        <div className="px-2.5 py-1.5 text-xs font-medium text-muted-foreground">
+          Connect a wallet
+        </div>
+        <DropdownMenuItem className="px-2.5 py-2" onClick={handleMetaMask}>
           MetaMask Wallet
         </DropdownMenuItem>
-        <DropdownMenuItem onClick={handlePartisia}>
+        <DropdownMenuItem className="px-2.5 py-2" onClick={handlePartisia}>
           Partisia Wallet
         </DropdownMenuItem>
-        <DropdownMenuItem onClick={handleLedger}>Ledger</DropdownMenuItem>
+        <DropdownMenuItem className="px-2.5 py-2" onClick={handleLedger}>
+          Ledger
+        </DropdownMenuItem>
         {mounted && config.isTestnet && (
           <>
             <DropdownMenuSeparator />
             <div className="p-2 flex flex-col gap-2">
+              <span className="px-0.5 text-xs font-medium text-muted-foreground">
+                Testnet dev key
+              </span>
               <Input
                 data-testid="dev-key-input"
-                className="dev-key-input text-xs"
+                className="dev-key-input border-border bg-background text-xs placeholder:text-muted-foreground"
                 placeholder="64-char hex private key"
                 value={devKey}
                 onChange={(e) => setDevKey(e.target.value)}
