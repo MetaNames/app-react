@@ -79,6 +79,26 @@ export default function RootLayout({
               </AlertDescription>
             </Alert>
           )}
+          {/* Legacy showed this banner whenever the env flag selected testnet
+              (VITE_ENV=test there, NEXT_PUBLIC_ENV=test here): the header badge
+              alone is hidden below `sm`, so on a phone nothing tells you the
+              names you register are throwaway. */}
+          {config.isTestnet && (
+            <Alert className="rounded-none border-x-0 border-t-0 bg-primary/10 text-foreground border-primary/40">
+              <AlertDescription className="flex flex-wrap items-center justify-between gap-2 max-w-5xl mx-auto w-full">
+                <span>
+                  You are on Testnet. Names registered here do not exist on
+                  mainnet.
+                </span>
+                <a
+                  href={config.websiteUrl}
+                  className="text-sm font-medium underline"
+                >
+                  Go to mainnet
+                </a>
+              </AlertDescription>
+            </Alert>
+          )}
           <Header />
           <main
             id="main-content"
