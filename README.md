@@ -44,6 +44,40 @@ npm run dev
 
 Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
 
+### Environment Variables
+
+Copy `.env.local.example` to `.env.local` and fill it in. Only `NEXT_PUBLIC_ENV`
+selects the chain; everything else is a per-deployment value.
+
+| Variable                        | Required | Description                                                                                     |
+| ------------------------------- | -------- | ----------------------------------------------------------------------------------------------- |
+| `NEXT_PUBLIC_ENV`               | yes      | `test` (Partisia testnet) or `prod` (mainnet). Unset defaults to `test`. See the warning below. |
+| `NEXT_PUBLIC_LANDING_URL`       | no       | Marketing site linked from the app. Defaults to `https://metanames.app`.                        |
+| `NEXT_PUBLIC_WEBSITE_URL`       | no       | Canonical app URL for `metadataBase`, `robots.txt` and `sitemap.xml`. Keep the trailing slash.  |
+| `NEXT_PUBLIC_CONTRACT_DISABLED` | no       | `true` shows the "contract temporarily disabled" banner. Defaults to `false`.                   |
+| `NEXT_PUBLIC_SENTRY_DSN`        | no       | Sentry DSN for browser error capture. Empty disables it.                                        |
+| `SENTRY_DSN`                    | no       | Sentry DSN for server-side capture. Empty disables it.                                          |
+| `SENTRY_ORG` / `SENTRY_PROJECT` | no       | Used by the Sentry build plugin to upload source maps.                                          |
+| `TESTNET_PRIVATE_KEY`           | no       | Testnet key used by the Playwright e2e suite only. Never set this on a deployment.              |
+
+> **`NEXT_PUBLIC_ENV` must be exactly `test` or `prod`.** Any other value (for
+> example `staging` or `testnet`) is treated as `prod` by `lib/config.ts` while
+> `app/api/account/balance/route.ts` still reads testnet, so the client and the
+> balance API end up on different chains. A staging deployment that should run
+> against testnet sets `NEXT_PUBLIC_ENV=test`.
+
+`NEXT_PUBLIC_ENV=test` also turns on the testnet banner and header badge, the
+wallet dev-key input, full Sentry trace sampling, and points the SDK, the block
+explorer links and the TLD migration contract address at testnet.
+
+Recommended per environment:
+
+| Deployment | `NEXT_PUBLIC_ENV` | `NEXT_PUBLIC_WEBSITE_URL`    |
+| ---------- | ----------------- | ---------------------------- |
+| local      | `test`            | `http://localhost:3000/`     |
+| staging    | `test`            | the staging host             |
+| production | `prod`            | `https://app.metanames.app/` |
+
 ## Development
 
 ### Available Scripts
