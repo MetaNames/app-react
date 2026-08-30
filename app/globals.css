@@ -128,17 +128,33 @@
     content: "";
     position: absolute;
     left: 50%;
-    top: 0;
+    top: -160px;
     transform: translateX(-50%);
     /* 120vw pushed the decoration past the right edge of a phone screen and
        gave every page a horizontal scrollbar. The beam is a background flourish;
        it has no business widening the document. */
     width: min(100vw, 960px);
-    height: 480px;
+    height: 640px;
     background: radial-gradient(
-      50% 60% at 50% 0%,
+      50% 55% at 50% 25%,
       var(--glow) 0%,
       transparent 72%
+    );
+    /* Fade both vertical edges so the glow never starts or ends as a hard
+       rectangle, regardless of where a page places the shared spotlight. */
+    -webkit-mask-image: linear-gradient(
+      to bottom,
+      transparent 0%,
+      black 25%,
+      black 70%,
+      transparent 100%
+    );
+    mask-image: linear-gradient(
+      to bottom,
+      transparent 0%,
+      black 25%,
+      black 70%,
+      transparent 100%
     );
     pointer-events: none;
     z-index: 0;

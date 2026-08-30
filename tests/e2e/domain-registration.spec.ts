@@ -98,6 +98,27 @@ test.describe("Domain Registration", () => {
       expect(Math.abs(centers.main - centers.checkout)).toBeLessThan(80);
     });
 
+    test("should fade the shared spotlight above compact page content", async ({
+      page,
+    }) => {
+      const testDomain = generateTestDomain("spotlight");
+      await page.goto(`/register/${testDomain}`);
+
+      const spotlight = page.locator(".spotlight-beam").first();
+      await expect(spotlight).toBeVisible({ timeout: LONG_API_TIMEOUT_MS });
+
+      const style = await spotlight.evaluate((element) => {
+        const pseudo = getComputedStyle(element, "::before");
+        return {
+          maskImage: pseudo.maskImage,
+          top: pseudo.top,
+        };
+      });
+
+      expect(style.maskImage).toContain("linear-gradient");
+      expect(Number.parseFloat(style.top)).toBeLessThan(0);
+    });
+
     test("should navigate to register page for available domain", async ({
       page,
     }) => {
