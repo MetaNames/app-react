@@ -9,6 +9,7 @@ import type { Domain } from "@/lib/types";
 import { Wallet } from "lucide-react";
 import { Skeleton } from "@/components/ui/skeleton";
 import { ConnectWalletCta } from "@/components/connect-wallet-cta";
+import { CompactPage } from "@/components/compact-page";
 import { WatchlistSection } from "@/components/watchlist";
 
 export function ProfilePageClient() {
@@ -55,30 +56,32 @@ export function ProfilePageClient() {
 
   if (!address)
     return (
-      <div
-        role="status"
-        className="flex flex-col items-center justify-center py-24 gap-4 text-center animate-fade-up"
-      >
-        <h1 className="sr-only">Profile</h1>
-        <span
-          className="flex h-14 w-14 items-center justify-center rounded-2xl bg-primary/15 text-primary-glow"
-          aria-hidden="true"
+      <CompactPage>
+        <div
+          role="status"
+          className="flex flex-col items-center justify-center gap-4 text-center animate-fade-up"
         >
-          <Wallet className="h-6 w-6" />
-        </span>
-        <p className="text-xl text-muted-foreground">
-          Connect your wallet to see your domains
-        </p>
-        <p className="text-sm text-muted-foreground">
-          Your .mpc names, their records and their expiry dates all live here.
-        </p>
-        <ConnectWalletCta label="Connect wallet" />
-        {/* The watchlist is local, so it is the one thing this page can still
-            show before a wallet exists — and the reason to come back. */}
-        <div className="mt-8 w-full max-w-md text-left">
-          <WatchlistSection />
+          <h1 className="sr-only">Profile</h1>
+          <span
+            className="flex h-14 w-14 items-center justify-center rounded-2xl bg-primary/15 text-primary-glow"
+            aria-hidden="true"
+          >
+            <Wallet className="h-6 w-6" />
+          </span>
+          <p className="text-xl text-muted-foreground">
+            Connect your wallet to see your domains
+          </p>
+          <p className="text-sm text-muted-foreground">
+            Your .mpc names, their records and their expiry dates all live here.
+          </p>
+          <ConnectWalletCta label="Connect wallet" />
+          {/* The watchlist is local, so it is the one thing this page can still
+              show before a wallet exists — and the reason to come back. */}
+          <div className="mt-8 w-full max-w-md text-left">
+            <WatchlistSection />
+          </div>
         </div>
-      </div>
+      </CompactPage>
     );
 
   return (

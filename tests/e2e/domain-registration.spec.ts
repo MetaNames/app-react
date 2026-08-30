@@ -46,20 +46,18 @@ test.describe("Domain Registration", () => {
       expect(isPromptVisible || isButtonVisible).toBeTruthy();
     });
 
-    test("should not show payment form when wallet is disconnected", async ({
+    test("should allow token selection but hide transaction-only controls when disconnected", async ({
       page,
     }) => {
       const testDomain = generateTestDomain("nopayment");
       await page.goto(`/register/${testDomain}`);
 
-      // Wait for the page's disconnected branch to actually render; asserting
-      // "not visible" against a still-blank page would pass trivially.
-      await expect(page.locator("h1").first()).toBeVisible({
+      const paymentTokenSelect = page.getByRole("combobox", {
+        name: "Payment token",
+      });
+      await expect(paymentTokenSelect).toBeVisible({
         timeout: LONG_API_TIMEOUT_MS,
       });
-
-      const paymentTokenSelect = page.locator(SELECTORS.PAYMENT_TOKEN_SELECT);
-      await expect(paymentTokenSelect).not.toBeVisible();
 
       const addYearBtn = page.locator(`button[aria-label="${TEXT.ADD_YEAR}"]`);
       await expect(addYearBtn).not.toBeVisible();
@@ -68,6 +66,36 @@ test.describe("Domain Registration", () => {
         `button[aria-label="${TEXT.REMOVE_YEAR}"]`,
       );
       await expect(removeYearBtn).not.toBeVisible();
+    });
+
+    test("should vertically center compact registration content in the usable page area", async ({
+      page,
+    }) => {
+      const testDomain = generateTestDomain("centered");
+      await page.setViewportSize({ width: 1440, height: 1000 });
+      await page.goto(`/register/${testDomain}`);
+
+      const checkoutContent = page
+        .locator(CSS_CLASSES.CONTENT_CHECKOUT)
+        .first();
+      await expect(checkoutContent).toBeVisible({
+        timeout: LONG_API_TIMEOUT_MS,
+      });
+
+      const centers = await page
+        .locator("#main-content")
+        .evaluate((main, checkoutSelector) => {
+          const mainBox = main.getBoundingClientRect();
+          const checkout = main.querySelector(checkoutSelector as string);
+          if (!checkout) throw new Error("Registration checkout not found");
+          const checkoutBox = checkout.getBoundingClientRect();
+          return {
+            main: mainBox.top + mainBox.height / 2,
+            checkout: checkoutBox.top + checkoutBox.height / 2,
+          };
+        }, CSS_CLASSES.CONTENT_CHECKOUT);
+
+      expect(Math.abs(centers.main - centers.checkout)).toBeLessThan(80);
     });
 
     test("should navigate to register page for available domain", async ({

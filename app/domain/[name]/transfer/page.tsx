@@ -2,6 +2,7 @@
 import { useState } from "react";
 import { useParams, useRouter } from "next/navigation";
 import { GoBackButton } from "@/components/go-back-button";
+import { CompactPage } from "@/components/compact-page";
 import { ConnectionRequired } from "@/components/connection-required";
 import { LoadingButton } from "@/components/loading-button";
 import { Input } from "@/components/ui/input";
@@ -44,48 +45,50 @@ export default function TransferPage() {
   };
 
   return (
-    <div className="spotlight-beam relative z-10 animate-fade-up flex flex-col gap-6 max-w-lg w-full">
-      <GoBackButton href={`/domain/${domainName}`} />
-      <h1 className="text-3xl font-extrabold tracking-tight">
-        Transfer domain
-      </h1>
-      <h2 className="text-xl">{domainName}</h2>
-      <div className="glass-panel rounded-2xl border-destructive/30 bg-destructive/5 p-4 flex flex-col gap-2">
-        <p>
-          <strong>Please note that all transfers are irreversible.</strong>
-        </p>
-        <p>
-          <strong>Verify the address is correct</strong>
-        </p>
-      </div>
-      <div className="flex flex-col gap-2">
-        <label htmlFor="recipient-input" className="text-sm font-medium">
-          Recipient Address
-        </label>
-        <Input
-          id="recipient-input"
-          placeholder="Recipient address (42 chars)"
-          value={recipient}
-          onChange={(e) => {
-            setRecipient(e.target.value);
-          }}
-          className={
-            recipient.length >= 40 && !isValid ? "border-destructive" : ""
-          }
-        />
-        {recipient.length >= 40 && !isValid && (
-          <p className="text-destructive text-sm">Address is invalid</p>
-        )}
-      </div>
-      <ConnectionRequired address={address}>
-        <LoadingButton
-          disabled={!isValid}
-          onClick={handleTransfer}
-          className="w-full"
-        >
+    <CompactPage>
+      <div className="spotlight-beam relative z-10 animate-fade-up flex flex-col gap-6 max-w-lg w-full mx-auto">
+        <GoBackButton href={`/domain/${domainName}`} />
+        <h1 className="text-3xl font-extrabold tracking-tight">
           Transfer domain
-        </LoadingButton>
-      </ConnectionRequired>
-    </div>
+        </h1>
+        <h2 className="text-xl">{domainName}</h2>
+        <div className="glass-panel rounded-2xl border-destructive/30 bg-destructive/5 p-4 flex flex-col gap-2">
+          <p>
+            <strong>Please note that all transfers are irreversible.</strong>
+          </p>
+          <p>
+            <strong>Verify the address is correct</strong>
+          </p>
+        </div>
+        <div className="flex flex-col gap-2">
+          <label htmlFor="recipient-input" className="text-sm font-medium">
+            Recipient Address
+          </label>
+          <Input
+            id="recipient-input"
+            placeholder="Recipient address (42 chars)"
+            value={recipient}
+            onChange={(e) => {
+              setRecipient(e.target.value);
+            }}
+            className={
+              recipient.length >= 40 && !isValid ? "border-destructive" : ""
+            }
+          />
+          {recipient.length >= 40 && !isValid && (
+            <p className="text-destructive text-sm">Address is invalid</p>
+          )}
+        </div>
+        <ConnectionRequired address={address}>
+          <LoadingButton
+            disabled={!isValid}
+            onClick={handleTransfer}
+            className="w-full"
+          >
+            Transfer domain
+          </LoadingButton>
+        </ConnectionRequired>
+      </div>
+    </CompactPage>
   );
 }

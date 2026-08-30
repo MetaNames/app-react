@@ -10,6 +10,7 @@ import { normalizeDomain, parseSubdomain } from "@/lib/domain-validator";
 import { trackLatest } from "@/lib/race";
 import { JdenticonAvatar } from "@/components/domain-avatar";
 import { Skeleton } from "@/components/ui/skeleton";
+import { CompactPage } from "@/components/compact-page";
 
 function useDomainStatus(
   domainName: string,
@@ -76,36 +77,40 @@ export function RegisterPageClient({ name }: { name: string }) {
 
   if (status === "loading")
     return (
-      <div
-        className="flex flex-col items-center gap-6 max-w-2xl mx-auto px-4 w-full py-8"
-        role="status"
-        aria-label="Loading the registration form"
-      >
-        <Skeleton className="h-9 w-64" />
-        <Skeleton className="h-[420px] w-full max-w-lg rounded-xl" />
-      </div>
+      <CompactPage>
+        <div
+          className="flex flex-col items-center gap-6 max-w-2xl mx-auto px-4 w-full"
+          role="status"
+          aria-label="Loading the registration form"
+        >
+          <Skeleton className="h-9 w-64" />
+          <Skeleton className="h-[420px] w-full max-w-lg rounded-xl" />
+        </div>
+      </CompactPage>
     );
 
   return (
-    <div className="spotlight-beam flex flex-col items-center gap-6 content checkout max-w-2xl mx-auto px-4 w-full relative z-10 animate-fade-up">
-      <div className="flex flex-col items-center gap-3 text-center">
-        <div className="avatar p-1 rounded-2xl ring-2 ring-primary/40 shadow-[0_0_24px_var(--glow)]">
-          <JdenticonAvatar value={domainName} size={56} />
+    <CompactPage>
+      <div className="spotlight-beam flex flex-col items-center gap-6 content checkout max-w-2xl mx-auto px-4 w-full relative z-10 animate-fade-up">
+        <div className="flex flex-col items-center gap-3 text-center">
+          <div className="avatar p-1 rounded-2xl ring-2 ring-primary/40 shadow-[0_0_24px_var(--glow)]">
+            <JdenticonAvatar value={domainName} size={56} />
+          </div>
+          <h1 className="text-3xl font-extrabold tracking-tight break-all">
+            Register <span className="text-primary-glow">{domainName}</span>
+          </h1>
+          <p className="text-sm text-muted-foreground">
+            {status === "subdomain"
+              ? "This subdomain is unclaimed and free to mint under its parent."
+              : "This name is unclaimed. Pick a duration and a token to mint it."}
+          </p>
         </div>
-        <h1 className="text-3xl font-extrabold tracking-tight break-all">
-          Register <span className="text-primary-glow">{domainName}</span>
-        </h1>
-        <p className="text-sm text-muted-foreground">
-          {status === "subdomain"
-            ? "This subdomain is unclaimed and free to mint under its parent."
-            : "This name is unclaimed. Pick a duration and a token to mint it."}
-        </p>
+        {status === "subdomain" && parent ? (
+          <SubdomainRegistration domain={domainName} parentDomain={parent} />
+        ) : (
+          <DomainPayment domain={domainName} mode="register" />
+        )}
       </div>
-      {status === "subdomain" && parent ? (
-        <SubdomainRegistration domain={domainName} parentDomain={parent} />
-      ) : (
-        <DomainPayment domain={domainName} mode="register" />
-      )}
-    </div>
+    </CompactPage>
   );
 }

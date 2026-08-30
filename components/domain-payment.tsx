@@ -164,29 +164,28 @@ export function DomainPayment({ domain, mode, onSuccess }: DomainPaymentProps) {
             </div>
           </div>
         )}
-        {address && (
-          <div className="flex items-center justify-between">
-            <span className="font-medium">Pay with</span>
-            <Select
-              value={selectedCoin}
-              onValueChange={(v) => setSelectedCoin(v as SdkBYOCSymbol)}
+        <div className="flex items-center justify-between">
+          <span className="font-medium">Pay with</span>
+          <Select
+            value={selectedCoin}
+            onValueChange={(v) => setSelectedCoin(v as SdkBYOCSymbol)}
+          >
+            <SelectTrigger
+              aria-label="Payment token"
+              data-testid="payment-token-select"
+              className="w-40"
             >
-              <SelectTrigger
-                data-testid="payment-token-select"
-                className="w-40"
-              >
-                <SelectValue />
-              </SelectTrigger>
-              <SelectContent>
-                {availableCoins.map((s) => (
-                  <SelectItem key={s} value={s}>
-                    {s}
-                  </SelectItem>
-                ))}
-              </SelectContent>
-            </Select>
-          </div>
-        )}
+              <SelectValue />
+            </SelectTrigger>
+            <SelectContent>
+              {availableCoins.map((s) => (
+                <SelectItem key={s} value={s}>
+                  {s}
+                </SelectItem>
+              ))}
+            </SelectContent>
+          </Select>
+        </div>
         <RequireWalletConnection address={address}>
           <div className="flex flex-col gap-3">
             <LoadingButton
