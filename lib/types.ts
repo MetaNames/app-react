@@ -26,7 +26,7 @@ export interface AlertMessage {
   message: string;
   action?: { label: string; onClick: () => void };
 }
-import type { BYOCSymbol as SdkBYOCSymbol } from "@metanames/sdk/dist/providers/config";
+import type { BYOCSymbol as SdkBYOCSymbol } from "@metanames/sdk/providers/config";
 
 export type BYOCSymbol = SdkBYOCSymbol;
 // Testnet coins - for mainnet coins use sdk.config.byoc at runtime

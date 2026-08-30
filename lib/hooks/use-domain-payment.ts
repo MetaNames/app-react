@@ -15,7 +15,7 @@ import {
 } from "@/lib/error";
 import { bridgeUrl, explorerTransactionUrl } from "@/lib/url";
 import type { FeesResponse } from "@/lib/types";
-import type { BYOCSymbol } from "@metanames/sdk/dist/providers/config";
+import type { BYOCSymbol } from "@metanames/sdk/providers/config";
 import { toast } from "sonner";
 import { track } from "@vercel/analytics";
 

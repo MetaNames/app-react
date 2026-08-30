@@ -1,29 +1,51 @@
 import type { MetaNamesSdk } from "@metanames/sdk";
-import type { MetaMaskSdk } from "@metanames/sdk/dist/interface";
+import type { MetaMaskSdk } from "@metanames/sdk/interface";
 import type { PermissionTypes } from "partisia-blockchain-applications-sdk/lib/sdk-listeners";
 import { config } from "./config";
 
 interface EthereumProvider extends MetaMaskSdk {
   isMetaMask?: boolean;
+  /** Set when several wallet extensions are installed side by side. */
+  providers?: EthereumProvider[];
+}
+
+/**
+ * The MetaMask provider, or nothing when it is not installed.
+ *
+ * Extensions inject themselves on `window.ethereum`, not on `window`. When more
+ * than one is installed they share that slot: whichever loaded last owns it and
+ * the rest are listed under `providers`, so the flag has to be checked on each
+ * entry rather than on the slot itself.
+ */
+function metaMaskProvider(): EthereumProvider | undefined {
+  const injected = (window as { ethereum?: EthereumProvider }).ethereum;
+  if (!injected) return undefined;
+  if (injected.providers?.length)
+    return injected.providers.find((provider) => provider.isMetaMask);
+
+  return injected.isMetaMask ? injected : undefined;
 }
 
 export async function connectMetaMask(sdk: MetaNamesSdk): Promise<string> {
-  const eth = window as unknown as EthereumProvider;
-  if (!eth?.isMetaMask) throw new Error("MetaMask not found");
+  const eth = metaMaskProvider();
+  if (!eth) throw new Error("MetaMask not found");
   await eth.request({
     method: "wallet_requestSnaps",
     params: { "npm:@partisiablockchain/snap": {} },
   });
+  // The snap answers `get_address` with the address itself. Older builds
+  // wrapped it in an object, so both shapes are read.
   const res = (await eth.request({
     method: "wallet_invokeSnap",
     params: {
       snapId: "npm:@partisiablockchain/snap",
       request: { method: "get_address" },
     },
-  })) as { address?: string };
-  if (!res?.address) throw new Error("No address from MetaMask");
+  })) as string | { address?: string } | undefined;
+  const address = typeof res === "string" ? res : res?.address;
+  if (!address) throw new Error("No address from MetaMask");
   sdk.setSigningStrategy("MetaMask", eth);
-  return res.address;
+  return address;
 }
 export async function connectPartisiaWallet(
   sdk: MetaNamesSdk,
@@ -45,7 +67,7 @@ export async function connectLedger(sdk: MetaNamesSdk): Promise<string> {
   const { default: TransportWebUSB } =
     await import("@ledgerhq/hw-transport-webusb");
   const { PartisiaLedgerClient } =
-    await import("@metanames/sdk/dist/transactions/ledger");
+    await import("@metanames/sdk/transactions/ledger");
   const transport = await TransportWebUSB.create();
   const client = new PartisiaLedgerClient(transport);
   const address = await client.getAddress();

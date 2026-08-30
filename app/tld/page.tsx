@@ -3,7 +3,7 @@ import { getServerSdk } from "@/lib/sdk";
 import { TldPageClient } from "./TldPageClient";
 import Loading from "./loading";
 import type { Domain } from "@/lib/types";
-import type { Domain as SdkDomain } from "@metanames/sdk/dist/models/domain";
+import type { Domain as SdkDomain } from "@metanames/sdk/models/domain";
 
 export const metadata = {
   title: "TLD Information",

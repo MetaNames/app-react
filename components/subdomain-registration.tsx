@@ -7,7 +7,7 @@ import { useWalletStore } from "@/lib/stores/wallet-store";
 import { useSdkStore } from "@/lib/stores/sdk-store";
 import { explorerTransactionUrl } from "@/lib/url";
 import { toast } from "sonner";
-import type { BYOCSymbol as SdkBYOCSymbol } from "@metanames/sdk/dist/providers/config";
+import type { BYOCSymbol as SdkBYOCSymbol } from "@metanames/sdk/providers/config";
 
 interface SubdomainRegistrationProps {
   domain: string;
