@@ -34,6 +34,12 @@ function DropdownMenuContent({
     <MenuPrimitive.Portal>
       <MenuPrimitive.Positioner
         className="isolate z-50 outline-none"
+        // Base UI positions with `absolute` by default, which resolves against
+        // the nearest transformed/filtered ancestor. Any such ancestor between
+        // the portal root and the popup drops the menu into the page's top-left
+        // corner instead of under its trigger. `fixed` is measured against the
+        // viewport, so the anchoring holds whatever the page is doing.
+        positionMethod="fixed"
         align={align}
         alignOffset={alignOffset}
         side={side}
