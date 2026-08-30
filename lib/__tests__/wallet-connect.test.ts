@@ -56,17 +56,20 @@ function mockSdk() {
   };
 }
 
-/** Install (or remove) the MetaMask-shaped globals the connector reads. */
+/** Install (or remove) the injected provider the connector reads. */
 function setEthereum(
-  value: { isMetaMask?: boolean; request?: unknown } | null,
+  value: {
+    isMetaMask?: boolean;
+    request?: unknown;
+    providers?: unknown[];
+  } | null,
 ) {
   const w = window as unknown as Record<string, unknown>;
   if (value === null) {
-    delete w.isMetaMask;
-    delete w.request;
+    delete w.ethereum;
     return;
   }
-  Object.assign(w, value);
+  w.ethereum = value;
 }
 
 describe("connectMetaMask", () => {
@@ -97,6 +100,53 @@ describe("connectMetaMask", () => {
 
     await expect(connectMetaMask(sdk)).rejects.toThrow("MetaMask not found");
     expect(sdk.setSigningStrategy).not.toHaveBeenCalled();
+  });
+
+  // Extensions inject on `window.ethereum`, never on `window` itself: a
+  // connector reading the flag off the window finds nothing in a real browser.
+  it("refuses when the flag is on the window instead of the provider", async () => {
+    setEthereum(null);
+    const w = window as unknown as Record<string, unknown>;
+    w.isMetaMask = true;
+    w.request = vi.fn();
+    const sdk = mockSdk();
+
+    await expect(connectMetaMask(sdk)).rejects.toThrow("MetaMask not found");
+
+    delete w.isMetaMask;
+    delete w.request;
+  });
+
+  // Several wallets installed at once: the last one to load owns
+  // `window.ethereum` and lists the others under `providers`.
+  it("finds MetaMask among several injected providers", async () => {
+    const request = vi
+      .fn()
+      .mockResolvedValueOnce(undefined)
+      .mockResolvedValueOnce("mm-address");
+    setEthereum({
+      isMetaMask: false,
+      request: vi.fn(),
+      providers: [
+        { isMetaMask: false, request: vi.fn() },
+        { isMetaMask: true, request },
+      ],
+    });
+    const sdk = mockSdk();
+
+    await expect(connectMetaMask(sdk)).resolves.toBe("mm-address");
+  });
+
+  // The snap answers with the address itself; older builds wrapped it.
+  it("accepts the address as a bare string", async () => {
+    const request = vi
+      .fn()
+      .mockResolvedValueOnce(undefined)
+      .mockResolvedValueOnce("bare-address");
+    setEthereum({ isMetaMask: true, request });
+    const sdk = mockSdk();
+
+    await expect(connectMetaMask(sdk)).resolves.toBe("bare-address");
   });
 
   // A snap that resolves without an address must not leave the app "connected"
